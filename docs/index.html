@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TR-PHISH - AI Phishing Detection Documentation</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-darker: #090d16;
+            --bg-dark: #0f172a;
+            --border-glow: rgba(0, 242, 254, 0.15);
+            --text-glow: 0 0 10px rgba(0, 242, 254, 0.6);
+        }
+
+        body {
+            background-color: var(--bg-darker);
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .brand-font {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        .cyber-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .text-shadow {
+            text-shadow: var(--text-glow);
+        }
+
+        pre {
+            background-color: #020617 !important;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            color: #38bdf8;
+        }
+
+        code {
+            color: #f472b6;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 2rem;
+        }
+
+        .sidebar a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            color: #06b6d4;
+            padding-left: 5px;
+        }
+    </style>
+</head>
+<body class="py-5">
+    <div class="container">
+        <!-- Header -->
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="brand-font text-info text-shadow"><i class="fas fa-shield-halved"></i> TR-PHISH</h1>
+                <p class="text-secondary">AI Phishing Detection Console & SOC Dashboard Documentation</p>
+            </div>
+        </div>
+
+        <div class="row g-5">
+            <!-- Sidebar Navigation -->
+            <div class="col-md-3">
+                <div class="sidebar cyber-card p-4">
+                    <h5 class="brand-font text-white mb-3">SECTIONS</h5>
+                    <ul class="nav flex-column gap-2">
+                        <li><a href="#about" class="active"><i class="fas fa-info-circle me-2"></i> About System</a></li>
+                        <li><a href="#installation"><i class="fas fa-download me-2"></i> Local Install</a></li>
+                        <li><a href="#docker"><i class="fab fa-docker me-2"></i> Docker Setup</a></li>
+                        <li><a href="#api"><i class="fas fa-network-wired me-2"></i> REST API</a></li>
+                        <li><a href="#deployment"><i class="fas fa-cloud-upload-alt me-2"></i> Cloud Deploy</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="col-md-9">
+                <div class="cyber-card p-5">
+                    
+                    <!-- About -->
+                    <section id="about" class="mb-5">
+                        <h3 class="brand-font text-info text-shadow mb-3">ABOUT THE SYSTEM</h3>
+                        <p>TR-PHISH is a production-ready, real-time Security Operations Center (SOC) platform designed to audit URLs, parse emails, decode QR codes, and run computer vision brand spoofing analyses to classify targets into <strong>Legitimate</strong>, <strong>Suspicious</strong>, or <strong>Phishing</strong>.</p>
+                        <p>It utilizes a trained <strong>Random Forest Classifier</strong> combined with live domain intelligence socket feeds (WHOIS, DNS, and SSL verification).</p>
+                    </section>
+
+                    <hr class="border-secondary mb-5">
+
+                    <!-- Installation -->
+                    <section id="installation" class="mb-5">
+                        <h3 class="brand-font text-info text-shadow mb-3">LOCAL INSTALLATION</h3>
+                        <p>To run the website and its dynamic Python backend locally:</p>
+                        
+                        <p><strong>1. Initialize Virtual Environment</strong></p>
+                        <pre><code>python -m venv venv
+venv\Scripts\activate</code></pre>
+
+                        <p><strong>2. Install Requirements</strong></p>
+                        <pre><code>pip install -r requirements.txt</code></pre>
+
+                        <p><strong>3. Train the Model</strong></p>
+                        <pre><code>python ml/train.py</code></pre>
+
+                        <p><strong>4. Run Flask Server</strong></p>
+                        <pre><code>python app.py</code></pre>
+                        <p>Navigate to <code>http://localhost:5000</code> and log in with:</p>
+                        <ul>
+                            <li><strong>Username:</strong> <code>admin</code></li>
+                            <li><strong>Password:</strong> <code>admin123</code></li>
+                        </ul>
+                    </section>
+
+                    <hr class="border-secondary mb-5">
+
+                    <!-- Docker -->
+                    <section id="docker" class="mb-5">
+                        <h3 class="brand-font text-info text-shadow mb-3">DOCKER CONTAINERIZATION</h3>
+                        <p>You can package and run the application inside a container:</p>
+                        <pre><code># Build Image
+docker build -t ai-phishing-detector .
+
+# Run Container
+docker run -p 5000:5000 ai-phishing-detector</code></pre>
+                    </section>
+
+                    <hr class="border-secondary mb-5">
+
+                    <!-- REST API -->
+                    <section id="api" class="mb-5">
+                        <h3 class="brand-font text-info text-shadow mb-3">REST API ENDPOINTS</h3>
+                        <p>Exposed endpoint for third-party system integrations:</p>
+                        
+                        <p><code>POST /scan</code></p>
+                        <pre><code>// Request Payload
+{
+  "url": "http://paypal-verification-alert.net/login"
+}
+
+// Response
+{
+  "status": "success",
+  "url": "http://paypal-verification-alert.net/login",
+  "verdict": "Phishing",
+  "confidence": 0.94,
+  "risk_score": 96
+}</code></pre>
+                    </section>
+
+                    <hr class="border-secondary mb-5">
+
+                    <!-- Deployment -->
+                    <section id="deployment" class="mb-5">
+                        <h3 class="brand-font text-info text-shadow mb-3">CLOUD DEPLOYMENT</h3>
+                        <p>For persistent deployments (Render, Railway, AWS, Heroku):</p>
+                        <ul>
+                            <li><strong>Persistent Volume:</strong> Mount a volume to the <code>/app/database</code> directory so your SQLite database (user accounts and scan logs) isn't wiped on redeploys.</li>
+                            <li><strong>GitHub Actions:</strong> The workflow at <code>.github/workflows/deploy.yml</code> automatically executes tests on push.</li>
+                        </ul>
+                    </section>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
