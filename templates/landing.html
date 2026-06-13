@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Shield - Real-Time Phishing Detection & Threat Intelligence Platform</title>
+    <link rel="shortcut icon" href="/static/assets/logo/favicon.ico" type="image/x-icon">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- Custom Style -->
+    <link href="/static/css/style.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            padding: 120px 0 80px 0;
+            background: radial-gradient(circle at 50% 30%, rgba(14, 165, 233, 0.08) 0%, rgba(15, 23, 42, 0) 60%);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(14, 165, 233, 0.2) 50%, rgba(255, 255, 255, 0) 100%);
+        }
+        .feature-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            height: 100%;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(14, 165, 233, 0.3);
+            box-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.15);
+            background: rgba(30, 41, 59, 0.6);
+        }
+        .feature-icon-wrapper {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(14, 165, 233, 0.1);
+            color: #0ea5e9;
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            border: 1px solid rgba(14, 165, 233, 0.2);
+        }
+        .stats-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+        .cyber-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+        .footer-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+        .glow-button {
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.2);
+            transition: all 0.3s ease;
+        }
+        .glow-button:hover {
+            box-shadow: 0 0 35px rgba(14, 165, 233, 0.45);
+        }
+    </style>
+</head>
+<body class="cyber-grid text-white" style="background-color: #0b0f19;">
+    <!-- Public Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark border-bottom border-secondary-subtle border-opacity-10 py-3" style="background-color: rgba(11, 15, 25, 0.8); backdrop-filter: blur(12px);">
+        <div class="container">
+            <a class="navbar-brand brand-font d-flex align-items-center" href="/">
+                <img src="/static/assets/logo/logo.svg" alt="AI Shield Logo" style="width: 32px; height: 32px; margin-right: 10px;">
+                <span>AI SHIELD</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                {% if 'user' in session %}
+                    <a href="/scanner" class="btn btn-outline-light btn-sm brand-font px-4">CONSOLE</a>
+                    <a href="/logout" class="btn btn-cyber btn-sm px-4 brand-font"><i class="fas fa-right-from-bracket me-1"></i> EXIT</a>
+                {% else %}
+                    <a href="/login" class="btn btn-outline-light btn-sm brand-font px-4">SIGN IN</a>
+                    <a href="/register" class="btn btn-cyber btn-sm px-4 brand-font">REGISTER</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <span class="stats-badge brand-font">
+                        <span class="spinner-grow spinner-grow-sm" role="status" style="width: 8px; height: 8px; color: #10b981;"></span>
+                        LIVE NETWORK INTEL STATUS: ENFORCED
+                    </span>
+                    <h1 class="display-4 fw-bold brand-font mb-4 text-white lh-base">
+                        Real-Time Phishing Detection & <br>
+                        <span class="text-info">Threat Intelligence Platform</span>
+                    </h1>
+                    <p class="lead text-secondary mb-5 mx-auto" style="max-width: 680px;">
+                        Protect your enterprise from credential harvesting, spoofed domains, and social engineering attacks using real-time machine learning heuristics and visual signature analysis.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3 mb-5">
+                        {% if 'user' in session %}
+                            <a href="/scanner" class="btn btn-cyber py-3 px-5 fs-6 brand-font glow-button">ENTER SOC CONSOLE</a>
+                        {% else %}
+                            <a href="/register" class="btn btn-cyber py-3 px-5 fs-6 brand-font glow-button">DEVISE FREE NODE</a>
+                            <a href="/login" class="btn btn-outline-light py-3 px-5 fs-6 brand-font">SIGN IN</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Heuristic Scanners Grid -->
+    <section class="py-5 border-top border-secondary-subtle border-opacity-10" style="background-color: rgba(15, 23, 42, 0.3);">
+        <div class="container py-4">
+            <div class="text-center mb-5">
+                <h2 class="brand-font text-white mb-2">SOC THREAT RESOLUTION SUITE</h2>
+                <p class="text-secondary small">Four advanced security modules built for immediate incident identification</p>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Heuristic URL Scanner -->
+                <div class="col-md-3">
+                    <div class="cyber-card feature-card p-4 rounded-4">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-magnifying-glass-chart"></i>
+                        </div>
+                        <h5 class="brand-font text-white mb-3">AI Heuristic Engine</h5>
+                        <p class="text-secondary small lh-base mb-0">
+                            Parses NLP patterns, domain structures, and online indicators using pre-trained machine learning heuristics.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Brand Visual Check -->
+                <div class="col-md-3">
+                    <div class="cyber-card feature-card p-4 rounded-4">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <h5 class="brand-font text-white mb-3">Visual Brand Sandbox</h5>
+                        <p class="text-secondary small lh-base mb-0">
+                            Renders target login interfaces programmatically to compare color distribution and identify logo/brand spoofing.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Email Header Parser -->
+                <div class="col-md-3">
+                    <div class="cyber-card feature-card p-4 rounded-4">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-envelope-open-text"></i>
+                        </div>
+                        <h5 class="brand-font text-white mb-3">Email Vector Parser</h5>
+                        <p class="text-secondary small lh-base mb-0">
+                            Inspects header spoofing anomalies, urgency metrics, and malicious links embedded in raw .eml mail headers.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- SSL/DNS Check -->
+                <div class="col-md-3">
+                    <div class="cyber-card feature-card p-4 rounded-4">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <h5 class="brand-font text-white mb-3">Threat Intelligence</h5>
+                        <p class="text-secondary small lh-base mb-0">
+                            Performs automated live SSL validations, DNS authority searches, and WHOIS domain age checks.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Metrics and Trust section -->
+    <section class="py-5">
+        <div class="container py-4 text-center">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="cyber-card p-5 rounded-4" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%); border: 1px solid rgba(255, 255, 255, 0.05);">
+                        <h3 class="brand-font text-white mb-3">STAY AHEAD OF PHISHING VECTORS</h3>
+                        <p class="text-secondary small mb-4">
+                            Subscribe to the AI Shield Threat Intelligence feed. Receive real-time indicators of compromise, vulnerability alerts, and system compliance updates.
+                        </p>
+                        
+                        <!-- Newsletter Subscription Form -->
+                        <form id="newsletterForm" class="mx-auto" style="max-width: 500px;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="input-group">
+                                <input type="email" class="form-control cyber-input bg-dark border-secondary-subtle border-opacity-20 text-white" placeholder="security@enterprise.com" required id="newsletterEmail">
+                                <button class="btn btn-cyber px-4 brand-font" type="submit">SUBSCRIBE</button>
+                            </div>
+                            <div id="newsletterStatus" class="mt-3 small" style="display: none;"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-5 border-top border-secondary-subtle border-opacity-10" style="background-color: #080b13;">
+        <div class="container text-center">
+            <div class="mb-4">
+                <img src="/static/assets/logo/logo.svg" alt="AI Shield Logo" style="width: 40px; height: 40px;" class="mb-2">
+                <h5 class="footer-brand text-white">AI SHIELD</h5>
+                <p class="text-secondary small mt-1">Real-Time Threat Intelligence & Protection Platform</p>
+            </div>
+            <div class="text-secondary small">
+                &copy; 2026 AI Shield SOC. All rights reserved. All scans protected under strict crypto-integrity controls.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Interactive newsletter handler
+        document.getElementById('newsletterForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const emailInput = document.getElementById('newsletterEmail');
+            const statusDiv = document.getElementById('newsletterStatus');
+            const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+            
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'mt-3 small text-secondary';
+            statusDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Registering subscriber key...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('email', emailInput.value);
+                
+                const response = await fetch('/newsletter/subscribe', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    statusDiv.className = 'mt-3 small text-success';
+                    statusDiv.innerHTML = `<i class="fas fa-check-circle me-1"></i> ${result.message}`;
+                    emailInput.value = '';
+                } else {
+                    statusDiv.className = 'mt-3 small text-danger';
+                    statusDiv.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> ${result.error || 'Failed to subscribe.'}`;
+                }
+            } catch (error) {
+                statusDiv.className = 'mt-3 small text-danger';
+                statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Connection failure to SOC API.';
+            }
+        });
+    </script>
+</body>
+</html>

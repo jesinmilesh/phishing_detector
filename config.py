@@ -1,10 +1,15 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Base Directory
 BASE_DIR = Path(__file__).resolve().parent
 
+# Load environment variables from .env
+load_dotenv(BASE_DIR / '.env')
+
 class Config:
+    BASE_DIR = BASE_DIR
     # Flask configuration
     SECRET_KEY = os.environ.get('SECRET_KEY', 'cyber_security_soc_secret_key_998811')
     DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
@@ -40,3 +45,12 @@ class Config:
         "https://openphish.com/feed.txt",
         "https://phishstats.info/phish_score.txt"
     ]
+    
+    # Email SMTP configuration
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'no-reply@ai-shield.local')
+

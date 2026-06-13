@@ -1,78 +1,116 @@
+/* ==========================================================================
+   TR-PHISH Modern SOC Design System & Stylesheet
+   Design Philosophy: Vercel/Linear aesthetics, high accessibility, eco-friendly
+   ========================================================================== */
+
 /* Global Theme Variables */
 :root {
-    --bg-darker: #05070c;
-    --bg-dark: #0b111e;
-    --bg-card: rgba(17, 24, 39, 0.7);
-    --border-color: rgba(56, 189, 248, 0.15);
-    --border-color-glow: rgba(56, 189, 248, 0.4);
+    /* Eco-friendly dark mode (low light emission saves OLED/display energy) */
+    --bg-darker: #060913;
+    --bg-dark: #0b0f19;
+    --bg-card: rgba(13, 20, 35, 0.8);
+    --border-color: rgba(56, 189, 248, 0.12);
+    --border-color-glow: rgba(56, 189, 248, 0.35);
     
-    /* Neon Accents */
-    --neon-blue: #38bdf8;
-    --neon-blue-glow: rgba(56, 189, 248, 0.3);
+    /* Accessibility-compliant high-contrast neon accents */
+    --neon-blue: #0ea5e9;
+    --neon-blue-glow: rgba(14, 165, 233, 0.25);
     
     --neon-green: #10b981;
-    --neon-green-glow: rgba(16, 185, 129, 0.3);
+    --neon-green-glow: rgba(16, 185, 129, 0.25);
     
-    --neon-red: #f43f5e;
-    --neon-red-glow: rgba(244, 63, 94, 0.3);
+    --neon-red: #ef4444;
+    --neon-red-glow: rgba(239, 68, 68, 0.25);
     
     --neon-yellow: #f59e0b;
-    --neon-yellow-glow: rgba(245, 158, 11, 0.3);
+    --neon-yellow-glow: rgba(245, 158, 11, 0.25);
     
-    --text-primary: #f3f4f6;
-    --text-secondary: #9ca3af;
-    --text-muted: #6b7280;
+    /* Typography & Hierarchy */
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+    
+    /* Animation / Performance Optimizations */
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Base Styles */
+/* Reset & Accessibility Standards */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 body {
     background-color: var(--bg-dark);
     background-image: 
-        radial-gradient(at 0% 0%, rgba(15, 23, 42, 0.9) 0, transparent 50%),
-        radial-gradient(at 50% 0%, rgba(56, 189, 248, 0.05) 0, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(244, 63, 94, 0.02) 0, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(13, 20, 35, 0.9) 0, transparent 40%),
+        radial-gradient(at 50% 0%, rgba(14, 165, 233, 0.03) 0, transparent 45%);
     background-attachment: fixed;
     color: var(--text-primary);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     min-height: 100vh;
     margin: 0;
     overflow-x: hidden;
+    line-height: 1.5;
+}
+
+/* Accessible focus ring for keyboard navigation (WCAG AA) */
+*:focus-visible {
+    outline: 2px solid var(--neon-blue) !important;
+    outline-offset: 3px;
 }
 
 h1, h2, h3, h4, h5, h6, .brand-font {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Orbitron', -apple-system, sans-serif;
     letter-spacing: 0.05em;
+    font-weight: 600;
 }
 
-/* Glassmorphism Card Container */
+/* Remove unwanted list-style bullets globally for navs, lists, etc. */
+ul, ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.bullet-list {
+    list-style-type: disc !important;
+    padding-left: 20px;
+    margin-bottom: 1rem;
+}
+
+.bullet-list li {
+    margin-bottom: 0.5rem;
+}
+
+/* Linear-inspired Sleek Cards */
 .cyber-card {
     background: var(--bg-card);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.25);
+    transition: var(--transition-smooth);
+    padding: 24px;
     position: relative;
     overflow: hidden;
 }
 
+/* Top highlights instead of full gradients (saves CPU paint cycles) */
 .cyber-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 3px;
+    height: 2px;
     background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
-    opacity: 0.5;
-    transition: opacity 0.3s ease;
+    opacity: 0.35;
 }
 
 .cyber-card:hover {
     border-color: var(--border-color-glow);
-    box-shadow: 0 12px 40px 0 rgba(56, 189, 248, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(14, 165, 233, 0.08);
     transform: translateY(-2px);
 }
 
@@ -86,162 +124,127 @@ h1, h2, h3, h4, h5, h6, .brand-font {
     background: linear-gradient(90deg, transparent, var(--neon-yellow), transparent);
 }
 
-/* Navbar Style */
+/* Minimalist Premium Navigation */
 .cyber-navbar {
-    background-color: rgba(5, 7, 12, 0.85);
+    background-color: rgba(6, 9, 19, 0.85);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-color);
-    padding: 15px 0;
+    padding: 14px 0;
 }
 
 .navbar-brand {
     color: var(--neon-blue) !important;
-    font-size: 1.4rem;
+    font-size: 1.35rem;
     font-weight: 700;
-    text-shadow: 0 0 10px var(--neon-blue-glow);
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .nav-link {
     color: var(--text-secondary) !important;
     font-weight: 500;
-    transition: all 0.2s;
-    margin: 0 8px;
+    transition: var(--transition-smooth);
+    margin: 0 6px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .nav-link:hover, .nav-link.active {
     color: var(--neon-blue) !important;
-    text-shadow: 0 0 8px var(--neon-blue-glow);
 }
 
-/* Neon buttons */
+/* Modern Rounded Buttons */
 .btn-cyber {
     background: transparent;
     color: var(--neon-blue);
     border: 1px solid var(--neon-blue);
-    box-shadow: 0 0 8px var(--neon-blue-glow);
+    box-shadow: 0 0 6px var(--neon-blue-glow);
     font-family: 'Orbitron', sans-serif;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
     font-weight: 600;
-    transition: all 0.3s;
-    border-radius: 6px;
-    padding: 10px 24px;
+    transition: var(--transition-smooth);
+    border-radius: 8px;
+    padding: 9px 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .btn-cyber:hover {
     background: var(--neon-blue);
     color: var(--bg-darker);
-    box-shadow: 0 0 20px var(--neon-blue);
+    box-shadow: 0 0 15px var(--neon-blue);
 }
 
 .btn-cyber-danger {
     background: transparent;
     color: var(--neon-red);
     border: 1px solid var(--neon-red);
-    box-shadow: 0 0 8px var(--neon-red-glow);
+    box-shadow: 0 0 6px var(--neon-red-glow);
     font-family: 'Orbitron', sans-serif;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
     font-weight: 600;
-    transition: all 0.3s;
-    border-radius: 6px;
+    transition: var(--transition-smooth);
+    border-radius: 8px;
+    padding: 9px 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .btn-cyber-danger:hover {
     background: var(--neon-red);
     color: var(--bg-darker);
-    box-shadow: 0 0 20px var(--neon-red);
+    box-shadow: 0 0 15px var(--neon-red);
 }
 
-/* Scanner Animation UI */
-.scanning-container {
+/* Stripe/Linear Inspired Input Wrapper (Removes bulky prepended squares) */
+.cyber-input-wrapper {
     position: relative;
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px dashed var(--border-color);
-    padding: 30px;
-    text-align: center;
-    overflow: hidden;
-}
-
-.scan-line {
-    position: absolute;
+    display: flex;
+    align-items: center;
     width: 100%;
-    height: 4px;
-    background: linear-gradient(to right, transparent, var(--neon-blue), transparent);
-    left: 0;
-    top: 0;
-    box-shadow: 0 0 10px var(--neon-blue);
-    animation: scanAnimation 2s infinite linear;
-    z-index: 10;
 }
 
-@keyframes scanAnimation {
-    0% { top: 0%; }
-    50% { top: 100%; }
-    100% { top: 0%; }
+.cyber-input-wrapper .input-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    pointer-events: none;
+    transition: var(--transition-smooth);
 }
 
-/* Indicators */
-.neon-badge {
-    padding: 6px 14px;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: bold;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    display: inline-block;
+.cyber-input-wrapper .cyber-input {
+    padding-left: 42px !important;
 }
 
-.badge-legitimate {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: var(--neon-green);
-    border: 1px solid var(--neon-green);
-    box-shadow: 0 0 8px var(--neon-green-glow);
+.cyber-input-wrapper:focus-within .input-icon {
+    color: var(--neon-blue);
 }
 
-.badge-suspicious {
-    background-color: rgba(245, 158, 11, 0.1);
-    color: var(--neon-yellow);
-    border: 1px solid var(--neon-yellow);
-    box-shadow: 0 0 8px var(--neon-yellow-glow);
-}
-
-.badge-phishing {
-    background-color: rgba(244, 63, 94, 0.1);
-    color: var(--neon-red);
-    border: 1px solid var(--neon-red);
-    box-shadow: 0 0 8px var(--neon-red-glow);
-}
-
-/* Metric Display Panels */
-.metric-value {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-}
-
-.metric-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    letter-spacing: 0.1em;
-}
-
-/* Custom Input Controls */
+/* Custom Sleek Inputs */
 .cyber-input {
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(6, 9, 19, 0.5);
     border: 1px solid var(--border-color);
     color: var(--text-primary) !important;
-    border-radius: 6px;
-    padding: 12px 16px;
-    transition: all 0.3s;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    transition: var(--transition-smooth);
+    width: 100%;
 }
 
 .cyber-input:focus {
-    background: rgba(15, 23, 42, 0.9);
+    background: rgba(6, 9, 19, 0.8);
     border-color: var(--neon-blue);
-    box-shadow: 0 0 12px var(--neon-blue-glow);
+    box-shadow: 0 0 10px var(--neon-blue-glow);
     outline: none;
 }
 
@@ -249,65 +252,186 @@ h1, h2, h3, h4, h5, h6, .brand-font {
     color: var(--text-muted);
 }
 
-/* Custom Table Layout */
+/* Vercel Search bar style for scanners */
+.cyber-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba(6, 9, 19, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 5px;
+    transition: var(--transition-smooth);
+    width: 100%;
+}
+
+.cyber-search-wrapper:focus-within {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 12px var(--neon-blue-glow);
+}
+
+.cyber-search-wrapper .search-icon {
+    position: absolute;
+    left: 16px;
+    color: var(--text-muted);
+    font-size: 1rem;
+    pointer-events: none;
+}
+
+.cyber-search-wrapper .cyber-input {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-left: 42px !important;
+    font-size: 0.95rem;
+    margin: 0;
+    width: 100%;
+}
+
+.cyber-search-wrapper .btn-cyber-search {
+    background: var(--neon-blue);
+    color: var(--bg-darker);
+    border: none;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    border-radius: 8px;
+    padding: 9px 18px;
+    transition: var(--transition-smooth);
+    white-space: nowrap;
+}
+
+.cyber-search-wrapper .btn-cyber-search:hover {
+    background: #0284c7;
+    box-shadow: 0 0 10px var(--neon-blue);
+}
+
+/* Modern Clean Tables */
+.cyber-table-container {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
 .cyber-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 8px;
+    margin-bottom: 0;
+    border-collapse: collapse;
     color: var(--text-primary);
+    background-color: rgba(6, 9, 19, 0.2);
 }
 
 .cyber-table th {
-    background-color: rgba(5, 7, 12, 0.5);
-    border-bottom: 2px solid var(--border-color);
-    padding: 12px 16px;
+    background-color: rgba(6, 9, 19, 0.7);
+    border-bottom: 1px solid var(--border-color);
+    padding: 14px 18px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--neon-blue);
+    font-weight: 600;
+    text-align: left;
 }
 
 .cyber-table tr {
-    background-color: rgba(17, 24, 39, 0.4);
-    transition: all 0.2s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    transition: var(--transition-smooth);
+}
+
+.cyber-table tr:last-child {
+    border-bottom: none;
 }
 
 .cyber-table tr:hover {
-    background-color: rgba(17, 24, 39, 0.85);
-    transform: scale(1.005);
+    background-color: rgba(13, 20, 35, 0.6);
 }
 
 .cyber-table td {
-    padding: 14px 16px;
-    border-top: 1px solid rgba(56, 189, 248, 0.05);
-    border-bottom: 1px solid rgba(56, 189, 248, 0.05);
+    padding: 14px 18px;
+    vertical-align: middle;
 }
 
-.cyber-table td:first-child {
-    border-left: 1px solid rgba(56, 189, 248, 0.05);
-    border-radius: 8px 0 0 8px;
+/* High Contrast Neon Badges */
+.neon-badge {
+    padding: 4px 12px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.cyber-table td:last-child {
-    border-right: 1px solid rgba(56, 189, 248, 0.05);
-    border-radius: 0 8px 8px 0;
+.badge-legitimate {
+    background-color: rgba(16, 185, 129, 0.08);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
-/* Pulse Glows */
-.pulse-glow-blue {
-    animation: pulseGlowBlue 2s infinite alternate;
+.badge-suspicious {
+    background-color: rgba(245, 158, 11, 0.08);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
-@keyframes pulseGlowBlue {
-    from { box-shadow: 0 0 5px var(--neon-blue-glow); }
-    to { box-shadow: 0 0 15px var(--neon-blue); }
+.badge-phishing {
+    background-color: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-/* Tabs style */
+/* Metrics Displays */
+.metric-value {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.metric-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.1em;
+    font-weight: 600;
+}
+
+/* Clean Loader (Uses CSS transforms for hardware acceleration/low battery drain) */
+.scanning-container {
+    border-radius: 12px;
+    background: rgba(6, 9, 19, 0.4);
+    border: 1px dashed var(--border-color);
+    padding: 40px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.scan-line {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+    left: 0;
+    top: 0;
+    transform: translateY(0);
+    animation: scanAnimation 2.5s infinite linear;
+    will-change: transform;
+}
+
+@keyframes scanAnimation {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(220px); }
+    100% { transform: translateY(0); }
+}
+
+/* Tab Configurations */
 .cyber-nav-tabs {
     border-bottom: 1px solid var(--border-color);
-    gap: 8px;
+    gap: 6px;
+    display: flex;
 }
 
 .cyber-nav-tabs .nav-link {
@@ -315,21 +439,22 @@ h1, h2, h3, h4, h5, h6, .brand-font {
     border-radius: 8px 8px 0 0;
     background: transparent;
     color: var(--text-secondary) !important;
-    padding: 10px 20px;
+    padding: 10px 16px;
+    margin: 0;
+    cursor: pointer;
 }
 
 .cyber-nav-tabs .nav-link.active {
-    background: rgba(17, 24, 39, 0.85);
+    background: rgba(13, 20, 35, 0.8);
     border: 1px solid var(--border-color);
     border-bottom-color: var(--bg-dark);
     color: var(--neon-blue) !important;
-    text-shadow: 0 0 8px var(--neon-blue-glow);
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -338,17 +463,33 @@ h1, h2, h3, h4, h5, h6, .brand-font {
 
 ::-webkit-scrollbar-thumb {
     background: var(--border-color);
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--neon-blue);
 }
 
-/* Screenshot styling */
+/* Screen Previews */
 .screenshot-preview {
     max-width: 100%;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Accessibility Skip-to-content helper */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--neon-blue);
+    color: var(--bg-darker);
+    padding: 8px;
+    z-index: 100;
+    transition: top 0.2s;
+}
+
+.skip-link:focus {
+    top: 0;
 }

@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>SOC Reports Archive - AI Phishing Detection</title>
+    <title>AI Shield SOC - Reports Archive</title>
+    <link rel="shortcut icon" href="/static/assets/logo/favicon.ico" type="image/x-icon">
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome -->
@@ -18,14 +19,14 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg cyber-navbar">
         <div class="container">
-            <a class="navbar-brand brand-font" href="/"><i class="fas fa-shield-halved text-info"></i> TR-PHISH</a>
-            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand brand-font" href="/scanner"><img src="/static/assets/logo/logo.svg" alt="AI Shield Logo" style="width: 30px; height: 30px; margin-right: 8px;"> AI SHIELD</a>
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <i class="fas fa-bars"></i>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/"><i class="fas fa-radar"></i> SCANNERS</a>
+                        <a class="nav-link" href="/scanner"><i class="fas fa-magnifying-glass"></i> SCANNERS</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/dashboard"><i class="fas fa-chart-line"></i> SOC DASHBOARD</a>
@@ -36,7 +37,7 @@
                 </ul>
                 <div class="d-flex align-items-center">
                     <span class="text-secondary me-3 small"><i class="fas fa-terminal text-info"></i> Analyst: <strong class="text-white">{{ session['user']['username'] }}</strong></span>
-                    <a href="/logout" class="btn btn-cyber-danger btn-sm py-1 px-3"><i class="fas fa-sign-out-alt"></i> EXIT</a>
+                    <a href="/logout" class="btn btn-cyber-danger btn-sm py-1 px-3"><i class="fas fa-right-from-bracket"></i> EXIT</a>
                 </div>
             </div>
         </div>
@@ -69,7 +70,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="cyber-card p-4">
-                    <div class="table-responsive">
+                    <div class="table-responsive cyber-table-container">
                         <table class="cyber-table">
                             <thead>
                                 <tr>

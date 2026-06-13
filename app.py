@@ -4,8 +4,9 @@ import cv2
 import random
 import numpy as np
 import email
+import secrets
 from email import policy
-from datetime import datetime
+from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, send_file
 from flask_limiter import Limiter
@@ -21,6 +22,12 @@ from intelligence.dns_lookup import lookup_dns
 from intelligence.ssl_checker import check_ssl
 from intelligence.threat_feed import fetch_threat_feed
 from reports.report_generator import generate_pdf_report
+from intelligence.email_service import (
+    send_welcome_email,
+    send_verification_email,
+    send_password_reset_email,
+    send_security_alert_email
+)
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -113,15 +120,34 @@ def login():
             
         user = db_manager.authenticate_user(username, password)
         if user:
+            session.pop(f'failed_attempts_{username}', None)
             session['user'] = {
                 'id': user['id'],
                 'username': user['username'],
                 'role': user['role']
             }
+            # Dispatch login alert email
+            send_security_alert_email(
+                user['email'],
+                username,
+                "New Access Node Authorized",
+                f"Your account was authenticated from remote address {request.remote_addr} at {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}."
+            )
             security_logger.info(f"SUCCESSFUL LOGIN | User: {username} | IP: {request.remote_addr}")
             flash("Login successful!", "success")
             return redirect(url_for('dashboard'))
         else:
+            user_record = db_manager.get_user_by_username(username)
+            if user_record:
+                attempts = session.get(f'failed_attempts_{username}', 0) + 1
+                session[f'failed_attempts_{username}'] = attempts
+                if attempts >= 3:
+                    send_security_alert_email(
+                        user_record['email'],
+                        username,
+                        "Multiple Failed Login Attempts",
+                        f"There have been {attempts} failed login attempts on your account from remote address {request.remote_addr}. If this wasn't you, please secure your credentials immediately."
+                    )
             security_logger.warning(f"FAILED LOGIN | User: {username} | IP: {request.remote_addr}")
             flash("Invalid credentials.", "danger")
             
@@ -158,8 +184,12 @@ def register():
             
         user_id = db_manager.create_user(username, email, password)
         if user_id:
+            token = secrets.token_urlsafe(32)
+            db_manager.set_user_verification_token(user_id, token)
+            verification_url = url_for('verify_email', token=token, _external=True)
+            send_verification_email(email, username, verification_url)
             security_logger.info(f"USER REGISTRATION | User: {username} | Email: {email} | IP: {request.remote_addr}")
-            flash("Registration successful! You can now log in.", "success")
+            flash("Registration successful! A verification link has been sent to your email.", "success")
             return redirect(url_for('login'))
         else:
             security_logger.error(f"USER REGISTRATION FAILED | User: {username} | Email: {email} | IP: {request.remote_addr}")
@@ -173,6 +203,138 @@ def logout():
     flash("You have been logged out.", "success")
     return redirect(url_for('login'))
 
+@app.route('/verify-email')
+def verify_email():
+    token = request.args.get('token', '')
+    if not token:
+        flash("Invalid verification token.", "danger")
+        return redirect(url_for('login'))
+        
+    user = db_manager.verify_user_email(token)
+    if user:
+        if 'user' in session and session['user']['id'] == user['id']:
+            session['user']['is_verified'] = 1
+        # Dispatch welcome email upon successful verification
+        login_url = url_for('login', _external=True)
+        send_welcome_email(user['email'], user['username'], login_url)
+        flash("Email verified successfully! Your AI Shield node is now fully authorized.", "success")
+        return redirect(url_for('login'))
+    else:
+        flash("Verification token expired or invalid.", "danger")
+        return redirect(url_for('login'))
+
+@app.route('/resend-verification', methods=['GET', 'POST'])
+@login_required
+def resend_verification():
+    user = db_manager.get_user_by_id(session['user']['id'])
+    if user:
+        if user.get('is_verified', 0):
+            flash("Your account is already verified.", "info")
+            return redirect(url_for('dashboard'))
+            
+        token = secrets.token_urlsafe(32)
+        db_manager.set_user_verification_token(user['id'], token)
+        verification_url = url_for('verify_email', token=token, _external=True)
+        send_verification_email(user['email'], user['username'], verification_url)
+        flash("Verification email has been resent. Please check your inbox.", "success")
+    else:
+        flash("User record not found.", "danger")
+    return redirect(url_for('index'))
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
+def forgot_password():
+    if 'user' in session:
+        return redirect(url_for('dashboard'))
+        
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        if not email:
+            flash("Email field is required.", "danger")
+            return render_template('forgot_password.html')
+            
+        user = db_manager.get_user_by_email(email)
+        if user:
+            token = secrets.token_urlsafe(32)
+            expiry = (datetime.utcnow() + timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S')
+            db_manager.set_user_reset_token(email, token, expiry)
+            
+            reset_url = url_for('reset_password', token=token, _external=True)
+            send_password_reset_email(email, user['username'], reset_url)
+            security_logger.info(f"PASSWORD RESET REQUESTED | User: {user['username']} | IP: {request.remote_addr}")
+            
+        flash("If that email address is registered, a password reset link has been sent to it.", "success")
+        return redirect(url_for('login'))
+        
+    return render_template('forgot_password.html')
+
+@app.route('/reset-password', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
+def reset_password():
+    if 'user' in session:
+        return redirect(url_for('dashboard'))
+        
+    token = request.args.get('token', '') or request.form.get('token', '')
+    if not token:
+        flash("Password reset token is missing.", "danger")
+        return redirect(url_for('login'))
+        
+    user = db_manager.get_user_by_reset_token(token)
+    if not user:
+        flash("Invalid or expired reset token.", "danger")
+        return redirect(url_for('login'))
+        
+    expiry_str = user.get('reset_token_expiry')
+    if expiry_str:
+        try:
+            expiry = datetime.strptime(expiry_str, '%Y-%m-%d %H:%M:%S')
+            if datetime.utcnow() > expiry:
+                flash("Reset token has expired.", "danger")
+                return redirect(url_for('login'))
+        except Exception:
+            pass
+
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        
+        if not password or len(password) < 6:
+            flash("Password must be at least 6 characters.", "danger")
+            return render_template('reset_password.html', token=token)
+            
+        if password != confirm_password:
+            flash("Passwords do not match.", "danger")
+            return render_template('reset_password.html', token=token)
+            
+        db_manager.reset_user_password(user['id'], password)
+        security_logger.info(f"PASSWORD RESET SUCCESS | User: {user['username']} | IP: {request.remote_addr}")
+        
+        send_security_alert_email(
+            user['email'],
+            user['username'],
+            "Password Changed Successfully",
+            f"The access credentials for your AI Shield account were updated on {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}."
+        )
+        
+        flash("Password reset successful! You can now log in with your new credentials.", "success")
+        return redirect(url_for('login'))
+        
+    return render_template('reset_password.html', token=token)
+
+@app.route('/newsletter/subscribe', methods=['POST'])
+@limiter.limit("3 per minute")
+def newsletter_subscribe():
+    email = request.form.get('email', '').strip()
+    if not email or not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return jsonify({"success": False, "error": "Invalid email address."}), 400
+        
+    success = db_manager.add_newsletter_subscriber(email)
+    if success:
+        security_logger.info(f"NEWSLETTER SUBSCRIPTION | Email: {email} | IP: {request.remote_addr}")
+        return jsonify({"success": True, "message": "Subscribed successfully! Thank you for staying informed."})
+    else:
+        return jsonify({"success": True, "message": "Email is already subscribed."})
+
 
 # ==========================================
 # APPLICATION ROUTES
@@ -181,7 +343,8 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html')
+    user = db_manager.get_user_by_id(session['user']['id'])
+    return render_template('index.html', user=user)
 
 @app.route('/dashboard')
 @login_required
@@ -198,12 +361,14 @@ def dashboard():
         det_rate = 0.0
         
     stats['detection_rate'] = round(det_rate, 2)
+    user = db_manager.get_user_by_id(session['user']['id'])
     
     return render_template(
         'dashboard.html', 
         stats=stats, 
         recent_scans=recent_scans,
-        threats=threats
+        threats=threats,
+        user=user
     )
 
 @app.route('/history')
@@ -292,6 +457,14 @@ def run_url_analysis(url: str, user_id: int) -> dict:
     app_logger.info(f"URL SCAN | ID: {scan_id} | URL: {scanned_url} | Verdict: {prediction} | Risk: {risk_score}% | User ID: {user_id}")
     if prediction == "Phishing" or risk_score >= 70:
         security_logger.warning(f"HIGH RISK THREAT DETECTED | ID: {scan_id} | URL: {scanned_url} | Verdict: {prediction} | Risk: {risk_score}% | User ID: {user_id}")
+        user = db_manager.get_user_by_id(user_id)
+        if user:
+            send_security_alert_email(
+                user["email"],
+                user["username"],
+                "Critical Phishing Indicator Resolved",
+                f"A scan submitted under your credentials identified a critical phishing site risk:<br><strong>Target URL:</strong> {scanned_url}<br><strong>Risk Score:</strong> {risk_score}%<br><strong>Confidence:</strong> {confidence}%"
+            )
         
     scan_record["scan_id"] = scan_id
     scan_record["pdf_filename"] = pdf_filename
@@ -301,6 +474,9 @@ def run_url_analysis(url: str, user_id: int) -> dict:
 @login_required
 @limiter.limit("20 per minute")
 def scan_url():
+    user = db_manager.get_user_by_id(session['user']['id'])
+    if user and not user.get('is_verified', 0):
+        return jsonify({"success": False, "error": "Email verification required. Please verify your email to unlock scanning tools."}), 403
     url = request.form.get('url', '').strip()
     if not url:
         return jsonify({"success": False, "error": "URL cannot be empty"}), 400
@@ -322,6 +498,9 @@ def scan_url():
 @login_required
 @limiter.limit("10 per minute")
 def scan_qrcode():
+    user = db_manager.get_user_by_id(session['user']['id'])
+    if user and not user.get('is_verified', 0):
+        return jsonify({"success": False, "error": "Email verification required. Please verify your email to unlock scanning tools."}), 403
     if 'file' not in request.files:
         return jsonify({"success": False, "error": "No file uploaded"}), 400
         
@@ -368,6 +547,9 @@ def scan_qrcode():
 @login_required
 @limiter.limit("10 per minute")
 def scan_email():
+    user = db_manager.get_user_by_id(session['user']['id'])
+    if user and not user.get('is_verified', 0):
+        return jsonify({"success": False, "error": "Email verification required. Please verify your email to unlock scanning tools."}), 403
     email_text = request.form.get('email_text', '').strip()
     uploaded_file = request.files.get('file')
     
@@ -496,6 +678,9 @@ def scan_email():
 @login_required
 @limiter.limit("10 per minute")
 def scan_screenshot():
+    user = db_manager.get_user_by_id(session['user']['id'])
+    if user and not user.get('is_verified', 0):
+        return jsonify({"success": False, "error": "Email verification required. Please verify your email to unlock scanning tools."}), 403
     url = request.form.get('url', '').strip()
     if not url:
         return jsonify({"success": False, "error": "URL cannot be empty"}), 400
@@ -606,6 +791,16 @@ def scan_screenshot():
             spoofing_score = random.randint(5, 25)
             
         screenshot_url_path = f"/static/uploads/screenshots/{screenshot_filename}"
+        
+        if is_spoofing_attempt:
+            user_record = db_manager.get_user_by_id(session['user']['id'])
+            if user_record:
+                send_security_alert_email(
+                    user_record["email"],
+                    user_record["username"],
+                    "Suspicious Visual Spoofing Sandbox Warning",
+                    f"A screenshot analysis audit for URL <strong>{url}</strong> matched the visual signature profile of mimicked brand <strong>{mimicked_brand}</strong> (Similarity Score: {similarity_index}%)."
+                )
         
         return jsonify({
             "success": True,

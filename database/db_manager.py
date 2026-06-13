@@ -27,10 +27,32 @@ class DatabaseManager:
                 email TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                role TEXT DEFAULT 'analyst'
+                role TEXT DEFAULT 'analyst',
+                is_verified INTEGER DEFAULT 0,
+                verification_token TEXT,
+                reset_token TEXT,
+                reset_token_expiry TIMESTAMP
             )
         ''')
         
+        # Ensure existing user table has columns
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN is_verified INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN verification_token TEXT")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN reset_token TEXT")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN reset_token_expiry TIMESTAMP")
+        except sqlite3.OperationalError:
+            pass
+            
         # Create Scans table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS scans (
@@ -57,13 +79,22 @@ class DatabaseManager:
             )
         ''')
         
+        # Create Newsletter table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS newsletter (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE NOT NULL,
+                subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
         # Check if an admin user exists, if not, create a default one
         cursor.execute("SELECT COUNT(*) as count FROM users")
         if cursor.fetchone()['count'] == 0:
             admin_pwd_hash = generate_password_hash("admin123")
             cursor.execute(
-                "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
-                ("admin", "admin@threatintel.local", admin_pwd_hash, "admin")
+                "INSERT INTO users (username, email, password_hash, role, is_verified) VALUES (?, ?, ?, ?, ?)",
+                ("admin", "admin@threatintel.local", admin_pwd_hash, "admin", 1)
             )
         
         conn.commit()
@@ -90,6 +121,14 @@ class DatabaseManager:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+        conn.close()
+        return dict(user) if user else None
+
+    def get_user_by_id(self, user_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         user = cursor.fetchone()
         conn.close()
         return dict(user) if user else None
@@ -210,3 +249,79 @@ class DatabaseManager:
         report = cursor.fetchone()
         conn.close()
         return dict(report) if report else None
+
+    # Verification and Reset operations
+    def set_user_verification_token(self, user_id, token):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET verification_token = ?, is_verified = 0 WHERE id = ?", (token, user_id))
+        conn.commit()
+        conn.close()
+
+    def verify_user_email(self, token):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE verification_token = ?", (token,))
+        user = cursor.fetchone()
+        if user:
+            cursor.execute("UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?", (user['id'],))
+            conn.commit()
+            conn.close()
+            user_dict = dict(user)
+            user_dict['is_verified'] = 1
+            user_dict['verification_token'] = None
+            return user_dict
+        conn.close()
+        return None
+
+    def get_user_by_email(self, email):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+        conn.close()
+        return dict(user) if user else None
+
+    def set_user_reset_token(self, email, token, expiry):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?", (token, expiry, email))
+        conn.commit()
+        conn.close()
+
+    def get_user_by_reset_token(self, token):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE reset_token = ?", (token,))
+        user = cursor.fetchone()
+        conn.close()
+        return dict(user) if user else None
+
+    def reset_user_password(self, user_id, password):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        pwd_hash = generate_password_hash(password)
+        cursor.execute("UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?", (pwd_hash, user_id))
+        conn.commit()
+        conn.close()
+
+    # Newsletter subscription
+    def add_newsletter_subscriber(self, email):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("INSERT INTO newsletter (email) VALUES (?)", (email,))
+            conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            return False
+        finally:
+            conn.close()
+
+    def get_newsletter_subscribers(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT email FROM newsletter")
+        subscribers = [row['email'] for row in cursor.fetchall()]
+        conn.close()
+        return subscribers

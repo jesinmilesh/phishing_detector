@@ -37,3 +37,6 @@ static/uploads/screenshots/*
 # OS files
 .DS_Store
 Thumbs.db
+
+# Scratch and Temporary scripts
+scratch/
