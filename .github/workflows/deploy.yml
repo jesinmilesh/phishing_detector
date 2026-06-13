@@ -14,11 +14,6 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/checkout@v4
-      # We use v5 for setup-python
-      # Let's write the correct setup action below
       
     - name: Set up Python 3.12
       uses: actions/setup-python@v5

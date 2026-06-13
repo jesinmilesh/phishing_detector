@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: phishing-detector
+    env: docker
+    plan: free
+    region: oregon
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+    disk:
+      name: database-volume
+      mountPath: /app/database
+      sizeGB: 1
