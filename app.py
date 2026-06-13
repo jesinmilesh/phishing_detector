@@ -82,10 +82,18 @@ def allowed_file(filename):
 # Security Headers Middleware
 @app.after_request
 def add_security_headers(response):
-    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-XSS-Protection'] = '1; mode=block'
-    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';"
+    # font-src includes cdn.jsdelivr.net so FontAwesome .woff2 icons load correctly
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
+        "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        "img-src 'self' data: blob:; "
+        "connect-src 'self';"
+    )
     return response
 
 # Login Required Decorator
@@ -341,8 +349,16 @@ def newsletter_subscribe():
 # ==========================================
 
 @app.route('/')
-@login_required
 def index():
+    # Unauthenticated visitors go to landing page; logged-in users go to scanner
+    if 'user' not in session:
+        return render_template('landing.html')
+    user = db_manager.get_user_by_id(session['user']['id'])
+    return render_template('index.html', user=user)
+
+@app.route('/scanner')
+@login_required
+def scanner():
     user = db_manager.get_user_by_id(session['user']['id'])
     return render_template('index.html', user=user)
 
