@@ -4,15 +4,16 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Virtual Environment
+# Virtual Environment folders
 venv/
 ENV/
-env/
+.venv/
 
-# SECURITY: Never commit secrets to GitHub.
-# Set these as Environment Variables in the Render dashboard instead.
-# https://dashboard.render.com → Your Service → Environment
-.env
+# SECURITY: Never commit real secrets to GitHub.
+# Store secrets in Render dashboard → Environment tab.
+# Only the template file (.env.example) is tracked.
+env/.env
+!env/.env.example
 
 # Database files
 database/*.db

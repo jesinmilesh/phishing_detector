@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 # Base Directory
 BASE_DIR = Path(__file__).resolve().parent
 
-# Load environment variables from .env
-load_dotenv(BASE_DIR / '.env')
+# Load environment variables from env/.env
+load_dotenv(BASE_DIR / 'env' / '.env')
 
 class Config:
     BASE_DIR = BASE_DIR
