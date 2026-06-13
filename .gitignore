@@ -8,7 +8,6 @@ __pycache__/
 venv/
 ENV/
 env/
-.env
 
 # Database files
 database/*.db
