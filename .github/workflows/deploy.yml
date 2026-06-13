@@ -1,0 +1,71 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Run Tests & Verify Build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/checkout@v4
+      # We use v5 for setup-python
+      # Let's write the correct setup action below
+      
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y whois gcc
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Train Machine Learning Model
+      run: |
+        python ml/train.py
+
+    - name: Run Test Suite
+      run: |
+        python -m unittest tests/test_suite.py
+
+  build-and-deploy:
+    name: Build Docker Image & Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker Image locally
+      run: |
+        docker build -t ai-phishing-detector:latest .
+
+    # OPTIONAL: Deploy to Render using a deploy hook (highly recommended for simple Flask/Docker hosting)
+    # To enable this, add RENDER_DEPLOY_HOOK_URL as a secret in your GitHub repository settings.
+    - name: Deploy to Render
+      if: env.RENDER_HOOK != ''
+      env:
+        RENDER_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      run: |
+        curl -X POST "$RENDER_HOOK"

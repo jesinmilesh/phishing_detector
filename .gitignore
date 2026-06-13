@@ -1,0 +1,39 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.env
+
+# Database files
+database/*.db
+database/test_phishing.db
+
+# Logs
+logs/
+*.log
+
+# Generated PDF reports
+reports/generated/
+reports/generated/*.pdf
+
+# Temporary Uploads & Screenshots
+static/uploads/*
+!static/uploads/screenshots/
+static/uploads/screenshots/*
+
+# IDE configs
+.vscode/
+.idea/
+.project
+.pydevproject
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db

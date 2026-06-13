@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>SOC Control Console - AI Phishing Detection</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- Custom Style -->
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg cyber-navbar">
+        <div class="container">
+            <a class="navbar-brand brand-font" href="/"><i class="fas fa-shield-halved text-info"></i> TR-PHISH</a>
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/"><i class="fas fa-radar"></i> SCANNERS</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard"><i class="fas fa-chart-line"></i> SOC DASHBOARD</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/history"><i class="fas fa-archive"></i> SCANS ARCHIVE</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span class="text-secondary me-3 small"><i class="fas fa-terminal text-info"></i> Analyst: <strong class="text-white">{{ session['user']['username'] }}</strong></span>
+                    <a href="/logout" class="btn btn-cyber-danger btn-sm py-1 px-3"><i class="fas fa-sign-out-alt"></i> EXIT</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Workspace -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center mb-5">
+                    <h1 class="brand-font text-info text-shadow">PHISHING DETECTION CENTER</h1>
+                    <p class="text-secondary">AI-Powered Real-Time Threat Analysis & Cryptographic Validation Sandbox</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scan Options Tab -->
+        <div class="row">
+            <div class="col-12">
+                <div class="cyber-card p-4">
+                    <ul class="nav nav-tabs cyber-nav-tabs mb-4" id="scanModes" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="url-scan-tab" data-bs-toggle="tab" data-bs-target="#url-scan" type="button" role="tab"><i class="fas fa-globe"></i> URL Analysis</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="qr-scan-tab" data-bs-toggle="tab" data-bs-target="#qr-scan" type="button" role="tab"><i class="fas fa-qrcode"></i> QR Code Scan</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="email-scan-tab" data-bs-toggle="tab" data-bs-target="#email-scan" type="button" role="tab"><i class="fas fa-envelope-open-text"></i> Email Analysis</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="screenshot-tab" data-bs-toggle="tab" data-bs-target="#screenshot" type="button" role="tab"><i class="fas fa-desktop"></i> Screenshot Sandbox</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="scanModesContent">
+                        
+                        <!-- 1. URL Scanner -->
+                        <div class="tab-pane fade show active" id="url-scan" role="tabpanel">
+                            <h5 class="brand-font text-white mb-3"><i class="fas fa-search"></i> Input Malicious URL Indicator</h5>
+                            <form id="urlScanForm">
+                                <div class="input-group">
+                                    <input type="text" id="urlInput" class="form-control cyber-input" placeholder="e.g. http://secure-login-chase-portal.xyz/index.html" required>
+                                    <button type="submit" class="btn btn-cyber"><i class="fas fa-play"></i> EXECUTE ANALYSIS</button>
+                                </div>
+                            </form>
+                            
+                            <!-- URL Scan Loading Indicator -->
+                            <div id="url-loading" class="scanning-container mt-4 d-none">
+                                <div class="scan-line"></div>
+                                <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
+                                <h6 class="brand-font text-info">RUNNING THREAT DETECTION MODELS...</h6>
+                                <p class="text-secondary small mb-0">Inspecting Lexicals | Executing WHOIS | Polling SSL Certificates | Compiling Reports</p>
+                            </div>
+                            
+                            <!-- URL Scan Results -->
+                            <div id="url-result" class="d-none"></div>
+                        </div>
+
+                        <!-- 2. QR Code Scanner -->
+                        <div class="tab-pane fade" id="qr-scan" role="tabpanel">
+                            <h5 class="brand-font text-white mb-3"><i class="fas fa-qrcode"></i> Decode Phishing QR Code</h5>
+                            <p class="text-secondary small">Upload a QR code image file (.png, .jpg, .jpeg, .gif). The engine will decode the target URL and analyze it.</p>
+                            <form id="qrScanForm" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <input type="file" id="qrFileInput" class="form-control cyber-input" accept="image/*" required>
+                                </div>
+                                <button type="submit" class="btn btn-cyber"><i class="fas fa-qrcode"></i> UPLOAD & SCAN</button>
+                            </form>
+
+                            <!-- QR Scan Loading -->
+                            <div id="qr-loading" class="scanning-container mt-4 d-none">
+                                <div class="scan-line"></div>
+                                <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
+                                <h6 class="brand-font text-info">PARSING QR IMAGE MATRIX...</h6>
+                            </div>
+
+                            <!-- QR Scan Results -->
+                            <div id="qr-result" class="d-none"></div>
+                        </div>
+
+                        <!-- 3. Email Phishing Scanner -->
+                        <div class="tab-pane fade" id="email-scan" role="tabpanel">
+                            <h5 class="brand-font text-white mb-3"><i class="fas fa-envelope-open-text"></i> Email Spam & Brand Spoofing Check</h5>
+                            <p class="text-secondary small">Paste raw email body content, or upload a raw `.eml` file to extract URLs and audit sender domains.</p>
+                            
+                            <form id="emailScanForm" enctype="multipart/form-data">
+                                <div class="row g-3">
+                                    <div class="col-md-7">
+                                        <label class="form-label text-muted small">PASTE EMAIL BODY TEXT</label>
+                                        <textarea id="emailTextInput" class="form-control cyber-input" rows="6" placeholder="Paste email content here... (e.g. 'Dear customer, your account was compromised. Click here http://paypa1.com to verify your details immediately!')"></textarea>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label text-muted small">OR UPLOAD RAW EML FILE</label>
+                                        <div class="cyber-card p-3 border-secondary-subtle">
+                                            <input type="file" id="emlFileInput" class="form-control cyber-input mb-3" accept=".eml">
+                                            <small class="text-muted d-block">Parsing extracts headers, DKIM validity, and structures automatically.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-cyber"><i class="fas fa-envelope-open-text"></i> ANALYZE EMAIL CORPUS</button>
+                                </div>
+                            </form>
+
+                            <!-- Email Scan Loading -->
+                            <div id="email-loading" class="scanning-container mt-4 d-none">
+                                <div class="scan-line"></div>
+                                <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
+                                <h6 class="brand-font text-info">CORRELATING HEADERS AND KEYWORD ENTROPY...</h6>
+                            </div>
+
+                            <!-- Email Scan Results -->
+                            <div id="email-result" class="d-none"></div>
+                        </div>
+
+                        <!-- 4. Screenshot Sandbox -->
+                        <div class="tab-pane fade" id="screenshot" role="tabpanel">
+                            <h5 class="brand-font text-white mb-3"><i class="fas fa-desktop"></i> Visual Brand Spoofing Sandbox</h5>
+                            <p class="text-secondary small">Simulate visual webpage rendering and check if page colors, buttons, and layout spoof known corporate styles on unauthorized domains.</p>
+                            <form id="screenshotForm">
+                                <div class="input-group">
+                                    <input type="text" id="screenshotUrlInput" class="form-control cyber-input" placeholder="e.g. http://secure-login-chase-update.com/signin" required>
+                                    <button type="submit" class="btn btn-cyber"><i class="fas fa-desktop"></i> DETECT SPOOFING</button>
+                                </div>
+                            </form>
+
+                            <!-- SS Loading -->
+                            <div id="ss-loading" class="scanning-container mt-4 d-none">
+                                <div class="scan-line"></div>
+                                <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
+                                <h6 class="brand-font text-info">RENDERING SANDBOX SCREENSHOT...</h6>
+                                <p class="text-secondary small mb-0">Running visual classification | Comparing corporate color profiles</p>
+                            </div>
+
+                            <!-- SS Results -->
+                            <div id="ss-result" class="d-none"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-muted border-top border-secondary-subtle mt-5" style="background-color: var(--bg-darker)">
+        <p class="small mb-0">&copy; 2026 TR-PHISH Security Operations Center. Real-Time AI Phishing Detection System.</p>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom JS -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
