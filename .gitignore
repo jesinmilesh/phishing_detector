@@ -9,6 +9,11 @@ venv/
 ENV/
 env/
 
+# SECURITY: Never commit secrets to GitHub.
+# Set these as Environment Variables in the Render dashboard instead.
+# https://dashboard.render.com → Your Service → Environment
+.env
+
 # Database files
 database/*.db
 database/test_phishing.db
