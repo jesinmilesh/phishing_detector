@@ -11,7 +11,3 @@ services:
         value: "False"
       - key: SECRET_KEY
         generateValue: true
-    disk:
-      name: database-volume
-      mountPath: /app/database
-      sizeGB: 1
