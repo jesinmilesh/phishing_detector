@@ -3,9 +3,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Base Directory
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from env/.env
+load_dotenv(BASE_DIR / '.env')
 load_dotenv(BASE_DIR / 'env' / '.env')
 
 class Config:
@@ -22,7 +23,7 @@ class Config:
     DATABASE_PATH = str(DB_DIR / 'phishing.db')
     
     # Models configuration
-    MODEL_DIR = BASE_DIR / 'models'
+    MODEL_DIR = BASE_DIR / 'ml' / 'models'
     MODEL_DIR.mkdir(exist_ok=True)
     MODEL_PATH = str(MODEL_DIR / 'phishing_model.pkl')
     

@@ -6,8 +6,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import joblib
 import numpy as np
-from config import Config
-from ml.feature_extractor import extract_features, get_vector
+from app.config import Config
+from ml.feature_extraction.feature_extractor import extract_features, get_vector, get_feature_names
+import pandas as pd
 
 class PhishingPredictor:
     def __init__(self, model_path=None):
@@ -74,8 +75,8 @@ class PhishingPredictor:
             }
 
         # 3. Model Inference
-        # Reshape for single sample prediction
-        sample = np.array(vector).reshape(1, -1)
+        # Wrap in pandas DataFrame to preserve feature names and avoid scikit-learn UserWarning
+        sample = pd.DataFrame([vector], columns=get_feature_names())
         prob = self.model.predict_proba(sample)[0]  # [prob_legit, prob_phish]
         phishing_prob = prob[1]
         

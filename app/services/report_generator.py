@@ -5,7 +5,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from config import Config
+from app.config import Config
 
 def format_url_for_table(url: str, max_len: int = 50) -> str:
     """Inserts zero-width spaces or line breaks to allow long URLs to wrap in PDF tables."""

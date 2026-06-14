@@ -3,7 +3,7 @@ import ssl
 from datetime import datetime, timezone
 from cryptography import x509
 from cryptography.x509.oid import NameOID
-from intelligence.whois_lookup import get_domain
+from app.services.whois_lookup import get_domain
 
 def check_ssl(url: str) -> dict:
     """

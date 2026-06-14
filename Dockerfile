@@ -23,9 +23,9 @@ COPY . /app/
 EXPOSE 5000
 
 # Set environment variables
-ENV FLASK_APP=app.py
+ENV FLASK_APP=app
 ENV DEBUG=False
 ENV PORT=5000
 
-# Run model training first to generate models/phishing_model.pkl, then start Flask app
-CMD python ml/train.py && python app.py
+# Run model training first to generate ml/models/phishing_model.pkl, then start Flask app
+CMD python ml/training/train.py && python -m app

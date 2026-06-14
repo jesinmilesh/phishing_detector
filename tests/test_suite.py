@@ -8,9 +8,9 @@ from datetime import datetime
 # Add project root to path to resolve imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import Config
+from app.config import Config
 from database.db_manager import DatabaseManager
-from ml.feature_extractor import extract_features, get_feature_names
+from ml.feature_extraction.feature_extractor import extract_features, get_feature_names
 from app import app, db_manager
 
 class TestFeatureExtractor(unittest.TestCase):
@@ -127,6 +127,68 @@ class TestFlaskAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         res_data = json.loads(response.data)
         self.assertTrue(isinstance(res_data, list))
+
+    def test_profile_requires_login(self):
+        response = self.client.get('/profile')
+        self.assertEqual(response.status_code, 302) # Redirect to login
+
+    def test_profile_and_preferences_lifecycle(self):
+        # Register user
+        username = "testprofileuser"
+        email = "profile@test.com"
+        password = "testpassword123"
+        
+        self.client.post('/register', data={
+            "username": username,
+            "email": email,
+            "password": password,
+            "confirm_password": password
+        })
+        
+        # Log in
+        login_response = self.client.post('/login', data={
+            "username": username,
+            "password": password
+        })
+        self.assertEqual(login_response.status_code, 302)
+        
+        # Access profile
+        profile_response = self.client.get('/profile')
+        self.assertEqual(profile_response.status_code, 200)
+        self.assertIn(b'ANALYST PROFILE CONTROL CONSOLE', profile_response.data)
+        
+        # Update profile details
+        update_data = {
+            "full_name": "Test Analyst Name",
+            "phone_number": "+1234567890",
+            "country": "Switzerland",
+            "timezone": "Europe/Paris",
+            "bio": "Expert in hunting zero-day phishing campaigns."
+        }
+        update_res = self.client.put('/profile/update', 
+                                    data=json.dumps(update_data), 
+                                    content_type='application/json')
+        self.assertEqual(update_res.status_code, 200)
+        self.assertTrue(json.loads(update_res.data)['success'])
+        
+        # Update preferences
+        pref_data = {
+            "theme": "dark",
+            "language": "en",
+            "default_view": "scanner",
+            "security_alerts": True,
+            "threat_notifications": False
+        }
+        pref_res = self.client.put('/preferences', 
+                                  data=json.dumps(pref_data), 
+                                  content_type='application/json')
+        self.assertEqual(pref_res.status_code, 200)
+        self.assertTrue(json.loads(pref_res.data)['success'])
+
+        # Check notifications endpoint
+        notif_res = self.client.get('/notifications')
+        self.assertEqual(notif_res.status_code, 200)
+        self.assertTrue(json.loads(notif_res.data)['success'])
 
 if __name__ == '__main__':
     unittest.main()

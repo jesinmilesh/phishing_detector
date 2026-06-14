@@ -1,7 +1,7 @@
 import socket
 from typing import Any
 import dns.resolver
-from intelligence.whois_lookup import get_domain
+from app.services.whois_lookup import get_domain
 
 def lookup_dns(url: str) -> dict:
     """

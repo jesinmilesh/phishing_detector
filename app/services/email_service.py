@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from config import Config
+from app.config import Config
 
 logger = logging.getLogger('ai-shield')
 
@@ -26,9 +26,9 @@ def safe_print_email(to_email, subject, body, sender=None):
     except Exception:
         pass
 
-def send_smtp_email(to_email, subject, html_content):
+def send_smtp_email_sync(to_email, subject, html_content):
     """
-    Core SMTP sender with logging fallback for developers without active SMTP credentials.
+    Synchronous SMTP sender execution.
     """
     sender = Config.MAIL_DEFAULT_SENDER
     username = Config.MAIL_USERNAME
@@ -88,6 +88,20 @@ def send_smtp_email(to_email, subject, html_content):
         # Print fallback securely so it doesn't fail on system encoding limits
         safe_print_email(to_email, subject, html_content)
         return False
+
+
+def send_smtp_email(to_email, subject, html_content):
+    """
+    Asynchronous SMTP sender wrapper to prevent main thread blocking.
+    """
+    import threading
+    thread = threading.Thread(
+        target=send_smtp_email_sync,
+        args=(to_email, subject, html_content)
+    )
+    thread.daemon = True
+    thread.start()
+    return True
 
 
 # ----------------------------------------------------------------------

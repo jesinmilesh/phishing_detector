@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>AI Shield - Profile & Settings Console</title>
+    <link rel="shortcut icon" href="/static/icons/favicon.ico" type="image/x-icon">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- Cropper.js CSS (CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+    <!-- Custom Style -->
+    <link href="/static/css/style.css" rel="stylesheet">
+    
+    <style>
+        .settings-sidebar .nav-link {
+            text-align: left;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: var(--text-secondary) !important;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            transition: var(--transition-smooth);
+            border: 1px solid transparent;
+        }
+        .settings-sidebar .nav-link:hover {
+            background: rgba(14, 165, 233, 0.08);
+            color: var(--text-primary) !important;
+            border-color: rgba(56, 189, 248, 0.1);
+        }
+        .settings-sidebar .nav-link.active {
+            background: rgba(14, 165, 233, 0.15) !important;
+            color: var(--neon-blue) !important;
+            border-color: var(--border-color-glow);
+            font-weight: 600;
+        }
+        .avatar-container {
+            position: relative;
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 15px var(--neon-blue-glow);
+            margin: 0 auto;
+            background: var(--bg-darker);
+        }
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition-smooth);
+        }
+        .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(6, 9, 19, 0.75);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: var(--transition-smooth);
+            cursor: pointer;
+        }
+        .avatar-container:hover .avatar-overlay {
+            opacity: 1;
+        }
+        .avatar-container:hover .avatar-img {
+            transform: scale(1.05);
+        }
+        .avatar-overlay i {
+            font-size: 1.5rem;
+            color: var(--neon-blue);
+            margin-bottom: 4px;
+        }
+        .avatar-overlay span {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .badge-current-session {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--neon-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        .cropper-preview-container {
+            max-height: 400px;
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .cropper-preview-container img {
+            max-width: 100%;
+            max-height: 350px;
+        }
+        .dropdown-menu-dark {
+            background-color: var(--bg-darker) !important;
+            border-color: var(--border-color) !important;
+        }
+        .notif-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition-smooth);
+        }
+        .notif-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .notif-item.unread {
+            background: rgba(14, 165, 233, 0.03);
+            border-left: 2px solid var(--neon-blue);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg cyber-navbar">
+        <div class="container">
+            <a class="navbar-brand brand-font" href="/scanner">
+                <img src="/static/images/logo.svg" alt="AI Shield Logo" style="width: 30px; height: 30px; margin-right: 8px;"> AI SHIELD
+            </a>
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/scanner"><i class="fas fa-magnifying-glass"></i> SCANNERS</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard"><i class="fas fa-chart-line"></i> SOC DASHBOARD</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/history"><i class="fas fa-archive"></i> SCANS ARCHIVE</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/profile"><i class="fas fa-user-gear"></i> MY PROFILE</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <!-- Notifications Dropdown -->
+                    <div class="dropdown me-3" id="notificationsDropdown">
+                        <button class="btn btn-link text-secondary position-relative p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="notifBtn">
+                            <i class="fas fa-bell fs-5"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notifBadge">
+                                0
+                            </span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-0 border border-secondary" style="width: 320px; font-size: 0.85rem;" aria-labelledby="notifBtn">
+                            <div class="p-2 border-bottom border-secondary d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">Notifications</span>
+                                <button class="btn btn-link btn-xs text-info p-0 text-decoration-none" id="markAllReadBtn" style="font-size: 0.75rem;">Mark all read</button>
+                            </div>
+                            <div class="overflow-y-auto" style="max-height: 250px;" id="notifList">
+                                <div class="p-3 text-center text-muted">No new security logs.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <span class="text-secondary me-3 small">
+                        <i class="fas fa-terminal text-info"></i> Analyst: <strong class="text-white">{{ session['user']['username'] }}</strong>
+                    </span>
+                    <a href="/logout" class="btn btn-cyber-danger btn-sm py-1 px-3"><i class="fas fa-right-from-bracket"></i> EXIT</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Email verification alert banner -->
+    {% if profile and not profile.is_verified %}
+    <div class="container mt-4">
+        <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-warning d-flex justify-content-between align-items-center py-3 px-4 rounded-3" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-circle-exclamation fs-5 me-3 text-warning"></i>
+                <div>
+                    <strong class="brand-font">EMAIL VERIFICATION REQUIRED</strong>
+                    <div class="small text-warning text-opacity-75">Please verify your email address to unlock AI scanning and visual brand spoofing detection modules.</div>
+                </div>
+            </div>
+            <a href="/resend-verification" class="btn btn-warning btn-sm py-1 px-3 fw-semibold brand-font text-dark"><i class="fas fa-paper-plane me-1"></i> Resend Verification</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Workspace -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="brand-font text-info text-shadow mb-4"><i class="fas fa-sliders"></i> ANALYST PROFILE CONTROL CONSOLE</h2>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Sidebar Navigation -->
+            <div class="col-lg-3 col-md-4">
+                <div class="cyber-card p-3 settings-sidebar">
+                    <div class="text-center mb-4 pb-3 border-bottom border-secondary border-opacity-20">
+                        <div class="avatar-container mb-3">
+                            <img src="{{ profile.avatar_path or '/static/images/default_avatar.png' }}" alt="Profile Avatar" class="avatar-img" id="sidebarAvatar">
+                            <label for="avatarFileInput" class="avatar-overlay">
+                                <i class="fas fa-camera"></i>
+                                <span>Change Photo</span>
+                            </label>
+                            <input type="file" id="avatarFileInput" accept="image/png, image/jpeg, image/jpg, image/webp" class="d-none">
+                        </div>
+                        <h5 class="brand-font text-white mb-1">{{ profile.username }}</h5>
+                        <span class="badge bg-secondary bg-opacity-25 text-info border border-info border-opacity-35 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.1em;">
+                            {{ profile.role }}
+                        </span>
+                    </div>
+
+                    <div class="nav flex-column nav-pills" id="settingsTabs" role="tablist">
+                        <button class="nav-link active" id="tab-profile-btn" data-bs-toggle="pill" data-bs-target="#tab-profile" type="button" role="tab"><i class="fas fa-user-circle me-2"></i> Account Profile</button>
+                        <button class="nav-link" id="tab-security-btn" data-bs-toggle="pill" data-bs-target="#tab-security" type="button" role="tab"><i class="fas fa-shield-halved me-2"></i> Node Security</button>
+                        <button class="nav-link" id="tab-preferences-btn" data-bs-toggle="pill" data-bs-target="#tab-preferences" type="button" role="tab"><i class="fas fa-sliders me-2"></i> Preferences</button>
+                        <button class="nav-link" id="tab-history-btn" data-bs-toggle="pill" data-bs-target="#tab-history" type="button" role="tab"><i class="fas fa-clock-rotate-left me-2"></i> Threat Scan History</button>
+                        <button class="nav-link" id="tab-reports-btn" data-bs-toggle="pill" data-bs-target="#tab-reports" type="button" role="tab"><i class="fas fa-file-pdf me-2"></i> Report Manager</button>
+                        <button class="nav-link" id="tab-subscription-btn" data-bs-toggle="pill" data-bs-target="#tab-subscription" type="button" role="tab"><i class="fas fa-credit-card me-2"></i> Subscription Plan</button>
+                        <button class="nav-link" id="tab-privacy-btn" data-bs-toggle="pill" data-bs-target="#tab-privacy" type="button" role="tab"><i class="fas fa-user-shield me-2"></i> Privacy & Account</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="col-lg-9 col-md-8">
+                <div class="tab-content" id="settingsTabsContent">
+                    
+                    <!-- TAB 1: PROFILE DETAILS -->
+                    <div class="tab-pane fade show active" id="tab-profile" role="tabpanel">
+                        <div class="cyber-card p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary border-opacity-20 pb-3">
+                                <h4 class="brand-font text-white mb-0"><i class="fas fa-user-circle text-info"></i> Account Profile</h4>
+                                <div>
+                                    <button class="btn btn-outline-info btn-sm px-3" id="editProfileBtn"><i class="fas fa-edit me-1"></i> Edit Profile</button>
+                                </div>
+                            </div>
+
+                            <form id="profileForm">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small">Full Name</label>
+                                        <input type="text" class="form-control cyber-input" id="profileFullName" value="{{ profile.full_name or '' }}" disabled>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small">Phone Number (Optional)</label>
+                                        <input type="text" class="form-control cyber-input" id="profilePhone" value="{{ profile.phone_number or '' }}" placeholder="e.g. +1 (555) 019-2834" disabled>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small">Country</label>
+                                        <input type="text" class="form-control cyber-input" id="profileCountry" value="{{ profile.country or '' }}" placeholder="e.g. United States" disabled>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small">Time Zone</label>
+                                        <select class="form-select cyber-input" id="profileTimezone" disabled>
+                                            <option value="UTC" {% if profile.timezone == 'UTC' %}selected{% endif %}>UTC (Coordinated Universal Time)</option>
+                                            <option value="America/New_York" {% if profile.timezone == 'America/New_York' %}selected{% endif %}>America/New_York (EST/EDT)</option>
+                                            <option value="America/Chicago" {% if profile.timezone == 'America/Chicago' %}selected{% endif %}>America/Chicago (CST/CDT)</option>
+                                            <option value="America/Denver" {% if profile.timezone == 'America/Denver' %}selected{% endif %}>America/Denver (MST/MDT)</option>
+                                            <option value="America/Los_Angeles" {% if profile.timezone == 'America/Los_Angeles' %}selected{% endif %}>America/Los_Angeles (PST/PDT)</option>
+                                            <option value="Europe/London" {% if profile.timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT/BST)</option>
+                                            <option value="Europe/Paris" {% if profile.timezone == 'Europe/Paris' %}selected{% endif %}>Europe/Paris (CET/CEST)</option>
+                                            <option value="Asia/Tokyo" {% if profile.timezone == 'Asia/Tokyo' %}selected{% endif %}>Asia/Tokyo (JST)</option>
+                                            <option value="Asia/Kolkata" {% if profile.timezone == 'Asia/Kolkata' %}selected{% endif %}>Asia/Kolkata (IST)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label text-muted small">Bio / About Me</label>
+                                        <textarea class="form-control cyber-input" id="profileBio" rows="4" placeholder="Briefly describe your responsibilities or threat hunting focus..." disabled>{{ profile.bio or '' }}</textarea>
+                                    </div>
+
+                                    <!-- Read-only attributes -->
+                                    <div class="col-md-6 mt-4">
+                                        <div class="p-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10 rounded">
+                                            <div class="text-muted small">Username</div>
+                                            <div class="fw-bold text-white">{{ profile.username }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mt-4">
+                                        <div class="p-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10 rounded">
+                                            <div class="text-muted small">Email Address</div>
+                                            <div class="fw-bold text-white">{{ profile.email }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mt-3">
+                                        <div class="p-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10 rounded text-center">
+                                            <div class="text-muted small">Account Created</div>
+                                            <div class="fw-bold text-white small">{{ profile.created_at }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mt-3">
+                                        <div class="p-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10 rounded text-center">
+                                            <div class="text-muted small">Last Authenticated</div>
+                                            <div class="fw-bold text-white small">{{ profile.last_login or 'Never' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mt-3">
+                                        <div class="p-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10 rounded text-center">
+                                            <div class="text-muted small">Node Status</div>
+                                            <div class="fw-bold text-success text-uppercase small">{{ profile.account_status }}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Form Action Buttons -->
+                                    <div class="col-12 d-none mt-4" id="profileActions">
+                                        <button type="submit" class="btn btn-cyber-success me-2 px-4" id="saveProfileBtn">Save Changes</button>
+                                        <button type="button" class="btn btn-outline-secondary px-4" id="cancelProfileBtn">Cancel</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: SECURITY & SESSIONS -->
+                    <div class="tab-pane fade" id="tab-security" role="tabpanel">
+                        <!-- Password Management Card -->
+                        <div class="cyber-card p-4 mb-4">
+                            <h4 class="brand-font text-white mb-4 border-bottom border-secondary border-opacity-20 pb-3"><i class="fas fa-key text-info"></i> Update Credentials</h4>
+                            <form id="changePasswordForm">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted small">Current Password</label>
+                                        <input type="password" class="form-control cyber-input" id="currentPassword" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted small">New Password</label>
+                                        <input type="password" class="form-control cyber-input" id="newPassword" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted small">Confirm New Password</label>
+                                        <input type="password" class="form-control cyber-input" id="confirmPassword" required>
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <button type="submit" class="btn btn-cyber-success"><i class="fas fa-lock me-1"></i> Update Password</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Multi-Factor Auth Card -->
+                        <div class="cyber-card p-4 mb-4">
+                            <h4 class="brand-font text-white mb-2 border-bottom border-secondary border-opacity-20 pb-3"><i class="fas fa-shield-halved text-info"></i> Multi-Factor Authentication (MFA)</h4>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div>
+                                    <h6 class="text-white mb-1">Time-based One-Time Password (TOTP)</h6>
+                                    <p class="text-muted small mb-0">Secure credential authentication via authenticator apps (Google Authenticator, Authy, Microsoft Authenticator).</p>
+                                </div>
+                                <div class="form-check form-switch fs-5">
+                                    <input class="form-check-input cursor-pointer" type="checkbox" id="mfaToggle" {% if sec.two_factor_enabled == 1 %}checked{% endif %}>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Session Management Card -->
+                        <div class="cyber-card p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary border-opacity-20 pb-3">
+                                <div>
+                                    <h4 class="brand-font text-white mb-1"><i class="fas fa-laptop-code text-info"></i> Active Session Nodes</h4>
+                                    <p class="text-muted small mb-0">Authorized terminal nodes currently connected to this SOC analyst account.</p>
+                                </div>
+                                <div>
+                                    <button class="btn btn-outline-danger btn-sm" id="revokeAllSessionsBtn"><i class="fas fa-ban me-1"></i> Revoke All Other Nodes</button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-dark table-hover align-middle" style="font-size: 0.85rem;">
+                                    <thead>
+                                        <tr class="text-muted border-secondary">
+                                            <th>Device / Node</th>
+                                            <th>OS / Browser</th>
+                                            <th>IP Address</th>
+                                            <th>Approximate Location</th>
+                                            <th>Last Active</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sessionsList">
+                                        {% for s in sessions %}
+                                        <tr class="border-secondary border-opacity-20">
+                                            <td>
+                                                <i class="{% if 'Phone' in s.device_name %}fas fa-mobile-screen-button{% else %}fas fa-desktop{% endif %} text-info me-2"></i>
+                                                <span class="fw-semibold text-white">{{ s.device_name }}</span>
+                                                {% if s.session_token == current_token %}
+                                                <span class="badge-current-session ms-1">Current Node</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ s.os }} / {{ s.browser }}</td>
+                                            <td><code>{{ s.ip_address }}</code></td>
+                                            <td>{{ s.location }}</td>
+                                            <td>{{ s.last_active }}</td>
+                                            <td class="text-end">
+                                                {% if s.session_token != current_token %}
+                                                <button class="btn btn-outline-danger btn-xs py-1 px-2 revoke-session-btn" data-token="{{ s.session_token }}">
+                                                    <i class="fas fa-trash-can"></i> Revoke
+                                                </button>
+                                                {% else %}
+                                                <span class="text-muted small">-</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: PREFERENCES -->
+                    <div class="tab-pane fade" id="tab-preferences">
+                        <div class="cyber-card p-4">
+                            <h4 class="brand-font text-white mb-4 border-bottom border-secondary border-opacity-20 pb-3"><i class="fas fa-sliders text-info"></i> Node Display & Preferences</h4>
+                            <form id="preferencesForm">
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-white small fw-bold">Console Theme Mode</label>
+                                        <select class="form-select cyber-input" id="prefTheme">
+                                            <option value="system" {% if prefs.theme == 'system' %}selected{% endif %}>System Preference</option>
+                                            <option value="dark" {% if prefs.theme == 'dark' %}selected{% endif %}>Cyber Dark Mode</option>
+                                            <option value="light" {% if prefs.theme == 'light' %}selected{% endif %}>Tactical Light Mode</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-white small fw-bold">Language / Locale</label>
+                                        <select class="form-select cyber-input" id="prefLanguage">
+                                            <option value="en" selected>English (United States)</option>
+                                            <option value="de" disabled>Deutsch (Germany) - Coming Soon</option>
+                                            <option value="fr" disabled>Français (France) - Coming Soon</option>
+                                            <option value="ja" disabled>日本語 (Japan) - Coming Soon</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-white small fw-bold">Default Console View</label>
+                                        <select class="form-select cyber-input" id="prefDefaultView">
+                                            <option value="dashboard" {% if prefs.default_view == 'dashboard' %}selected{% endif %}>SOC Dashboard</option>
+                                            <option value="scanner" {% if prefs.default_view == 'scanner' %}selected{% endif %}>Phishing Scanner</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12 mt-4">
+                                        <h5 class="brand-font text-white mb-3">Email Notification Subscriptions</h5>
+                                        
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input cyber-input" type="checkbox" id="prefAlerts" {% if sec.login_alerts_enabled == 1 %}checked{% endif %}>
+                                            <label class="form-check-label text-secondary small" for="prefAlerts">
+                                                <strong>Security Alerts & Node Logins</strong><br>
+                                                Send immediate email warnings upon new access nodes or password updates.
+                                            </label>
+                                        </div>
+
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input cyber-input" type="checkbox" id="prefThreats" checked>
+                                            <label class="form-check-label text-secondary small" for="prefThreats">
+                                                <strong>Phishing Threat Detections</strong><br>
+                                                Send reports whenever critical risks or visual spoofing domains are identified.
+                                            </label>
+                                        </div>
+
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input cyber-input" type="checkbox" id="prefNewsletter">
+                                            <label class="form-check-label text-secondary small" for="prefNewsletter">
+                                                <strong>Threat Intelligence Bulletins</strong><br>
+                                                Receive periodic summaries of global phishing campaigns and threat intel.
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 mt-4">
+                                        <button type="submit" class="btn btn-cyber-success px-4">Save Display Preferences</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: SCAN HISTORY -->
+                    <div class="tab-pane fade" id="tab-history">
+                        <div class="cyber-card p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary border-opacity-20 pb-3">
+                                <div>
+                                    <h4 class="brand-font text-white mb-1"><i class="fas fa-clock-rotate-left text-info"></i> Threat Scan History</h4>
+                                    <p class="text-muted small mb-0">Interactive records of indicators investigated by this analyst node.</p>
+                                </div>
+                                <a href="/profile/export-history" class="btn btn-outline-info btn-sm"><i class="fas fa-file-csv me-1"></i> Export CSV</a>
+                            </div>
+
+                            <!-- Search & Filter Controls -->
+                            <div class="row g-2 mb-4">
+                                <div class="col-md-5">
+                                    <input type="text" class="form-control cyber-input" id="historySearchInput" placeholder="Search URL indicators...">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select cyber-input" id="historyVerdictFilter">
+                                        <option value="all">All Verdicts</option>
+                                        <option value="Legitimate">Legitimate Only</option>
+                                        <option value="Suspicious">Suspicious Only</option>
+                                        <option value="Phishing">Phishing Only</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select cyber-input" id="historySortFilter">
+                                        <option value="date_desc">Newest First</option>
+                                        <option value="date_asc">Oldest First</option>
+                                        <option value="score_desc">Highest Risk Score</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- History Table -->
+                            <div class="table-responsive">
+                                <table class="table table-dark table-hover align-middle" style="font-size: 0.85rem;">
+                                    <thead>
+                                        <tr class="text-muted border-secondary">
+                                            <th>Target URL Indicator</th>
+                                            <th>Verdict</th>
+                                            <th>Confidence</th>
+                                            <th>Risk Score</th>
+                                            <th>Scan Time</th>
+                                            <th class="text-end">Report</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="historyTableBody">
+                                        <!-- Dynamic AJAX injection -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-secondary border-opacity-20">
+                                <div class="small text-muted" id="historyPaginationInfo">
+                                    Showing 0 to 0 of 0 scans
+                                </div>
+                                <nav aria-label="Scan history page navigation">
+                                    <ul class="pagination pagination-sm mb-0">
+                                        <li class="page-item" id="btnPrevHistory"><button class="page-link bg-darker border-secondary text-secondary">Prev</button></li>
+                                        <li class="page-item" id="btnNextHistory"><button class="page-link bg-darker border-secondary text-secondary">Next</button></li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 5: REPORT MANAGER -->
+                    <div class="tab-pane fade" id="tab-reports">
+                        <div class="cyber-card p-4">
+                            <h4 class="brand-font text-white mb-4 border-bottom border-secondary border-opacity-20 pb-3"><i class="fas fa-file-pdf text-info"></i> PDF Threat Reports</h4>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-dark table-hover align-middle" style="font-size: 0.85rem;">
+                                    <thead>
+                                        <tr class="text-muted border-secondary">
+                                            <th>Report File Name</th>
+                                            <th>Generated For</th>
+                                            <th>Risk Verdict</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reportsTableBody">
+                                        {% if reports %}
+                                            {% for r in reports %}
+                                            <tr class="border-secondary border-opacity-20" id="report-row-{{ r.id }}">
+                                                <td>
+                                                    <i class="fas fa-file-pdf text-danger me-2 fs-5"></i>
+                                                    <span class="text-white fw-semibold">{{ r.pdf_path.split('/')[-1] }}</span>
+                                                </td>
+                                                <td><code class="text-secondary small">{{ r.url[:50] }}...</code></td>
+                                                <td>
+                                                    <span class="badge {% if r.prediction == 'Phishing' %}bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20{% elif r.prediction == 'Suspicious' %}bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20{% else %}bg-success bg-opacity-10 text-success border border-success border-opacity-20{% endif %}">
+                                                        {{ r.prediction }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <a href="/report/download/{{ r.scan_id }}" class="btn btn-outline-info btn-xs py-1 px-2 me-1" target="_blank">
+                                                        <i class="fas fa-download"></i> Download
+                                                    </a>
+                                                    <button class="btn btn-outline-danger btn-xs py-1 px-2 delete-report-btn" data-id="{{ r.id }}">
+                                                        <i class="fas fa-trash-can"></i> Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="4" class="text-center p-4 text-muted">No PDF intelligence files compiled yet.</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 6: SUBSCRIPTION -->
+                    <div class="tab-pane fade" id="tab-subscription">
+                        <div class="cyber-card p-4">
+                            <h4 class="brand-font text-white mb-2 border-bottom border-secondary border-opacity-20 pb-3"><i class="fas fa-credit-card text-info"></i> Node License & Plan</h4>
+                            
+                            <!-- Quota Metrics -->
+                            <div class="row g-4 mb-4 mt-2">
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10 rounded">
+                                        <div class="text-muted small mb-1">URLs Scanned Today</div>
+                                        <h3 class="brand-font text-white mb-2">{{ stats.total_scans or 0 }} / 100</h3>
+                                        <div class="progress bg-darker" style="height: 6px;">
+                                            <div class="progress-bar bg-info" style="width: {{ [stats.total_scans or 0, 100]|min }}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10 rounded">
+                                        <div class="text-muted small mb-1">Detections Accuracy</div>
+                                        <h3 class="brand-font text-white mb-2">99.4%</h3>
+                                        <div class="progress bg-darker" style="height: 6px;">
+                                            <div class="progress-bar bg-success" style="width: 99.4%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10 rounded">
+                                        <div class="text-muted small mb-1">Threats Logged</div>
+                                        <h3 class="brand-font text-white mb-2">{{ stats.phishing_count + stats.suspicious_count }} Dets</h3>
+                                        <div class="progress bg-darker" style="height: 6px;">
+                                            <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Subscription Tier Cards -->
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="card bg-darker border-secondary p-3 text-center position-relative h-100">
+                                        <h6 class="brand-font text-white">Free Sandbox</h6>
+                                        <h4 class="text-info font-monospace my-2">$0</h4>
+                                        <ul class="text-muted small list-unstyled my-3 text-start">
+                                            <li><i class="fas fa-check text-info me-1"></i> 10 URL scans / day</li>
+                                            <li><i class="fas fa-check text-info me-1"></i> Standard WHOIS info</li>
+                                            <li><i class="fas fa-xmark text-danger me-1"></i> No Brand Spoofing SS</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-dark border-info p-3 text-center position-relative h-100 border-glow">
+                                        <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-info text-dark brand-font fw-bold" style="font-size: 0.65rem;">ACTIVE SUBSCRIPTION</span>
+                                        <h6 class="brand-font text-white mt-1">Analyst Pro</h6>
+                                        <h4 class="text-info font-monospace my-2">$29<span class="fs-6 text-muted">/mo</span></h4>
+                                        <ul class="text-white small list-unstyled my-3 text-start">
+                                            <li><i class="fas fa-check text-info me-1"></i> 1,000 scans / day</li>
+                                            <li><i class="fas fa-check text-info me-1"></i> Brand Spoofing Sandbox</li>
+                                            <li><i class="fas fa-check text-info me-1"></i> Custom PDF Reports</li>
+                                            <li><i class="fas fa-check text-info me-1"></i> API Key Access</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-darker border-secondary p-3 text-center position-relative h-100">
+                                        <h6 class="brand-font text-white">Sentinel Enterprise</h6>
+                                        <h4 class="text-info font-monospace my-2">$99<span class="fs-6 text-muted">/mo</span></h4>
+                                        <ul class="text-muted small list-unstyled my-3 text-start">
+                                            <li><i class="fas fa-check text-info me-1"></i> Unlimited queries</li>
+                                            <li><i class="fas fa-check text-info me-1"></i> Dedicated Intel feeds</li>
+                                            <li><i class="fas fa-check text-info me-1"></i> Priority model execution</li>
+                                            <li><i class="fas fa-check text-info me-1"></i> Dedicated SLA support</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 7: PRIVACY & ACCOUNT -->
+                    <div class="tab-pane fade" id="tab-privacy">
+                        <!-- Privacy / GDPR Compliance -->
+                        <div class="cyber-card p-4 mb-4">
+                            <h4 class="brand-font text-white mb-2 border-bottom border-secondary border-opacity-20 pb-3"><i class="fas fa-user-shield text-info"></i> Compliance & Data Portability</h4>
+                            <p class="text-muted small mt-3">Under GDPR guidelines, you have the right to request all data collected by TR-PHISH AI Shield associated with your analyst credentials.</p>
+                            
+                            <div class="d-flex gap-2">
+                                <a href="/profile/export-data" class="btn btn-cyber-success"><i class="fas fa-file-invoice-dollar me-1"></i> Export Account Data (JSON)</a>
+                                <a href="/profile/export-history" class="btn btn-outline-info"><i class="fas fa-file-csv me-1"></i> Export Scan Log (CSV)</a>
+                            </div>
+                        </div>
+
+                        <!-- Danger Zone -->
+                        <div class="cyber-card p-4 card-danger">
+                            <h4 class="brand-font text-danger mb-2 border-bottom border-danger border-opacity-20 pb-3"><i class="fas fa-triangle-exclamation text-danger"></i> Danger Zone</h4>
+                            <p class="text-muted small mt-3">Permanently delete your AI Shield account. This action destroys your profile information, historical phishing scan files, and revokes all multi-factor keys instantly. <strong>This cannot be undone.</strong></p>
+                            
+                            <button class="btn btn-cyber-danger" id="deleteAccountBtn"><i class="fas fa-user-xmark me-1"></i> Terminate Account</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: IMAGE CROPPER -->
+    <div class="modal fade" id="cropperModal" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border border-secondary text-white">
+                <div class="modal-header border-secondary border-opacity-20">
+                    <h5 class="modal-title brand-font"><i class="fas fa-crop me-2"></i> Crop Profile Image</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="cropper-preview-container">
+                        <img id="cropperImage" src="">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary border-opacity-20">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-cyber-success" id="cropSaveBtn"><i class="fas fa-check me-1"></i> Crop & Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: MFA SETUP -->
+    <div class="modal fade" id="mfaSetupModal" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border border-secondary text-white">
+                <div class="modal-header border-secondary border-opacity-20">
+                    <h5 class="modal-title brand-font text-info"><i class="fas fa-shield-halved me-2"></i> Set Up 2FA Security</h5>
+                    <button type="button" class="btn-close btn-close-white" id="mfaCloseBtn" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <p class="text-muted small">Scan the QR code in Google Authenticator or enter the manual configuration key.</p>
+                    
+                    <div class="d-inline-block p-3 bg-white rounded-3 mb-3">
+                        <canvas id="mfaQrCanvas"></canvas>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Manual Key:</small>
+                        <code class="text-warning fs-5 fw-bold" id="mfaSecretText">XXXX XXXX XXXX XXXX</code>
+                    </div>
+
+                    <div class="border-top border-secondary border-opacity-20 pt-3 text-start">
+                        <label class="form-label text-muted small">Enter 6-Digit TOTP Verification Code</label>
+                        <input type="text" class="form-control cyber-input text-center fs-5 letter-spacing-lg mb-3" placeholder="000000" maxlength="6" id="mfaVerificationCode">
+                        <div id="mfaSetupError" class="alert alert-danger py-2 border-0 bg-danger bg-opacity-10 text-danger small d-none"></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary border-opacity-20">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-cyber-success" id="mfaVerifyBtn"><i class="fas fa-lock me-1"></i> Enable 2FA</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: MFA DISABLE -->
+    <div class="modal fade" id="mfaDisableModal" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border border-secondary text-white">
+                <div class="modal-header border-secondary border-opacity-20">
+                    <h5 class="modal-title brand-font text-danger"><i class="fas fa-triangle-exclamation me-2"></i> Disable 2FA Security</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small">Disabling TOTP security lowers your node's protection. Please confirm your account passcode to proceed.</p>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Verify Current Password</label>
+                        <input type="password" class="form-control cyber-input" id="mfaDisablePassword" required>
+                    </div>
+                    <div id="mfaDisableError" class="alert alert-danger py-2 border-0 bg-danger bg-opacity-10 text-danger small d-none"></div>
+                </div>
+                <div class="modal-footer border-secondary border-opacity-20">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-cyber-danger" id="mfaDisableConfirmBtn">Disable Protection</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ACCOUNT DELETION -->
+    <div class="modal fade" id="deleteAccountModal" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border border-danger text-white">
+                <div class="modal-header border-danger border-opacity-20">
+                    <h5 class="modal-title brand-font text-danger"><i class="fas fa-triangle-exclamation me-2"></i> Permanent Account Termination</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small">This action immediately revokes access, terminates all sessions, and deletes threat archives in compliance with privacy standards. <strong>This cannot be reversed.</strong></p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-danger small fw-bold">Confirm Passcode to Authorize Deletion</label>
+                        <input type="password" class="form-control cyber-input" id="deleteAccountPassword" placeholder="Enter your current password">
+                    </div>
+                    <div id="deleteAccountError" class="alert alert-danger py-2 border-0 bg-danger bg-opacity-10 text-danger small d-none"></div>
+                </div>
+                <div class="modal-footer border-danger border-opacity-20">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-cyber-danger" id="deleteAccountConfirmBtn"><i class="fas fa-user-xmark me-1"></i> Destroy Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-muted border-top border-secondary-subtle mt-5" style="background-color: var(--bg-darker)">
+        <p class="small mb-0">&copy; 2026 TR-PHISH Security Operations Center. Real-Time AI Phishing Detection System.</p>
+    </footer>
+
+    <!-- JS Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+
+    <!-- Custom Profile Javascript Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            // ==========================================
+            // NOTIFICATION CENTER DYNAMIC LOGIC
+            // ==========================================
+            const notifBadge = document.getElementById('notifBadge');
+            const notifList = document.getElementById('notifList');
+            const markAllReadBtn = document.getElementById('markAllReadBtn');
+            
+            function fetchNotifications() {
+                fetch('/notifications')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Badge Count
+                            if (data.unread_count > 0) {
+                                notifBadge.textContent = data.unread_count;
+                                notifBadge.classList.remove('d-none');
+                            } else {
+                                notifBadge.classList.add('d-none');
+                            }
+                            
+                            // Dropdown List
+                            if (data.notifications.length === 0) {
+                                notifList.innerHTML = '<div class="p-3 text-center text-muted">No new security logs.</div>';
+                            } else {
+                                notifList.innerHTML = data.notifications.map(n => `
+                                    <div class="p-3 notif-item ${n.is_read ? '' : 'unread'}" id="notif-item-${n.id}">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <strong class="text-white small">${n.title}</strong>
+                                            <div class="d-flex gap-2">
+                                                ${!n.is_read ? `<button class="btn btn-link p-0 text-info mark-read-btn" data-id="${n.id}"><i class="fas fa-check text-opacity-50"></i></button>` : ''}
+                                                <button class="btn btn-link p-0 text-danger delete-notif-btn" data-id="${n.id}"><i class="fas fa-trash-can text-opacity-50"></i></button>
+                                            </div>
+                                        </div>
+                                        <p class="text-secondary mb-1" style="font-size: 0.75rem;">${n.message}</p>
+                                        <span class="text-muted" style="font-size: 0.65rem;">${n.created_at}</span>
+                                    </div>
+                                `).join('');
+                            }
+                        }
+                    });
+            }
+            
+            // Mark all read
+            markAllReadBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                fetch('/notifications/read-all', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken }
+                }).then(() => fetchNotifications());
+            });
+            
+            // Single read / delete event delegation
+            notifList.addEventListener('click', function(e) {
+                const markBtn = e.target.closest('.mark-read-btn');
+                const deleteBtn = e.target.closest('.delete-notif-btn');
+                
+                if (markBtn) {
+                    e.stopPropagation();
+                    const notifId = markBtn.dataset.id;
+                    fetch(`/notifications/read/${notifId}`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrfToken }
+                    }).then(() => fetchNotifications());
+                }
+                
+                if (deleteBtn) {
+                    e.stopPropagation();
+                    const notifId = deleteBtn.dataset.id;
+                    fetch(`/notifications/delete/${notifId}`, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRFToken': csrfToken }
+                    }).then(() => fetchNotifications());
+                }
+            });
+            
+            // Initial Notification Load & Polling (every 30s)
+            fetchNotifications();
+            setInterval(fetchNotifications, 30000);
+
+            // ==========================================
+            // PROFILE DETAILS EDIT / SAVE
+            // ==========================================
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            const profileActions = document.getElementById('profileActions');
+            const profileForm = document.getElementById('profileForm');
+            const profileInputs = profileForm.querySelectorAll('input, select, textarea');
+            
+            editProfileBtn.addEventListener('click', function() {
+                profileInputs.forEach(input => input.removeAttribute('disabled'));
+                profileActions.classList.remove('d-none');
+                editProfileBtn.classList.add('d-none');
+            });
+            
+            document.getElementById('cancelProfileBtn').addEventListener('click', function() {
+                profileInputs.forEach(input => input.setAttribute('disabled', ''));
+                profileActions.classList.add('d-none');
+                editProfileBtn.classList.remove('d-none');
+                // Reload page to reset values
+                window.location.reload();
+            });
+            
+            profileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const payload = {
+                    full_name: document.getElementById('profileFullName').value,
+                    phone_number: document.getElementById('profilePhone').value,
+                    country: document.getElementById('profileCountry').value,
+                    timezone: document.getElementById('profileTimezone').value,
+                    bio: document.getElementById('profileBio').value
+                };
+                
+                fetch('/profile/update', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert(data.error || 'Failed to update profile.');
+                    }
+                });
+            });
+
+            // ==========================================
+            // CROPPER IMAGE UPLOAD LOGIC
+            // ==========================================
+            const avatarFileInput = document.getElementById('avatarFileInput');
+            const cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
+            const cropperImage = document.getElementById('cropperImage');
+            let cropper = null;
+            
+            avatarFileInput.addEventListener('change', function(e) {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                    const file = files[0];
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('Image size exceeds 5MB limit.');
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        cropperImage.src = evt.target.result;
+                        cropperModal.show();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            document.getElementById('cropperModal').addEventListener('shown.bs.modal', function() {
+                cropper = new Cropper(cropperImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    background: false,
+                    autoCropArea: 0.9
+                });
+            });
+            
+            document.getElementById('cropperModal').addEventListener('hidden.bs.modal', function() {
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+                avatarFileInput.value = '';
+            });
+            
+            document.getElementById('cropSaveBtn').addEventListener('click', function() {
+                if (!cropper) return;
+                
+                // Get 256x256 cropped canvas
+                const canvas = cropper.getCroppedCanvas({
+                    width: 256,
+                    height: 256
+                });
+                
+                // Convert to WebP base64 DataURL
+                const base64Image = canvas.toDataURL('image/webp', 0.9);
+                
+                fetch('/profile/upload-photo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ image: base64Image })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('sidebarAvatar').src = data.avatar_url;
+                        cropperModal.hide();
+                        alert('Profile picture updated successfully!');
+                    } else {
+                        alert(data.error || 'Failed to upload photo.');
+                    }
+                });
+            });
+
+            // ==========================================
+            // PASSWORD CHANGE LOGIC
+            // ==========================================
+            const changePasswordForm = document.getElementById('changePasswordForm');
+            changePasswordForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const currentPassword = document.getElementById('currentPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (newPassword !== confirmPassword) {
+                    alert('New passwords do not match!');
+                    return;
+                }
+                
+                fetch('/profile/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword,
+                        confirm_password: confirmPassword
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        changePasswordForm.reset();
+                    } else {
+                        alert(data.error || 'Failed to change password.');
+                    }
+                });
+            });
+
+            // ==========================================
+            // TWO-FACTOR AUTHENTICATION (MFA) LOGIC
+            // ==========================================
+            const mfaToggle = document.getElementById('mfaToggle');
+            const mfaSetupModal = new bootstrap.Modal(document.getElementById('mfaSetupModal'));
+            const mfaDisableModal = new bootstrap.Modal(document.getElementById('mfaDisableModal'));
+            let currentMfaState = mfaToggle.checked;
+            
+            mfaToggle.addEventListener('change', function() {
+                if (mfaToggle.checked) {
+                    // Turn on MFA setup flow
+                    fetch('/profile/2fa/setup', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrfToken }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('mfaSecretText').textContent = data.secret.match(/.{1,4}/g).join(' ');
+                            
+                            // Generate client-side QR Code using QRious
+                            const qr = new QRious({
+                                element: document.getElementById('mfaQrCanvas'),
+                                size: 200,
+                                value: data.otpauth_url
+                            });
+                            
+                            document.getElementById('mfaVerificationCode').value = '';
+                            document.getElementById('mfaSetupError').classList.add('d-none');
+                            mfaSetupModal.show();
+                        } else {
+                            alert('MFA setup initiation failed.');
+                            mfaToggle.checked = false;
+                        }
+                    });
+                } else {
+                    // Disable MFA flow
+                    document.getElementById('mfaDisablePassword').value = '';
+                    document.getElementById('mfaDisableError').classList.add('d-none');
+                    mfaDisableModal.show();
+                }
+            });
+            
+            // Revert state if modal closed without completing
+            document.getElementById('mfaSetupModal').addEventListener('hidden.bs.modal', function() {
+                mfaToggle.checked = currentMfaState;
+            });
+            document.getElementById('mfaDisableModal').addEventListener('hidden.bs.modal', function() {
+                mfaToggle.checked = currentMfaState;
+            });
+            
+            // Verify and Enable 2FA
+            document.getElementById('mfaVerifyBtn').addEventListener('click', function() {
+                const code = document.getElementById('mfaVerificationCode').value.trim();
+                if (code.length !== 6) {
+                    alert('Please enter a valid 6-digit verification code.');
+                    return;
+                }
+                
+                fetch('/profile/2fa/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ otp_code: code })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        currentMfaState = true;
+                        mfaToggle.checked = true;
+                        mfaSetupModal.hide();
+                    } else {
+                        const errDiv = document.getElementById('mfaSetupError');
+                        errDiv.textContent = data.error;
+                        errDiv.classList.remove('d-none');
+                    }
+                });
+            });
+            
+            // Disable 2FA Verify
+            document.getElementById('mfaDisableConfirmBtn').addEventListener('click', function() {
+                const password = document.getElementById('mfaDisablePassword').value;
+                if (!password) {
+                    alert('Password verification is required.');
+                    return;
+                }
+                
+                fetch('/profile/2fa/disable', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ password: password })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        currentMfaState = false;
+                        mfaToggle.checked = false;
+                        mfaDisableModal.hide();
+                    } else {
+                        const errDiv = document.getElementById('mfaDisableError');
+                        errDiv.textContent = data.error;
+                        errDiv.classList.remove('d-none');
+                    }
+                });
+            });
+
+            // ==========================================
+            // PREFERENCES UPDATE
+            // ==========================================
+            const preferencesForm = document.getElementById('preferencesForm');
+            preferencesForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const payload = {
+                    theme: document.getElementById('prefTheme').value,
+                    language: document.getElementById('prefLanguage').value,
+                    default_view: document.getElementById('prefDefaultView').value,
+                    security_alerts: document.getElementById('prefAlerts').checked,
+                    threat_notifications: document.getElementById('prefThreats').checked
+                };
+                
+                fetch('/preferences', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                    } else {
+                        alert(data.error || 'Failed to save preferences.');
+                    }
+                });
+            });
+
+            // ==========================================
+            // SESSIONS REVOCATION
+            // ==========================================
+            const sessionsList = document.getElementById('sessionsList');
+            sessionsList.addEventListener('click', function(e) {
+                const btn = e.target.closest('.revoke-session-btn');
+                if (btn) {
+                    const token = btn.dataset.token;
+                    if (confirm('Are you sure you want to terminate this remote node session?')) {
+                        fetch('/profile/sessions/revoke', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: JSON.stringify({ session_token: token })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+                                window.location.reload();
+                            } else {
+                                alert(data.error);
+                            }
+                        });
+                    }
+                }
+            });
+            
+            document.getElementById('revokeAllSessionsBtn').addEventListener('click', function() {
+                if (confirm('Revoke all remote authorization nodes except your active terminal?')) {
+                    fetch('/profile/sessions/revoke-all', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrfToken }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            window.location.reload();
+                        }
+                    });
+                }
+            });
+
+            // ==========================================
+            // AJAX ADVANCED SCAN HISTORY PAGINATION
+            // ==========================================
+            let historyPage = 1;
+            const historySearchInput = document.getElementById('historySearchInput');
+            const historyVerdictFilter = document.getElementById('historyVerdictFilter');
+            const historySortFilter = document.getElementById('historySortFilter');
+            const historyTableBody = document.getElementById('historyTableBody');
+            const historyPaginationInfo = document.getElementById('historyPaginationInfo');
+            
+            function loadScanHistory() {
+                const search = encodeURIComponent(historySearchInput.value.trim());
+                const prediction = historyVerdictFilter.value;
+                const sort = historySortFilter.value;
+                
+                fetch(`/history?format=json&page=${historyPage}&per_page=8&search=${search}&prediction=${prediction}&sort=${sort}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.items.length === 0) {
+                            historyTableBody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-muted">No phishing scans archived matching filters.</td></tr>';
+                            historyPaginationInfo.textContent = 'Showing 0 to 0 of 0 scans';
+                        } else {
+                            historyTableBody.innerHTML = data.items.map(s => `
+                                <tr class="border-secondary border-opacity-20">
+                                    <td><code class="text-info">${s.url}</code></td>
+                                    <td>
+                                        <span class="badge ${s.prediction === 'Phishing' ? 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20' : s.prediction === 'Suspicious' ? 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20' : 'bg-success bg-opacity-10 text-success border border-success border-opacity-20'}">
+                                            ${s.prediction}
+                                        </span>
+                                    </td>
+                                    <td>${s.confidence}%</td>
+                                    <td>
+                                        <strong class="${s.risk_score >= 70 ? 'text-danger' : s.risk_score >= 35 ? 'text-warning' : 'text-success'}">${s.risk_score}%</strong>
+                                    </td>
+                                    <td class="small text-secondary">${s.scan_time}</td>
+                                    <td class="text-end">
+                                        <a href="/report/download/${s.id}" class="btn btn-outline-info btn-xs py-1 px-2" target="_blank">
+                                            <i class="fas fa-file-pdf"></i> PDF
+                                        </a>
+                                    </td>
+                                </tr>
+                            `).join('');
+                            
+                            const startItem = (data.page - 1) * data.per_page + 1;
+                            const endItem = Math.min(data.page * data.per_page, data.total);
+                            historyPaginationInfo.textContent = `Showing ${startItem} to ${endItem} of ${data.total} scans`;
+                        }
+                        
+                        // Disable / Enable pagination buttons
+                        document.getElementById('btnPrevHistory').classList.toggle('disabled', !data.has_prev);
+                        document.getElementById('btnNextHistory').classList.toggle('disabled', !data.has_next);
+                    });
+            }
+            
+            // Search / Filter event listeners
+            historySearchInput.addEventListener('input', function() { historyPage = 1; loadScanHistory(); });
+            historyVerdictFilter.addEventListener('change', function() { historyPage = 1; loadScanHistory(); });
+            historySortFilter.addEventListener('change', function() { historyPage = 1; loadScanHistory(); });
+            
+            document.getElementById('btnPrevHistory').addEventListener('click', function() {
+                if (historyPage > 1) {
+                    historyPage--;
+                    loadScanHistory();
+                }
+            });
+            document.getElementById('btnNextHistory').addEventListener('click', function() {
+                historyPage++;
+                loadScanHistory();
+            });
+            
+            // Trigger initial load when tab is clicked
+            document.getElementById('tab-history-btn').addEventListener('click', loadScanHistory);
+
+            // ==========================================
+            // REPORT MANAGER DELETE LOGIC
+            // ==========================================
+            const reportsTableBody = document.getElementById('reportsTableBody');
+            reportsTableBody.addEventListener('click', function(e) {
+                const btn = e.target.closest('.delete-report-btn');
+                if (btn) {
+                    const reportId = btn.dataset.id;
+                    if (confirm('Delete this threat intelligence report PDF? This cannot be undone.')) {
+                        fetch(`/reports/delete/${reportId}`, {
+                            method: 'DELETE',
+                            headers: { 'X-CSRFToken': csrfToken }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                document.getElementById(`report-row-${reportId}`).remove();
+                                alert(data.message);
+                            } else {
+                                alert(data.error);
+                            }
+                        });
+                    }
+                }
+            });
+
+            // ==========================================
+            // DELETE ACCOUNT DESTRUCTION LOGIC
+            // ==========================================
+            const deleteAccountModal = new bootstrap.Modal(document.getElementById('deleteAccountModal'));
+            
+            document.getElementById('deleteAccountBtn').addEventListener('click', function() {
+                document.getElementById('deleteAccountPassword').value = '';
+                document.getElementById('deleteAccountError').classList.add('d-none');
+                deleteAccountModal.show();
+            });
+            
+            document.getElementById('deleteAccountConfirmBtn').addEventListener('click', function() {
+                const password = document.getElementById('deleteAccountPassword').value;
+                if (!password) {
+                    alert('Passcode confirmation is required.');
+                    return;
+                }
+                
+                fetch('/account', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ password: password })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.href = '/login';
+                    } else {
+                        const errDiv = document.getElementById('deleteAccountError');
+                        errDiv.textContent = data.error;
+                        errDiv.classList.remove('d-none');
+                    }
+                });
+            });
+            
+        });
+    </script>
+</body>
+</html>

@@ -16,8 +16,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_auc_score
 
-from config import Config
-from ml.feature_extractor import extract_features, get_feature_names
+from app.config import Config
+from ml.feature_extraction.feature_extractor import extract_features, get_feature_names
 
 # Try to import xgboost
 try:
