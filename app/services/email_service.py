@@ -179,7 +179,7 @@ def send_smtp_email_sync(app, to_email, subject, html_content, text_content=None
                 delivery_failed=False,
                 error_details="Simulation mode active (no SMTP credentials configured)"
             )
-            return True
+            return (True, None)
 
         validate_smtp_config()
 
@@ -350,7 +350,7 @@ def send_smtp_email_sync(app, to_email, subject, html_content, text_content=None
             stack_trace=stack_trace
         )
 
-        return email_sent
+        return (email_sent, error_details)
 
 
 # ---------------------------------------------------------------------------
@@ -603,14 +603,18 @@ def send_verification_email(user_email, username, verification_url, token=None):
     )
 
     _log_reg('info', f"STEP: Calling SMTP sender for verification email to {user_email}")
-    success = send_smtp_email_critical(user_email, subject, html_content, text_content, token=token)
+    res = send_smtp_email_critical(user_email, subject, html_content, text_content, token=token)
+    if isinstance(res, tuple):
+        success, error_details = res
+    else:
+        success, error_details = res, None
 
     if success:
         _log_reg('info', f"SUCCESS: Verification email sent to {user_email}")
+        return True
     else:
-        _log_reg('error', f"FAILED: Verification email could NOT be sent to {user_email}")
-
-    return success
+        _log_reg('error', f"FAILED: Verification email could NOT be sent to {user_email}. Error: {error_details}")
+        return (False, error_details)
 
 
 def send_welcome_email(user_email, username, login_url):

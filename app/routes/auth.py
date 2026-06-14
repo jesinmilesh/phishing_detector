@@ -254,18 +254,25 @@ def register():
             reg_logger.info(f"Step 6: Sending verification email to {email}")
             print(f"[REGISTRATION] Step 6: Sending email to {email}")
             email_sent = False
+            email_error = None
             try:
-                email_sent = send_verification_email(email, username, verification_url, token=token)
+                res = send_verification_email(email, username, verification_url, token=token)
+                if isinstance(res, tuple):
+                    email_sent, email_error = res
+                else:
+                    email_sent, email_error = res, None
+
                 if email_sent:
                     reg_logger.info(f"Step 7: Verification email sent successfully to {email}")
                     print(f"[REGISTRATION] Step 7: Email sent OK")
                 else:
-                    reg_logger.error(f"Step 7: Verification email FAILED to send to {email}")
-                    print(f"[REGISTRATION] Step 7: Email send returned False")
-                    error_logger.error(f"REGISTRATION EMAIL FAILED | User: {username} | Email: {email}")
+                    reg_logger.error(f"Step 7: Verification email FAILED to send to {email}. Error: {email_error}")
+                    print(f"[REGISTRATION] Step 7: Email send returned False. Error: {email_error}")
+                    error_logger.error(f"REGISTRATION EMAIL FAILED | User: {username} | Email: {email} | Error: {email_error}")
             except Exception as email_exc:
-                reg_logger.error(f"Step 7: Email send raised exception: {str(email_exc)}")
-                error_logger.error(f"REGISTRATION EMAIL EXCEPTION | User: {username} | Email: {email} | Error: {email_exc}")
+                email_error = str(email_exc)
+                reg_logger.error(f"Step 7: Email send raised exception: {email_error}")
+                error_logger.error(f"REGISTRATION EMAIL EXCEPTION | User: {username} | Email: {email} | Error: {email_error}")
                 print(f"[REGISTRATION] Step 7: EMAIL EXCEPTION — {email_exc}")
                 email_sent = False
 
@@ -281,10 +288,8 @@ def register():
                     "success"
                 )
             else:
-                flash(
-                    "Verification email could not be delivered.",
-                    "danger"
-                )
+                err_msg = f"Verification email could not be delivered. Details: {email_error}" if email_error else "Verification email could not be delivered."
+                flash(err_msg, "danger")
             return redirect(url_for('login'))
         else:
             reg_logger.error(f"FAILED: Username or email collision — username={username}, email={email}")
@@ -352,12 +357,18 @@ def verify_email_resend():
         db_manager.set_user_verification_token(user['id'], token)
         base_url = Config.APP_BASE_URL.rstrip('/')
         verification_url = f"{base_url}/verify-email?token={token}"
-        resend_sent = send_verification_email(email, user['username'], verification_url, token=token)
+        res = send_verification_email(email, user['username'], verification_url, token=token)
+        if isinstance(res, tuple):
+            resend_sent, resend_error = res
+        else:
+            resend_sent, resend_error = res, None
+
         if resend_sent:
             session[session_key] = datetime.now().isoformat()
             flash("✅ A new verification link has been sent to your email. Please check your inbox and spam folder.", "success")
         else:
-            flash("Verification email could not be delivered.", "danger")
+            err_msg = f"Verification email could not be delivered. Details: {resend_error}" if resend_error else "Verification email could not be delivered."
+            flash(err_msg, "danger")
     else:
         # Prevent user enumeration — always show neutral message, but record send attempts to session
         session[session_key] = datetime.now().isoformat()
@@ -413,12 +424,18 @@ def resend_verification():
         db_manager.set_user_verification_token(user['id'], token)
         base_url = Config.APP_BASE_URL.rstrip('/')
         verification_url = f"{base_url}/verify-email?token={token}"
-        resend_sent = send_verification_email(user['email'], user['username'], verification_url, token=token)
+        res = send_verification_email(user['email'], user['username'], verification_url, token=token)
+        if isinstance(res, tuple):
+            resend_sent, resend_error = res
+        else:
+            resend_sent, resend_error = res, None
+
         if resend_sent:
             session[session_key] = datetime.now().isoformat()
             flash("✅ Verification email has been resent. Please check your inbox (and spam folder).", "success")
         else:
-            flash("Verification email could not be delivered.", "danger")
+            err_msg = f"Verification email could not be delivered. Details: {resend_error}" if resend_error else "Verification email could not be delivered."
+            flash(err_msg, "danger")
     else:
         flash("User record not found.", "danger")
     return redirect(url_for('index'))
