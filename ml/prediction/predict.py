@@ -2,7 +2,7 @@ import os
 import sys
 
 # Add project root to path to resolve imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import joblib
 import numpy as np
