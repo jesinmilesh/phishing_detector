@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Email Verification | AI Shield Threat Intelligence</title>
+    <link rel="shortcut icon" href="/static/icons/favicon.ico" type="image/x-icon">
+    
+    <!-- Bootstrap 5 & FontAwesome 6 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- Custom & Responsive Auth Styles -->
+    <link href="/static/css/auth.css?v=2" rel="stylesheet">
+</head>
+<body>
+    <!-- Accessibility Live Region for announcing errors -->
+    <div id="aria-live-status" class="visually-hidden" aria-live="assertive" aria-atomic="true"></div>
+
+    <div class="auth-split-container">
+        <!-- LEFT SIDE: Security Visuals -->
+        <section class="auth-visual-pane d-flex" aria-label="Branding and Security Info">
+            <div class="auth-visual-content">
+                <div class="illustration-wrapper">
+                    <img src="/static/images/auth-illustration.svg" alt="Futuristic AI security shield guarding database nodes" class="img-fluid float-slow">
+                </div>
+                <h1 class="visual-marketing-title">Protect Your Digital World with AI-Powered Threat Detection</h1>
+                <p class="visual-marketing-desc">
+                    Real-time phishing detection, intelligent threat analysis, and enterprise-grade security for modern users.
+                </p>
+            </div>
+        </section>
+
+        <!-- RIGHT SIDE: Auth Card Form -->
+        <main class="auth-form-pane">
+            <div class="auth-card-wrapper">
+                <!-- Platform Brand Header -->
+                <a href="/" class="auth-brand-header" aria-label="AI Shield Home">
+                    <img src="/static/images/logo.svg" alt="AI Shield Logo" class="auth-brand-logo">
+                    <span class="auth-brand-text">AI SHIELD</span>
+                </a>
+
+                <!-- Auth card -->
+                <div class="auth-glass-card position-relative">
+                    <!-- Loading Mask -->
+                    <div class="loading-overlay" aria-hidden="true">
+                        <div class="spinner-cyber" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    <!-- Alert messages from Flask -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="alert-custom-wrapper">
+                                {% for category, message in messages %}
+                                    <div class="alert-custom alert-custom-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'info' }}" role="alert">
+                                        <i class="fas {% if category == 'danger' %}fa-circle-xmark{% elif category == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %} mt-0.5"></i>
+                                        <span>{{ message }}</span>
+                                        <button class="alert-custom-close" aria-label="Close message"><i class="fas fa-xmark"></i></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Verification States -->
+                    {% if status == 'success' %}
+                        <!-- Success State -->
+                        <div class="text-center">
+                            <div class="verify-success-icon-wrapper">
+                                <i class="fas fa-circle-check"></i>
+                            </div>
+                            <h2 class="auth-card-title">Node Verified</h2>
+                            <p class="auth-card-subtitle">Your analyst identity token is successfully activated</p>
+                            <p class="text-secondary small mb-4">
+                                Thank you for verifying your email address. Your security credentials have been established, and you now have access to the AI Shield Threat Intelligence Dashboard.
+                            </p>
+                            <a href="/login" class="btn-cyber-primary text-decoration-none">
+                                <span>Proceed to Login</span>
+                                <i class="fas fa-arrow-right-to-bracket"></i>
+                            </a>
+                        </div>
+
+                    {% elif status == 'error' %}
+                        <!-- Error State -->
+                        <div class="text-center">
+                            <div class="verify-error-icon-wrapper">
+                                <i class="fas fa-circle-exclamation"></i>
+                            </div>
+                            <h2 class="auth-card-title">Verification Failed</h2>
+                            <p class="auth-card-subtitle">Invalid or expired authorization token</p>
+                            <p class="text-secondary small mb-4">
+                                The verification link you used is invalid or has expired. Please enter your email address below to receive a new authorization token link.
+                            </p>
+                            <form id="verify-email-resend-form" method="POST" action="/verify-email/resend" class="text-start" novalidate>
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <div class="input-group-custom">
+                                    <label for="email" class="form-label-custom">Correspondence Email</label>
+                                    <div class="input-icon-wrapper">
+                                        <input type="email" class="form-control-custom" id="email" name="email" placeholder="name@company.com" required autocomplete="email">
+                                        <span class="input-icon-custom"><i class="fas fa-envelope"></i></span>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-cyber-primary">
+                                    <span>Resend Verification Link</span>
+                                    <i class="fas fa-rotate-left"></i>
+                                </button>
+                            </form>
+                            <div class="auth-card-footer mt-4">
+                                <a href="/login" class="auth-footer-link"><i class="fas fa-arrow-left me-1"></i> Return to Sign In</a>
+                            </div>
+                        </div>
+
+                    {% else %}
+                        <!-- Pending/Default Verification Info State -->
+                        <div class="text-center">
+                            <div class="verify-pending-icon-wrapper">
+                                <i class="fas fa-envelope-open-text"></i>
+                            </div>
+                            <h2 class="auth-card-title">Verify Your Email</h2>
+                            <p class="auth-card-subtitle">Verification link dispatched</p>
+                            <p class="text-secondary small mb-4">
+                                We've sent an activation link to your registered email. Please click the link inside the email to finalize establishing your AI Shield access credentials.
+                            </p>
+                            <form id="verify-email-resend-form" method="POST" action="/verify-email/resend" class="text-start" novalidate>
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <div class="input-group-custom">
+                                    <label for="email" class="form-label-custom">Correspondence Email</label>
+                                    <div class="input-icon-wrapper">
+                                        <input type="email" class="form-control-custom" id="email" name="email" placeholder="name@company.com" required autocomplete="email">
+                                        <span class="input-icon-custom"><i class="fas fa-envelope"></i></span>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-cyber-primary">
+                                    <span>Resend Verification Link</span>
+                                    <i class="fas fa-rotate-left"></i>
+                                </button>
+                            </form>
+                            <div class="auth-card-footer mt-4">
+                                <a href="/login" class="auth-footer-link"><i class="fas fa-arrow-left me-1"></i> Return to Sign In</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom Auth Handler -->
+    <script src="/static/js/auth.js?v=2"></script>
+</body>
+</html>

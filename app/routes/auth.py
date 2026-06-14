@@ -23,15 +23,21 @@ def login():
         return redirect(url_for('dashboard'))
         
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
+        username_or_email = request.form.get('username', '').strip() or request.form.get('email', '').strip()
         password = request.form.get('password', '')
         
-        if not username or not password:
+        if not username_or_email or not password:
             flash("All fields are required.", "danger")
             return render_template('login.html')
             
-        user = db_manager.authenticate_user(username, password)
-        if user:
+        user = None
+        if '@' in username_or_email:
+            user = db_manager.get_user_by_email(username_or_email)
+        if not user:
+            user = db_manager.get_user_by_username(username_or_email)
+            
+        if user and check_password_hash(user['password_hash'], password):
+            username = user['username']
             # Check 2FA
             sec_settings = db_manager.get_security_settings_by_user_id(user['id'])
             if sec_settings and sec_settings.get('two_factor_enabled', 0) == 1:
@@ -79,18 +85,24 @@ def login():
             flash("Login successful!", "success")
             return redirect(url_for('dashboard'))
         else:
-            user_record = db_manager.get_user_by_username(username)
+            user_record = None
+            if '@' in username_or_email:
+                user_record = db_manager.get_user_by_email(username_or_email)
+            if not user_record:
+                user_record = db_manager.get_user_by_username(username_or_email)
+                
             if user_record:
-                attempts = session.get(f'failed_attempts_{username}', 0) + 1
-                session[f'failed_attempts_{username}'] = attempts
+                failed_username = user_record['username']
+                attempts = session.get(f'failed_attempts_{failed_username}', 0) + 1
+                session[f'failed_attempts_{failed_username}'] = attempts
                 if attempts >= 3:
                     send_security_alert_email(
                         user_record['email'],
-                        username,
+                        failed_username,
                         "Multiple Failed Login Attempts",
                         f"There have been {attempts} failed login attempts on your account from remote address {request.remote_addr}. If this wasn't you, please secure your credentials immediately."
                     )
-            security_logger.warning(f"FAILED LOGIN | User: {username} | IP: {request.remote_addr}")
+            security_logger.warning(f"FAILED LOGIN | User: {username_or_email} | IP: {request.remote_addr}")
             flash("Invalid credentials.", "danger")
             
     return render_template('login.html')
@@ -171,6 +183,7 @@ def register():
         return redirect(url_for('dashboard'))
         
     if request.method == 'POST':
+        full_name = request.form.get('full_name', '').strip()
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
@@ -195,6 +208,8 @@ def register():
             
         user_id = db_manager.create_user(username, email, password)
         if user_id:
+            if full_name:
+                db_manager.update_profile(user_id, full_name, '', '', '', '')
             token = secrets.token_urlsafe(32)
             db_manager.set_user_verification_token(user_id, token)
             verification_url = url_for('verify_email', token=token, _external=True)
@@ -221,8 +236,7 @@ def logout():
 def verify_email():
     token = request.args.get('token', '')
     if not token:
-        flash("Invalid verification token.", "danger")
-        return redirect(url_for('login'))
+        return render_template('verify_email.html', status='pending')
         
     user = db_manager.verify_user_email(token)
     if user:
@@ -231,11 +245,54 @@ def verify_email():
         # Dispatch welcome email upon successful verification
         login_url = url_for('login', _external=True)
         send_welcome_email(user['email'], user['username'], login_url)
-        flash("Email verified successfully! Your AI Shield node is now fully authorized.", "success")
-        return redirect(url_for('login'))
+        return render_template('verify_email.html', status='success')
     else:
-        flash("Verification token expired or invalid.", "danger")
-        return redirect(url_for('login'))
+        return render_template('verify_email.html', status='error')
+
+@app.route('/verify-email/resend', methods=['POST'])
+@limiter.limit("3 per minute")
+def verify_email_resend():
+    email = request.form.get('email', '').strip()
+    if not email:
+        flash("Email is required.", "danger")
+        return redirect(url_for('verify_email'))
+        
+    user = db_manager.get_user_by_email(email)
+    if user:
+        if user.get('is_verified', 0):
+            flash("Your account is already verified. Please log in.", "info")
+            return redirect(url_for('login'))
+            
+        token = secrets.token_urlsafe(32)
+        db_manager.set_user_verification_token(user['id'], token)
+        verification_url = url_for('verify_email', token=token, _external=True)
+        send_verification_email(email, user['username'], verification_url)
+        flash("A new verification link has been sent to your email.", "success")
+    else:
+        # Prevent user enumeration
+        flash("If that email address is registered, a new verification link has been sent.", "success")
+        
+    return redirect(url_for('verify_email'))
+
+@app.route('/api/check-username', methods=['POST'])
+@limiter.limit("20 per minute")
+def check_username():
+    data = request.get_json() or {}
+    username = data.get('username', '').strip()
+    if not username:
+        return jsonify({"available": False, "error": "Username is required."}), 400
+    user = db_manager.get_user_by_username(username)
+    return jsonify({"available": user is None})
+
+@app.route('/api/check-email', methods=['POST'])
+@limiter.limit("20 per minute")
+def check_email():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip()
+    if not email:
+        return jsonify({"available": False, "error": "Email is required."}), 400
+    user = db_manager.get_user_by_email(email)
+    return jsonify({"available": user is None})
 
 @app.route('/resend-verification', methods=['GET', 'POST'])
 @login_required
@@ -348,6 +405,7 @@ def newsletter_subscribe():
         return jsonify({"success": True, "message": "Subscribed successfully! Thank you for staying informed."})
     else:
         return jsonify({"success": True, "message": "Email is already subscribed."})
+
 
 
 # ==========================================

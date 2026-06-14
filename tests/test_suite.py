@@ -102,12 +102,12 @@ class TestFlaskAPI(unittest.TestCase):
     def test_login_page_loads(self):
         response = self.client.get('/login')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'ANALYST SIGN IN', response.data)
+        self.assertIn(b'Welcome Back', response.data)
 
     def test_register_page_loads(self):
         response = self.client.get('/register')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'REGISTER ANALYST ID', response.data)
+        self.assertIn(b'Register Node', response.data)
 
     def test_rest_api_scan_endpoint(self):
         # CSRF is exempt for /scan, and testing is enabled
