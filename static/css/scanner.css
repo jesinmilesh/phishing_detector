@@ -4,29 +4,29 @@
    ========================================================================== */
 
 :root {
-    --bg-base: #030712;
-    --bg-surface: #0b0f19;
-    --bg-card: rgba(17, 24, 39, 0.65);
-    --bg-glass: rgba(11, 15, 25, 0.6);
+    --bg-base: #0F172A;
+    --bg-surface: #0B0F19;
+    --bg-card: #1E293B;
+    --bg-glass: rgba(30, 41, 59, 0.8);
     --backdrop-blur: blur(12px);
     
-    --border-subtle: rgba(56, 189, 248, 0.12);
-    --border-hover: rgba(56, 189, 248, 0.3);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(59, 130, 246, 0.3);
     
-    --color-primary: #00e5ff;
-    --color-primary-glow: rgba(0, 229, 255, 0.15);
-    --color-secondary: #0ea5e9;
-    --color-success: #10b981;
-    --color-success-glow: rgba(16, 185, 129, 0.12);
-    --color-warning: #f59e0b;
+    --color-primary: #3B82F6;
+    --color-primary-glow: rgba(59, 130, 246, 0.15);
+    --color-secondary: #60A5FA;
+    --color-success: #22C55E;
+    --color-success-glow: rgba(34, 197, 94, 0.12);
+    --color-warning: #F59E0B;
     --color-warning-glow: rgba(245, 158, 11, 0.12);
-    --color-danger: #ef4444;
+    --color-danger: #EF4444;
     --color-danger-glow: rgba(239, 68, 68, 0.12);
     
-    --text-primary: #f9fafb;
-    --text-secondary: #d1d5db;
-    --text-muted: #9ca3af;
-    --text-dark: #4b5563;
+    --text-primary: #F8FAFC;
+    --text-secondary: #CBD5E1;
+    --text-muted: #94A3B8;
+    --text-dark: #94A3B8;
     
     --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -36,6 +36,26 @@ body.scanner-theme {
     color: var(--text-primary);
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
+    color-scheme: dark;
+}
+
+/* Global dark mode input overrides for scanner */
+::placeholder {
+    color: var(--text-muted) !important;
+    opacity: 1;
+}
+
+select option {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+/* Bootstrap .text-muted override for dark theme */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+.text-secondary {
+    color: var(--text-secondary) !important;
 }
 
 /* Header Redesign */
@@ -75,7 +95,7 @@ body.scanner-theme {
 
 .soc-nav-link:hover, .soc-nav-link.active {
     color: var(--color-primary);
-    background-color: rgba(0, 229, 255, 0.05);
+    background-color: rgba(59, 130, 246, 0.06);
 }
 
 .soc-nav-link i {
@@ -92,7 +112,7 @@ body.scanner-theme {
 .hero-section-soc {
     padding: 40px 0 25px;
     text-align: center;
-    background: radial-gradient(circle at top, rgba(0, 229, 255, 0.03), transparent 60%);
+    background: radial-gradient(circle at top, rgba(59, 130, 246, 0.04), transparent 60%);
 }
 
 .hero-title-soc {
@@ -214,7 +234,7 @@ body.scanner-theme {
 
 .btn-search-soc:hover {
     background-color: var(--color-primary);
-    color: #030712;
+    color: var(--bg-base);
     box-shadow: 0 0 15px var(--color-primary);
 }
 
@@ -238,7 +258,7 @@ body.scanner-theme {
 }
 
 .suggestion-chip:hover {
-    background-color: rgba(0, 229, 255, 0.05);
+    background-color: rgba(59, 130, 246, 0.06);
     border-color: var(--color-primary);
     color: var(--color-primary);
 }
@@ -281,6 +301,7 @@ body.scanner-theme {
 
 .metric-card-soc:hover {
     border-color: var(--color-primary);
+    box-shadow: 0 4px 16px var(--color-primary-glow);
     transform: translateY(-2px);
 }
 
@@ -377,7 +398,7 @@ body.scanner-theme {
 
 .file-drop-zone:hover {
     border-color: var(--color-primary);
-    background-color: rgba(0, 229, 255, 0.01);
+    background-color: rgba(59, 130, 246, 0.03);
 }
 
 /* Custom UI badges */
@@ -459,6 +480,6 @@ body.scanner-theme {
 
 .btn-soc:hover {
     border-color: var(--color-primary);
-    background-color: rgba(0, 229, 255, 0.05);
+    background-color: rgba(59, 130, 246, 0.06);
     color: var(--color-primary);
 }

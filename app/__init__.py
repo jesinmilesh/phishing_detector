@@ -106,6 +106,10 @@ def add_security_headers(response):
         "img-src 'self' data: blob:; "
         "connect-src 'self';"
     )
+    # Disable caching for development/audit clarity
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, public, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
     return response
 
 # Import routes to register them

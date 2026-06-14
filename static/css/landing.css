@@ -9,31 +9,31 @@
     --font-cyber: 'Orbitron', sans-serif;
 
     /* Theme Colors (Dark Theme Default) */
-    --bg-main: #060913;
-    --bg-darker: #03050a;
-    --bg-card: rgba(13, 20, 38, 0.45);
-    --bg-card-hover: rgba(20, 30, 58, 0.65);
+    --bg-main: #0F172A;
+    --bg-darker: #0B0F19;
+    --bg-card: #1E293B;
+    --bg-card-hover: rgba(30, 41, 59, 0.9);
     
-    --border-color: rgba(255, 255, 255, 0.05);
-    --border-hover: rgba(14, 165, 233, 0.3);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(59, 130, 246, 0.3);
 
-    --primary: #0ea5e9; /* Cyber Blue */
-    --primary-rgb: 14, 165, 233;
-    --primary-glow: rgba(14, 165, 233, 0.15);
+    --primary: #3B82F6; /* Cyber Blue */
+    --primary-rgb: 59, 130, 246;
+    --primary-glow: rgba(59, 130, 246, 0.15);
 
-    --secondary: #10b981; /* Security Green */
-    --secondary-rgb: 16, 185, 129;
+    --secondary: #22C55E; /* Security Green */
+    --secondary-rgb: 34, 197, 94;
     
-    --danger: #ef4444; /* Threat Red */
+    --danger: #EF4444; /* Threat Red */
     --danger-rgb: 239, 68, 68;
 
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --text-dark: #64748b;
+    --text-main: #F8FAFC;
+    --text-muted: #CBD5E1;
+    --text-dark: #94A3B8;
 
     /* Transitions & Shadows */
     --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    --box-shadow-glow: 0 0 30px rgba(14, 165, 233, 0.15);
+    --box-shadow-glow: 0 0 30px rgba(59, 130, 246, 0.15);
     --glass-blur: blur(12px);
 }
 
@@ -74,6 +74,33 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* ============================================================
+   BOOTSTRAP .text-muted DARK MODE OVERRIDE
+   Bootstrap's default is #6c757d which fails contrast on dark
+   backgrounds. Override globally for this page.
+   ============================================================ */
+.text-muted {
+    color: var(--text-dark) !important;
+}
+
+/* On dark sections specifically, boost contrast even further */
+.timeline-card .text-muted,
+.premium-card .text-muted,
+.cta-box .text-muted,
+.footer .text-muted,
+.intel-section .text-muted,
+.faq-section .text-muted,
+.hero-wrapper .text-muted,
+.features-section .text-muted,
+.dashboard-preview-section .text-muted {
+    color: var(--text-dark) !important;
+}
+
+/* Light theme: restore proper muted colour for light backgrounds */
+.light-theme .text-muted {
+    color: #475569 !important;
+}
+
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
     font-weight: 700;
@@ -82,7 +109,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 p {
-    color: var(--text-muted);
+    color: var(--text-dark);
 }
 
 /* Background Cyber Grid Pattern */
@@ -95,15 +122,15 @@ p {
     z-index: -2;
     background-size: 50px 50px;
     background-image: 
-        linear-gradient(to right, rgba(14, 165, 233, 0.02) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(14, 165, 233, 0.02) 1px, transparent 1px);
+        linear-gradient(to right, rgba(59, 130, 246, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(59, 130, 246, 0.025) 1px, transparent 1px);
     pointer-events: none;
 }
 
 .light-theme .cyber-grid-bg {
     background-image: 
-        linear-gradient(to right, rgba(14, 165, 233, 0.04) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(14, 165, 233, 0.04) 1px, transparent 1px);
+        linear-gradient(to right, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
 }
 
 /* Glowing Radial Circles */
@@ -112,7 +139,7 @@ p {
     width: 600px;
     height: 600px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(14, 165, 233, 0.08) 0%, rgba(14, 165, 233, 0) 70%);
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0) 70%);
     filter: blur(80px);
     z-index: -1;
     pointer-events: none;
@@ -120,7 +147,7 @@ p {
 
 /* Navbar Glassmorphism */
 .navbar-glass {
-    background-color: rgba(6, 9, 19, 0.7);
+    background-color: rgba(15, 23, 42, 0.75);
     backdrop-filter: var(--glass-blur);
     border-bottom: 1px solid var(--border-color);
     transition: var(--transition-smooth);
@@ -134,7 +161,7 @@ p {
 .navbar-scrolled {
     padding-top: 10px;
     padding-bottom: 10px;
-    background-color: rgba(3, 5, 10, 0.95);
+    background-color: rgba(15, 23, 42, 0.97);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
@@ -198,7 +225,7 @@ p {
     border-radius: 8px;
     font-weight: 600;
     font-size: 0.9rem;
-    box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
     transition: var(--transition-smooth);
     display: inline-flex;
     align-items: center;
@@ -207,7 +234,7 @@ p {
 
 .btn-premium-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.6);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.55);
     color: #fff;
 }
 
@@ -222,8 +249,8 @@ p {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: rgba(14, 165, 233, 0.1);
-    border: 1px solid rgba(14, 165, 233, 0.25);
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
     color: var(--primary);
     padding: 6px 16px;
     border-radius: 100px;
@@ -232,7 +259,7 @@ p {
     letter-spacing: 0.05em;
     text-transform: uppercase;
     margin-bottom: 25px;
-    box-shadow: 0 0 15px rgba(14, 165, 233, 0.05);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.08);
 }
 
 .hero-title {
@@ -274,7 +301,7 @@ p {
 .hero-float-img {
     width: 100%;
     max-width: 500px;
-    filter: drop-shadow(0 20px 40px rgba(14, 165, 233, 0.15));
+    filter: drop-shadow(0 20px 40px rgba(59, 130, 246, 0.18));
     animation: floatAnimation 6s ease-in-out infinite;
 }
 
@@ -391,15 +418,15 @@ p {
     justify-content: center;
     border-radius: 12px;
     margin-bottom: 25px;
-    border: 1px solid rgba(14, 165, 233, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.25);
     transition: var(--transition-smooth);
 }
 
 .premium-card:hover .card-icon {
     transform: scale(1.1) rotate(5deg);
     color: var(--secondary);
-    border-color: rgba(16, 185, 129, 0.3);
-    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(34, 197, 94, 0.35);
+    background: rgba(34, 197, 94, 0.1);
 }
 
 .card-title {
@@ -410,7 +437,8 @@ p {
 
 .card-text {
     font-size: 0.95rem;
-    color: var(--text-muted);
+    color: var(--text-dark);
+    line-height: 1.65;
 }
 
 /* How It Works (Timeline Workflow) */
@@ -515,7 +543,7 @@ p {
 }
 
 .demo-console {
-    background: rgba(3, 5, 10, 0.8);
+    background: rgba(15, 23, 42, 0.9);
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 40px;
@@ -553,7 +581,7 @@ p {
     font-family: var(--font-cyber);
     font-size: 0.85rem;
     letter-spacing: 2px;
-    color: var(--text-muted);
+    color: var(--text-dark);
 }
 
 .demo-input-group {
@@ -568,7 +596,7 @@ p {
 
 .demo-input-group:focus-within {
     border-color: var(--primary);
-    box-shadow: 0 0 15px rgba(14, 165, 233, 0.25);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
 }
 
 .demo-input {
@@ -605,8 +633,8 @@ p {
 }
 
 .intel-table th {
-    background-color: rgba(3, 5, 10, 0.4);
-    color: var(--text-muted);
+    background-color: rgba(15, 23, 42, 0.6);
+    color: var(--text-dark);
     font-family: var(--font-cyber);
     font-size: 0.75rem;
     letter-spacing: 1px;
@@ -625,7 +653,7 @@ p {
 .dashboard-preview-section {
     padding: 100px 0;
     position: relative;
-    background: radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.05) 0%, transparent 60%);
+    background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 60%);
 }
 
 .dashboard-mockup-wrapper {
@@ -690,16 +718,17 @@ p {
 
 .faq-accordion .accordion-body {
     padding: 20px 25px;
-    color: var(--text-muted);
+    color: var(--text-dark);
     font-size: 0.95rem;
-    background-color: rgba(3, 5, 10, 0.2);
+    background-color: rgba(15, 23, 42, 0.4);
+    line-height: 1.7;
 }
 
 /* Call To Action */
 .cta-section {
     padding: 120px 0;
     position: relative;
-    background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 60%);
+    background: radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.05) 0%, transparent 60%);
 }
 
 .cta-box {
@@ -733,6 +762,8 @@ p {
     max-width: 600px;
     margin: 0 auto 35px auto;
     font-size: 1.15rem;
+    color: var(--text-dark);
+    line-height: 1.7;
 }
 
 /* Footer styling */
