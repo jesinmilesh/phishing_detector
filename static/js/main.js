@@ -6,11 +6,209 @@ function getCssVariable(name) {
 
 // Global Chart References
 let riskGaugeChart = null;
-let featuresRadarChart = null;
+let indexTrendChart = null;
+let indexPieChart = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
     const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
+
+    // ----------------------------------------------------
+    // SUGGESTION CHIPS LOGIC
+    // ----------------------------------------------------
+    const suggestionChips = document.querySelectorAll('.suggestion-chip');
+    suggestionChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            const fillValue = chip.getAttribute('data-fill');
+            const tabPane = chip.closest('.tab-pane');
+            if (tabPane && fillValue) {
+                const textInput = tabPane.querySelector('input[type="text"]');
+                if (textInput) {
+                    textInput.value = fillValue;
+                    textInput.focus();
+                }
+            }
+        });
+    });
+
+    // ----------------------------------------------------
+    // SMOOTH SCROLL FOR ANCHORS
+    // ----------------------------------------------------
+    const quickScanLink = document.querySelector('a[href="#scan-section"]');
+    if (quickScanLink) {
+        quickScanLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = document.getElementById('scan-section');
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
+    // ----------------------------------------------------
+    // NOTIFICATIONS PANEL (CSP COMPLIANT)
+    // ----------------------------------------------------
+    const notifBadge = document.getElementById('notifBadge');
+    const notifList = document.getElementById('notifList');
+    const markAllReadBtn = document.getElementById('markAllReadBtn');
+    
+    function fetchNotifications() {
+        if (!notifList) return;
+        fetch('/notifications')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.unread_count > 0) {
+                        if (notifBadge) {
+                            notifBadge.textContent = data.unread_count;
+                            notifBadge.classList.remove('d-none');
+                        }
+                    } else {
+                        if (notifBadge) notifBadge.classList.add('d-none');
+                    }
+                    
+                    if (data.notifications.length === 0) {
+                        notifList.innerHTML = '<div class="p-3 text-center text-muted">No new security logs.</div>';
+                    } else {
+                        notifList.innerHTML = data.notifications.map(n => `
+                            <div class="p-3 border-bottom border-secondary border-opacity-10 ${n.is_read ? '' : 'bg-info bg-opacity-5'}" id="notif-item-${n.id}" style="transition: all 0.2s;">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <strong class="text-white small d-flex align-items-center gap-2">
+                                        <span class="d-inline-block rounded-circle bg-danger" style="width: 5px; height: 5px; display: ${n.is_read ? 'none' : 'inline-block'}"></span>
+                                        ${n.title}
+                                    </strong>
+                                    <div class="d-flex gap-2">
+                                        ${!n.is_read ? `<button class="btn btn-link p-0 text-info mark-read-btn" data-id="${n.id}" title="Mark read"><i class="fas fa-check"></i></button>` : ''}
+                                        <button class="btn btn-link p-0 text-danger delete-notif-btn" data-id="${n.id}" title="Delete alert"><i class="fas fa-trash-can"></i></button>
+                                    </div>
+                                </div>
+                                <p class="text-secondary mb-1" style="font-size: 0.75rem; line-height:1.3">${n.message}</p>
+                                <span class="text-muted" style="font-size: 0.65rem;">${n.created_at}</span>
+                            </div>
+                        `).join('');
+                    }
+                }
+            })
+            .catch(err => console.error("Error loading index notifications:", err));
+    }
+    
+    if (notifList) {
+        notifList.addEventListener('click', (e) => {
+            const markBtn = e.target.closest('.mark-read-btn');
+            const deleteBtn = e.target.closest('.delete-notif-btn');
+            
+            if (markBtn) {
+                e.stopPropagation();
+                const notifId = markBtn.dataset.id;
+                fetch(`/notifications/read/${notifId}`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken }
+                }).then(() => fetchNotifications());
+            }
+            
+            if (deleteBtn) {
+                e.stopPropagation();
+                const notifId = deleteBtn.dataset.id;
+                fetch(`/notifications/delete/${notifId}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRFToken': csrfToken }
+                }).then(() => fetchNotifications());
+            }
+        });
+    }
+
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fetch('/notifications/read-all', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            }).then(() => fetchNotifications());
+        });
+    }
+    
+    fetchNotifications();
+    setInterval(fetchNotifications, 30000);
+
+    // ----------------------------------------------------
+    // LANDING ANALYTICS CHARTS
+    // ----------------------------------------------------
+    initializeLandingCharts();
+
+    function initializeLandingCharts() {
+        const trendCanvas = document.getElementById('indexTrendCanvas');
+        if (!trendCanvas) return;
+
+        const dailyData = JSON.parse(trendCanvas.dataset.dailyScans || '[]');
+        const sortedData = [...dailyData].reverse();
+        
+        const labels = sortedData.map(d => {
+            const date = new Date(d.date);
+            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        });
+        const totalCounts = sortedData.map(d => d.count || 0);
+
+        // Chart 1: Volume Trend (Line)
+        indexTrendChart = new Chart(trendCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Audit Traffic',
+                    data: totalCounts,
+                    borderColor: '#00e5ff',
+                    backgroundColor: 'rgba(0, 229, 255, 0.05)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    pointBackgroundColor: '#00e5ff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#4b5563', font: { size: 8 } } },
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.03)' }, ticks: { color: '#4b5563', font: { size: 8 } } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: '#0b0f19', borderColor: 'rgba(0, 229, 255, 0.2)', borderWidth: 1 }
+                }
+            }
+        });
+
+        // Chart 2: Category breakdown (Doughnut)
+        const pieCanvas = document.getElementById('indexPieCanvas');
+        if (pieCanvas) {
+            const phishVal = parseInt(pieCanvas.dataset.phishing || '0');
+            const suspVal = parseInt(pieCanvas.dataset.suspicious || '0');
+            const safeVal = parseInt(pieCanvas.dataset.legitimate || '0');
+
+            indexPieChart = new Chart(pieCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Safe', 'Suspicious', 'Phishing'],
+                    datasets: [{
+                        data: [safeVal, suspVal, phishVal],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 1,
+                        borderColor: '#0b0f19'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#0b0f19', borderColor: 'rgba(0, 229, 255, 0.2)', borderWidth: 1 }
+                    }
+                }
+            });
+        }
+    }
 
     // ----------------------------------------------------
     // URL SCAN HANDLER
@@ -31,14 +229,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const response = await fetch('/scan/url', {
                     method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    },
+                    headers: { 'X-CSRFToken': csrfToken },
                     body: formData
                 });
                 
                 const res = await response.json();
-                
                 if (res.success) {
                     displayUrlResult(res.data);
                 } else {
@@ -71,14 +266,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const response = await fetch('/scan/qrcode', {
                     method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    },
+                    headers: { 'X-CSRFToken': csrfToken },
                     body: formData
                 });
                 
                 const res = await response.json();
-                
                 if (res.success) {
                     displayQrResult(res.data);
                 } else {
@@ -120,14 +312,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const response = await fetch('/scan/email', {
                     method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    },
+                    headers: { 'X-CSRFToken': csrfToken },
                     body: formData
                 });
                 
                 const res = await response.json();
-                
                 if (res.success) {
                     displayEmailResult(res.data);
                 } else {
@@ -160,14 +349,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const response = await fetch('/scan/screenshot', {
                     method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    },
+                    headers: { 'X-CSRFToken': csrfToken },
                     body: formData
                 });
                 
                 const res = await response.json();
-                
                 if (res.success) {
                     displayScreenshotResult(res.data);
                 } else {
@@ -177,6 +363,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 showError('ss-result', 'Connection to rendering sandbox failed.');
             } finally {
                 hideLoading('ss-loading');
+            }
+        });
+    }
+
+    // ----------------------------------------------------
+    // DOMAIN INTELLIGENCE HANDLER (5TH TAB)
+    // ----------------------------------------------------
+    const domainIntelForm = document.getElementById('domainIntelForm');
+    if (domainIntelForm) {
+        domainIntelForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            let domainInput = document.getElementById('domainIntelInput').value.trim();
+            if (!domainInput) return;
+
+            // Simple validation: prefix with http:// if it's a raw domain name
+            if (!domainInput.startsWith('http://') && !domainInput.startsWith('https://')) {
+                domainInput = 'http://' + domainInput;
+            }
+
+            showLoading('domain-loading');
+            hideResult('domain-result');
+
+            try {
+                const formData = new FormData();
+                formData.append('url', domainInput);
+
+                const response = await fetch('/scan/url', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken },
+                    body: formData
+                });
+                
+                const res = await response.json();
+                if (res.success) {
+                    displayDomainResult(res.data);
+                } else {
+                    showError('domain-result', res.error || 'Domain lookup failed');
+                }
+            } catch (err) {
+                showError('domain-result', 'Failed to resolve DNS indicators.');
+            } finally {
+                hideLoading('domain-loading');
             }
         });
     }
@@ -521,7 +749,7 @@ function displayScreenshotResult(data) {
             
             <div class="row mt-3 g-4">
                 <div class="col-md-6">
-                    <img src="${data.screenshot_url}" class="screenshot-preview" alt="Sandboxed Screenshot">
+                    <img src="${data.screenshot_url}" class="screenshot-preview" alt="Sandboxed Screenshot" style="max-width:100%; border:1px solid rgba(255,255,255,0.05); border-radius:6px;">
                 </div>
                 <div class="col-md-6">
                     <div class="alert ${alertClass}">
@@ -549,6 +777,66 @@ function displayScreenshotResult(data) {
 }
 
 // ----------------------------------------------------
+// DOMAIN INTEL RESULTS DISPLAY (5TH TAB)
+// ----------------------------------------------------
+function displayDomainResult(data) {
+    const el = document.getElementById('domain-result');
+    if (!el) return;
+    el.classList.remove('d-none');
+
+    const intel = data.details || {};
+    const whois = intel.whois || {};
+    const ssl = intel.ssl || {};
+    const dns = intel.dns || {};
+
+    let badgeClass = 'badge-soc-success';
+    if (data.prediction === 'Phishing') badgeClass = 'badge-soc-danger';
+    else if (data.prediction === 'Suspicious') badgeClass = 'badge-soc-warning';
+
+    el.innerHTML = `
+        <div class="cyber-card mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-20">
+                <h5 class="brand-font text-info m-0"><i class="fas fa-shield-halved"></i> DOMAIN REPUTATION & INDICATORS</h5>
+                <span class="badge-soc ${badgeClass}">${data.prediction.toUpperCase()}</span>
+            </div>
+
+            <div class="row g-3">
+                <!-- Left: Whois Registry & SSL -->
+                <div class="col-md-6">
+                    <div class="p-3 bg-black bg-opacity-20 rounded border border-secondary border-opacity-10 h-100">
+                        <strong class="text-info font-monospace d-block mb-2 small"><i class="fas fa-id-card"></i> WHOIS & SSL Details</strong>
+                        <table class="table table-borderless text-light table-sm small mb-0">
+                            <tr><td><strong>Domain:</strong></td><td class="text-secondary font-monospace">${whois.domain || 'N/A'}</td></tr>
+                            <tr><td><strong>Registrar:</strong></td><td class="text-secondary">${whois.registrar || 'N/A'}</td></tr>
+                            <tr><td><strong>Domain Age:</strong></td><td class="text-secondary">${whois.domain_age_days !== -1 ? whois.domain_age_days + ' days' : 'Unknown'}</td></tr>
+                            <tr><td><strong>SSL Issuer:</strong></td><td class="text-secondary">${ssl.issuer || 'N/A'}</td></tr>
+                            <tr><td><strong>SSL Active:</strong></td><td><span class="badge ${ssl.has_ssl ? 'bg-success' : 'bg-danger'}">${ssl.has_ssl ? 'Active' : 'Missing'}</span></td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Right: DNS Resolutions -->
+                <div class="col-md-6">
+                    <div class="p-3 bg-black bg-opacity-20 rounded border border-secondary border-opacity-10 h-100">
+                        <strong class="text-info font-monospace d-block mb-2 small"><i class="fas fa-network-wired"></i> Authoritative DNS Maps</strong>
+                        <div class="dns-records">
+                            ${renderDnsRow("A Records (IP Resolution)", dns.A)}
+                            ${renderDnsRow("MX Records (Mail Exchanger)", dns.MX)}
+                            ${renderDnsRow("NS Records (Name Server)", dns.NS)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3 p-3 bg-black bg-opacity-30 rounded border border-secondary border-opacity-20 d-flex justify-content-between align-items-center">
+                <span class="text-secondary small">Risk Level: <strong>${data.risk_score}%</strong> • Node Verdict: <strong>${data.prediction}</strong></span>
+                <a href="/report/download/${data.scan_id}" class="btn-soc p-1 px-3 text-info"><i class="fas fa-file-pdf"></i> Download Audit Report</a>
+            </div>
+        </div>
+    `;
+}
+
+// ----------------------------------------------------
 // CHART GENERATOR (Using Chart.js)
 // ----------------------------------------------------
 
@@ -563,7 +851,7 @@ function renderGaugeChart(riskScore) {
     const rest = 100 - riskScore;
     
     let mainColor = '#10b981'; // Green
-    if (riskScore >= 70) mainColor = '#f43f5e'; // Red
+    if (riskScore >= 70) mainColor = '#ef4444'; // Red
     else if (riskScore >= 35) mainColor = '#f59e0b'; // Yellow
 
     riskGaugeChart = new Chart(ctx, {

@@ -183,6 +183,7 @@ def register():
         return redirect(url_for('dashboard'))
         
     if request.method == 'POST':
+        print("[DEBUG] Registration Started")
         full_name = request.form.get('full_name', '').strip()
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip()
@@ -208,16 +209,20 @@ def register():
             
         user_id = db_manager.create_user(username, email, password)
         if user_id:
+            print("[DEBUG] User Saved")
             if full_name:
                 db_manager.update_profile(user_id, full_name, '', '', '', '')
             token = secrets.token_urlsafe(32)
+            print("[DEBUG] Token Created")
             db_manager.set_user_verification_token(user_id, token)
             verification_url = url_for('verify_email', token=token, _external=True)
+            print("[DEBUG] Email Generated")
             send_verification_email(email, username, verification_url)
             security_logger.info(f"USER REGISTRATION | User: {username} | Email: {email} | IP: {request.remote_addr}")
             flash("Registration successful! A verification link has been sent to your email.", "success")
             return redirect(url_for('login'))
         else:
+            print("[DEBUG] User Registration Failed (Username/Email collision)")
             security_logger.error(f"USER REGISTRATION FAILED | User: {username} | Email: {email} | IP: {request.remote_addr}")
             flash("Username or Email already exists.", "danger")
             
@@ -409,6 +414,72 @@ def newsletter_subscribe():
 
 
 # ==========================================
-# APPLICATION ROUTES
+# DIAGNOSTICS & SYSTEM ROUTES
 # ==========================================
+
+@app.route('/test-email')
+def test_email():
+    recipient = request.args.get('email', '').strip()
+    if not recipient:
+        recipient = Config.MAIL_USERNAME or "jesinmilesh@gmail.com"
+        
+    print(f"[DEBUG] Initiating Sync Test Email to: {recipient}")
+    
+    from app.services.email_service import send_smtp_email_sync, validate_smtp_config
+    from app import app as current_flask_app
+    
+    test_subject = "AI Shield Diagnostics: Test Email Route"
+    test_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>AI Shield Diagnostics</title>
+        <style>
+            body { font-family: Arial, sans-serif; background-color: #060913; color: #cbd5e1; padding: 20px; }
+            .card { max-width: 600px; margin: 0 auto; background: #0d1423; border: 1px solid #0ea5e9; border-radius: 8px; padding: 25px; }
+            h1 { color: #0ea5e9; margin-top: 0; }
+            .success-msg { color: #10b981; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>🛡️ AI Shield Diagnostics</h1>
+            <p class="success-msg">Email Sent Successfully!</p>
+            <p>This is an automated diagnostics and verification message transmitted from the <strong>/test-email</strong> route.</p>
+            <p>If you received this message, your Flask-Mail and SMTP integration is fully functional and emails are active!</p>
+            <div style="margin-top: 30px; border-top: 1px solid rgba(56,189,248,0.15); padding-top: 15px;">
+                <img src="cid:jesin_tech_logo" alt="Jesin Technologies Logo" style="height: 35px; max-width: 140px;">
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Pre-validate and collect any warning notifications
+    warnings = validate_smtp_config()
+    
+    # Transmit test email synchronously to wait and capture exact status
+    success = send_smtp_email_sync(current_flask_app, recipient, test_subject, test_html)
+    
+    if success:
+        print("[DEBUG] Email Sent Successfully")
+        return jsonify({
+            "success": True,
+            "status": "Email Sent Successfully",
+            "recipient": recipient,
+            "warnings": warnings,
+            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
+        })
+    else:
+        print("[-] SMTP Transmission Failed")
+        return jsonify({
+            "success": False,
+            "status": "SMTP Transmission Failed",
+            "recipient": recipient,
+            "warnings": warnings,
+            "details": "Check logs/email.log for connection, SSL/TLS handshake, or authentication credentials errors.",
+            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
+        }), 500
+
 

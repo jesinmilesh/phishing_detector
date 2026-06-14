@@ -6,51 +6,70 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>AI Shield SOC - Threat Intelligence Control Console</title>
     <link rel="shortcut icon" href="/static/icons/favicon.ico" type="image/x-icon">
+    
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome -->
-    <!-- FontAwesome 6 (official CDN - icons load reliably) -->
+    
+    <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
-    <!-- Custom Style -->
+    
+    <!-- Google Fonts: Inter, Poppins, Manrope, Orbitron -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=Orbitron:wght@500;700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
     <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/static/css/scanner.css" rel="stylesheet">
 </head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg cyber-navbar">
+<body class="scanner-theme">
+
+    <!-- TOP NAVIGATION BAR -->
+    <nav class="navbar navbar-expand-lg soc-navbar" aria-label="Main Navigation">
         <div class="container">
-            <a class="navbar-brand brand-font" href="/scanner"><img src="/static/images/logo.svg" alt="AI Shield Logo" style="width: 30px; height: 30px; margin-right: 8px;"> AI SHIELD</a>
-            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <!-- Left: Logo & Brand -->
+            <a class="soc-navbar-brand" href="/scanner">
+                <img src="/static/images/logo.svg" alt="AI Shield Logo" style="width: 32px; height: 32px;">
+                <span>AI SHIELD</span>
+            </a>
+            
+            <!-- Mobile Menu Toggle -->
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#socNavbarNav" aria-controls="socNavbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <i class="fas fa-bars"></i>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+            
+            <!-- Center & Right Navigation -->
+            <div class="collapse navbar-collapse" id="socNavbarNav">
+                <!-- Center Links -->
+                <ul class="navbar-nav mx-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="/scanner"><i class="fas fa-magnifying-glass"></i> SCANNERS</a>
+                        <a class="soc-nav-link" href="/dashboard"><i class="fas fa-chart-line"></i> Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/dashboard"><i class="fas fa-chart-line"></i> SOC DASHBOARD</a>
+                        <a class="soc-nav-link active" href="/scanner"><i class="fas fa-shield-halved"></i> Threat Analysis</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/history"><i class="fas fa-archive"></i> SCANS ARCHIVE</a>
+                        <a class="soc-nav-link" href="/dashboard"><i class="fas fa-rss"></i> Threat Intelligence</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/profile"><i class="fas fa-user-gear"></i> MY PROFILE</a>
+                        <a class="soc-nav-link" href="/history"><i class="fas fa-file-invoice"></i> Reports</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="soc-nav-link" href="/history"><i class="fas fa-box-archive"></i> History</a>
                     </li>
                 </ul>
-                <div class="d-flex align-items-center">
+                
+                <!-- Right Controls -->
+                <div class="d-flex align-items-center gap-3">
                     <!-- Notifications Dropdown -->
-                    <div class="dropdown me-3" id="notificationsDropdown">
-                        <button class="btn btn-link text-secondary position-relative p-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="notifBtn">
+                    <div class="dropdown" id="notificationsDropdown">
+                        <button class="btn btn-link text-secondary position-relative p-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="notifBtn" aria-label="Alerts Dropdown">
                             <i class="fas fa-bell fs-5"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notifBadge" style="font-size: 0.6rem; padding: 2px 4px;">
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notifBadge" style="font-size: 0.65rem; padding: 2px 5px;">
                                 0
                             </span>
                         </button>
                         <div class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-0 border border-secondary" style="width: 320px; font-size: 0.85rem;" aria-labelledby="notifBtn">
                             <div class="p-2 border-bottom border-secondary d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">Notifications</span>
+                                <span class="fw-bold text-info"><i class="fas fa-triangle-exclamation me-1"></i> Security Alerts</span>
                                 <button class="btn btn-link btn-xs text-info p-0 text-decoration-none" id="markAllReadBtn" style="font-size: 0.75rem;">Mark all read</button>
                             </div>
                             <div class="overflow-y-auto" style="max-height: 250px;" id="notifList">
@@ -59,13 +78,29 @@
                         </div>
                     </div>
                     
-                    <span class="text-secondary me-3 small"><i class="fas fa-terminal text-info"></i> Analyst: <strong class="text-white">{{ session['user']['username'] }}</strong></span>
-                    <a href="/logout" class="btn btn-cyber-danger btn-sm py-1 px-3"><i class="fas fa-right-from-bracket"></i> EXIT</a>
+                    <!-- Dark Mode icon status -->
+                    <button class="btn text-secondary p-0" id="themeToggleBtn" title="Theme Toggle (Dark Mode Default)" aria-label="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    
+                    <!-- User Settings profile link -->
+                    <a href="/profile" class="text-secondary small d-flex align-items-center gap-2 text-decoration-none" title="User Settings">
+                        <div class="analyst-avatar-container" style="width:26px; height:26px; font-size:0.75rem; border:1px solid var(--color-primary); background:linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color:#030712; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Orbitron', sans-serif; font-weight:700;">
+                            {{ session['user']['username'][:2]|upper }}
+                        </div>
+                    </a>
+                    
+                    <!-- Settings Gear -->
+                    <a href="/profile" class="text-secondary" title="System Settings" aria-label="Settings"><i class="fas fa-gear"></i></a>
+                    
+                    <!-- Exit -->
+                    <a href="/logout" class="btn btn-outline-danger btn-sm px-3 py-1 font-monospace" style="font-size: 0.75rem; letter-spacing:0.05em;"><i class="fas fa-right-from-bracket"></i> EXIT</a>
                 </div>
             </div>
         </div>
     </nav>
 
+    <!-- Email Verification Alert Banner -->
     {% if user and not user.is_verified %}
     <div class="container mt-4">
         <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-warning d-flex justify-content-between align-items-center py-3 px-4 rounded-3" role="alert">
@@ -81,229 +116,427 @@
     </div>
     {% endif %}
 
-    <!-- Main Workspace -->
-    <div class="container my-5">
-        <div class="row">
-            <div class="col-12">
-                <div class="text-center mb-5">
-                    <h1 class="brand-font text-info text-shadow">PHISHING DETECTION CENTER</h1>
-                    <p class="text-secondary">AI-Powered Real-Time Threat Analysis & Cryptographic Validation Sandbox</p>
-                </div>
+    <!-- HERO SECTION REDESIGN (Reduced Height) -->
+    <header class="hero-section-soc">
+        <div class="container">
+            <h1 class="hero-title-soc">AI-Powered Phishing Detection Platform</h1>
+            <p class="hero-subtitle-soc">
+                Analyze URLs, emails, QR codes, and screenshots using advanced machine learning models and real-time threat intelligence feeds.
+            </p>
+            <div class="hero-actions">
+                <a href="#scan-section" class="btn btn-cyber py-2 px-4"><i class="fas fa-crosshairs me-2"></i> Quick Scan Console</a>
+                <a href="/history" class="btn btn-outline-secondary py-2 px-4 text-white"><i class="fas fa-database me-2"></i> View Audit History</a>
             </div>
         </div>
+    </header>
 
-        <!-- Scan Options Tab -->
-        <div class="row">
-            <div class="col-12">
-                <div class="cyber-card p-4">
-                    <ul class="nav nav-tabs cyber-nav-tabs mb-4" id="scanModes" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="url-scan-tab" data-bs-toggle="tab" data-bs-target="#url-scan" type="button" role="tab"><i class="fas fa-globe"></i> URL Analysis</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="qr-scan-tab" data-bs-toggle="tab" data-bs-target="#qr-scan" type="button" role="tab"><i class="fas fa-qrcode"></i> QR Code Scan</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="email-scan-tab" data-bs-toggle="tab" data-bs-target="#email-scan" type="button" role="tab"><i class="fas fa-envelope-open-text"></i> Email Analysis</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="screenshot-tab" data-bs-toggle="tab" data-bs-target="#screenshot" type="button" role="tab"><i class="fas fa-desktop"></i> Screenshot Sandbox</button>
-                        </li>
-                    </ul>
+    <div class="container my-4">
+        <!-- KPI METRICS SECTION -->
+        <section class="metric-grid-soc" aria-label="Core Metrics Panel">
+            <!-- Scans -->
+            <div class="metric-card-soc">
+                <div class="label">URLs Scanned</div>
+                <div class="val">{{ stats['total_scans'] }}</div>
+                <div class="trend text-success"><i class="fas fa-arrow-up"></i> Live Tracking</div>
+            </div>
+            
+            <!-- Detections -->
+            {% set total_threats = stats['phishing_count'] + stats['suspicious_count'] %}
+            <div class="metric-card-soc">
+                <div class="label">Threats Mapped</div>
+                <div class="val text-danger">{{ total_threats }}</div>
+                <div class="trend text-danger"><i class="fas fa-shield-virus"></i> Active</div>
+            </div>
 
-                    <div class="tab-content" id="scanModesContent">
-                        
-                        <!-- 1. URL Scanner -->
-                        <div class="tab-pane fade show active" id="url-scan" role="tabpanel">
-                            <h5 class="brand-font text-white mb-3"><i class="fas fa-search"></i> Input Malicious URL Indicator</h5>
-                            <form id="urlScanForm" class="cyber-search-wrapper">
-                                <i class="fas fa-magnifying-glass search-icon"></i>
-                                <input type="text" id="urlInput" class="form-control cyber-input" placeholder="e.g. http://secure-login-chase-portal.xyz/index.html" required>
-                                <button type="submit" class="btn-cyber-search">EXECUTE ANALYSIS</button>
-                            </form>
-                            
-                            <!-- URL Scan Loading Indicator -->
-                            <div id="url-loading" class="scanning-container mt-4 d-none">
-                                <div class="scan-line"></div>
-                                <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
-                                <h6 class="brand-font text-info">RUNNING THREAT DETECTION MODELS...</h6>
-                                <p class="text-secondary small mb-0">Inspecting Lexicals | Executing WHOIS | Polling SSL Certificates | Compiling Reports</p>
+            <!-- Safe URLs -->
+            <div class="metric-card-soc">
+                <div class="label">Safe Indicators</div>
+                <div class="val text-success">{{ stats['legitimate_count'] }}</div>
+                <div class="trend text-success"><i class="fas fa-check-double"></i> Clean</div>
+            </div>
+
+            <!-- Accuracy -->
+            <div class="metric-card-soc">
+                <div class="label">AI Precision</div>
+                <div class="val text-info">{{ stats['detection_rate'] }}%</div>
+                <div class="trend text-info"><i class="fas fa-bullseye"></i> High</div>
+            </div>
+
+            <!-- Reports -->
+            <div class="metric-card-soc">
+                <div class="label">Reports Compiled</div>
+                <div class="val">{{ stats['total_scans'] }}</div>
+                <div class="trend text-secondary"><i class="fas fa-file-pdf"></i> Signed</div>
+            </div>
+
+            <!-- Risk Score -->
+            {% set risk_score_index = ((total_threats / (stats['total_scans'] if stats['total_scans'] > 0 else 1) * 100) | round | int) %}
+            <div class="metric-card-soc">
+                <div class="label">Platform Risk Index</div>
+                <div class="val {% if risk_score_index > 40 %}text-danger{% elif risk_score_index > 20 %}text-warning{% else %}text-success{% endif %}">{{ risk_score_index }}%</div>
+                <div class="trend text-muted"><i class="fas fa-gauge"></i> Index</div>
+            </div>
+        </section>
+
+        <!-- THREAT OVERVIEW & DATA ANALYTICS GRID -->
+        <section class="soc-content-grid" aria-label="System Health Overview">
+            
+            <!-- Column 1: System Health & Interactive Charts -->
+            <div class="panel-card-soc">
+                <h2 class="panel-title-soc"><i class="fas fa-server"></i> Platform Security Status</h2>
+                
+                <div class="row align-items-center">
+                    <!-- Gauge and Dial Indicators -->
+                    <div class="col-md-5 text-center">
+                        <div style="position:relative; width:110px; height:110px; margin:0 auto;" class="risk-dial">
+                            <svg viewBox="0 0 36 36" class="circular-chart" style="width:110px; height:110px;">
+                                <path fill="none" stroke="rgba(255, 255, 255, 0.05)" stroke-width="2.8" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path fill="none" stroke="{% if risk_score_index > 40 %}#ef4444{% elif risk_score_index > 20 %}#f59e0b{% else %}#10b981{% endif %}" stroke-width="2.8" stroke-dasharray="{{ risk_score_index }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <div class="risk-dial-value" style="font-family:'Orbitron', sans-serif; font-size:1.6rem; font-weight:700; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:var(--text-primary);">{{ risk_score_index }}%</div>
+                        </div>
+                        <div class="text-secondary small mt-2 fw-semibold">Dynamic Threat Coefficient</div>
+                    </div>
+                    
+                    <!-- Progress bars -->
+                    <div class="col-md-7">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-secondary">AI Detection Confidence</span>
+                                <span class="text-info fw-bold">98.4%</span>
                             </div>
-                            
-                            <!-- URL Scan Results -->
-                            <div id="url-result" class="d-none"></div>
+                            <div class="progress bg-dark" style="height: 6px; border:1px solid rgba(255,255,255,0.03);">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: 98.4%" aria-valuenow="98.4" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
                         </div>
 
-                        <!-- 2. QR Code Scanner -->
-                        <div class="tab-pane fade" id="qr-scan" role="tabpanel">
-                            <h5 class="brand-font text-white mb-3"><i class="fas fa-qrcode"></i> Decode Phishing QR Code</h5>
-                            <p class="text-secondary small">Upload a QR code image file (.png, .jpg, .jpeg, .gif). The engine will decode the target URL and analyze it.</p>
-                            <form id="qrScanForm" enctype="multipart/form-data">
-                                <div class="mb-3">
-                                    <input type="file" id="qrFileInput" class="form-control cyber-input" accept="image/*" required>
-                                </div>
-                                <button type="submit" class="btn btn-cyber"><i class="fas fa-qrcode"></i> UPLOAD & SCAN</button>
-                            </form>
-
-                            <!-- QR Scan Loading -->
-                            <div id="qr-loading" class="scanning-container mt-4 d-none">
-                                <div class="scan-line"></div>
-                                <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
-                                <h6 class="brand-font text-info">PARSING QR IMAGE MATRIX...</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-secondary">Sandboxed Pipeline Latency</span>
+                                <span class="text-success fw-bold">148ms</span>
                             </div>
-
-                            <!-- QR Scan Results -->
-                            <div id="qr-result" class="d-none"></div>
+                            <div class="progress bg-dark" style="height: 6px; border:1px solid rgba(255,255,255,0.03);">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 88%" aria-valuenow="88" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
                         </div>
 
-                        <!-- 3. Email Phishing Scanner -->
-                        <div class="tab-pane fade" id="email-scan" role="tabpanel">
-                            <h5 class="brand-font text-white mb-3"><i class="fas fa-envelope-open-text"></i> Email Spam & Brand Spoofing Check</h5>
-                            <p class="text-secondary small">Paste raw email body content, or upload a raw `.eml` file to extract URLs and audit sender domains.</p>
-                            
-                            <form id="emailScanForm" enctype="multipart/form-data">
-                                <div class="row g-3">
-                                    <div class="col-md-7">
-                                        <label class="form-label text-muted small">PASTE EMAIL BODY TEXT</label>
-                                        <textarea id="emailTextInput" class="form-control cyber-input" rows="6" placeholder="Paste email content here... (e.g. 'Dear customer, your account was compromised. Click here http://paypa1.com to verify your details immediately!')"></textarea>
-                                    </div>
-                                    <div class="col-md-5">
-                                        <label class="form-label text-muted small">OR UPLOAD RAW EML FILE</label>
-                                        <div class="cyber-card p-3 border-secondary-subtle">
-                                            <input type="file" id="emlFileInput" class="form-control cyber-input mb-3" accept=".eml">
-                                            <small class="text-muted d-block">Parsing extracts headers, DKIM validity, and structures automatically.</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-3">
-                                    <button type="submit" class="btn btn-cyber"><i class="fas fa-envelope-open-text"></i> ANALYZE EMAIL CORPUS</button>
-                                </div>
-                            </form>
-
-                            <!-- Email Scan Loading -->
-                            <div id="email-loading" class="scanning-container mt-4 d-none">
-                                <div class="scan-line"></div>
-                                <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
-                                <h6 class="brand-font text-info">CORRELATING HEADERS AND KEYWORD ENTROPY...</h6>
+                        <div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-secondary">Node Core Integrity</span>
+                                <span class="text-success fw-bold">100%</span>
                             </div>
-
-                            <!-- Email Scan Results -->
-                            <div id="email-result" class="d-none"></div>
-                        </div>
-
-                        <!-- 4. Screenshot Sandbox -->
-                        <div class="tab-pane fade" id="screenshot" role="tabpanel">
-                            <h5 class="brand-font text-white mb-3"><i class="fas fa-desktop"></i> Visual Brand Spoofing Sandbox</h5>
-                            <p class="text-secondary small">Simulate visual webpage rendering and check if page colors, buttons, and layout spoof known corporate styles on unauthorized domains.</p>
-                            <form id="screenshotForm" class="cyber-search-wrapper">
-                                <i class="fas fa-desktop search-icon"></i>
-                                <input type="text" id="screenshotUrlInput" class="form-control cyber-input" placeholder="e.g. http://secure-login-chase-update.com/signin" required>
-                                <button type="submit" class="btn-cyber-search">DETECT SPOOFING</button>
-                            </form>
-
-                            <!-- SS Loading -->
-                            <div id="ss-loading" class="scanning-container mt-4 d-none">
-                                <div class="scan-line"></div>
-                                <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
-                                <h6 class="brand-font text-info">RENDERING SANDBOX SCREENSHOT...</h6>
-                                <p class="text-secondary small mb-0">Running visual classification | Comparing corporate color profiles</p>
+                            <div class="progress bg-dark" style="height: 6px; border:1px solid rgba(255,255,255,0.03);">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
-
-                            <!-- SS Results -->
-                            <div id="ss-result" class="d-none"></div>
                         </div>
+                    </div>
+                </div>
 
+                <!-- Interactive Analytics Charts -->
+                <div class="charts-grid-soc">
+                    <div>
+                        <div class="small text-secondary mb-2 font-monospace"><i class="fas fa-chart-line text-info"></i> Log Intensity (7 Days)</div>
+                        <div style="height: 120px; position:relative;">
+                            <canvas id="indexTrendCanvas" data-daily-scans="{{ stats['daily_scans']|tojson }}"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="small text-secondary mb-2 font-monospace"><i class="fas fa-chart-pie text-info"></i> Indicator Category Ratio</div>
+                        <div style="height: 120px; position:relative;">
+                            <canvas id="indexPieCanvas" 
+                                    data-phishing="{{ stats['phishing_count'] }}" 
+                                    data-suspicious="{{ stats['suspicious_count'] }}" 
+                                    data-legitimate="{{ stats['legitimate_count'] }}"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Column 2: Live Scans Activity Feed -->
+            <div class="panel-card-soc">
+                <h2 class="panel-title-soc"><i class="fas fa-clock-rotate-left"></i> Security Auditing Stream</h2>
+                
+                <div class="overflow-y-auto pe-1" style="max-height: 280px; font-size: 0.8rem;">
+                    {% if recent_scans %}
+                        <div class="list-group list-group-flush bg-transparent">
+                            {% for scan in recent_scans %}
+                                <div class="list-group-item bg-transparent text-secondary border-secondary border-opacity-10 px-0 py-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge {% if scan.prediction == 'Phishing' %}bg-danger bg-opacity-10 text-danger border border-danger{% elif scan.prediction == 'Suspicious' %}bg-warning bg-opacity-10 text-warning border border-warning{% else %}bg-success bg-opacity-10 text-success border border-success{% endif %}" style="font-size:0.65rem;">
+                                            {{ scan.prediction }}
+                                        </span>
+                                        <small class="text-muted font-monospace">{{ scan.scan_time[11:19] }}</small>
+                                    </div>
+                                    <div class="text-white text-break font-monospace my-1" style="font-size:0.75rem;">
+                                        {{ scan.url[:55] }}{% if scan.url|length > 55 %}...{% endif %}
+                                    </div>
+                                    <div class="d-flex justify-content-between text-muted" style="font-size:0.65rem;">
+                                        <span>Risk Coeff: <strong>{{ scan.risk_score }}%</strong></span>
+                                        <a href="/report/download/{% if scan.id %}{{ scan.id }}{% else %}{{ scan.scan_id }}{% endif %}" class="text-info text-decoration-none"><i class="fas fa-file-pdf"></i> Report</a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-folder-open fa-2x mb-2"></i>
+                            <p class="mb-0 small">No recent scanning sessions logged.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- GLASSMORPHISM SCAN CONSOLE -->
+        <section class="scan-panel-card" id="scan-section">
+            <!-- Tab Links -->
+            <ul class="nav nav-tabs scan-tabs-list border-0" id="scanModes" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link scan-tab-btn active" id="url-scan-tab" data-bs-toggle="tab" data-bs-target="#url-scan" type="button" role="tab" aria-controls="url-scan" aria-selected="true">
+                        <i class="fas fa-globe"></i> URL Scanner
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link scan-tab-btn" id="email-scan-tab" data-bs-toggle="tab" data-bs-target="#email-scan" type="button" role="tab" aria-controls="email-scan" aria-selected="false">
+                        <i class="fas fa-envelope-open-text"></i> Email Scanner
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link scan-tab-btn" id="qr-scan-tab" data-bs-toggle="tab" data-bs-target="#qr-scan" type="button" role="tab" aria-controls="qr-scan" aria-selected="false">
+                        <i class="fas fa-qrcode"></i> QR Scanner
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link scan-tab-btn" id="screenshot-tab" data-bs-toggle="tab" data-bs-target="#screenshot" type="button" role="tab" aria-controls="screenshot" aria-selected="false">
+                        <i class="fas fa-desktop"></i> Screenshot Analysis
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link scan-tab-btn" id="domain-intel-tab" data-bs-toggle="tab" data-bs-target="#domain-intel" type="button" role="tab" aria-controls="domain-intel" aria-selected="false">
+                        <i class="fas fa-shield-halved"></i> Domain Intelligence
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content Sheets -->
+            <div class="tab-content" id="scanModesContent">
+                
+                <!-- 1. URL Scanner Sheet -->
+                <div class="tab-pane fade show active" id="url-scan" role="tabpanel" aria-labelledby="url-scan-tab">
+                    <h3 class="tab-pane-title"><i class="fas fa-globe"></i> Live URL Indicator Inspection</h3>
+                    <p class="tab-pane-desc">Analyze domain registries, WHOIS data, certificate authorities, and heuristic structures using deep learning.</p>
+                    
+                    <form id="urlScanForm" class="search-wrapper-soc" aria-label="URL Scan Form">
+                        <i class="fas fa-globe main-icon"></i>
+                        <input type="text" id="urlInput" placeholder="Enter target URL (e.g. http://secure-auth-login-update.com/signin)" required>
+                        <button type="submit" class="btn-search-soc">EXECUTE AUDIT</button>
+                    </form>
+                    
+                    <!-- Suggestions Box -->
+                    <div class="suggestions-box">
+                        <span class="small text-muted font-monospace me-1">Historical Sandbox Targets:</span>
+                        <button class="suggestion-chip" type="button" data-fill="http://chase-login-security.com">chase-login-security.com</button>
+                        <button class="suggestion-chip" type="button" data-fill="https://google.com">google.com</button>
+                        <button class="suggestion-chip" type="button" data-fill="http://paypal-resolution-update.net/home">paypal-resolution-update.net</button>
+                    </div>
+
+                    <!-- Loader -->
+                    <div id="url-loading" class="scanning-container mt-4 d-none text-center p-4 rounded bg-black bg-opacity-20 border border-info border-opacity-10">
+                        <div class="scan-line"></div>
+                        <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
+                        <h4 class="brand-font text-info fs-6">RUNNING HYBRID DETECTION MODELS...</h4>
+                        <p class="text-secondary small mb-0">Correlating Lexicals • Reviewing SSL Signatures • Testing Domain Age Coefficients</p>
+                    </div>
+
+                    <!-- Results Sheet -->
+                    <div id="url-result" class="mt-4 d-none"></div>
+                </div>
+
+                <!-- 2. Email Scanner Sheet -->
+                <div class="tab-pane fade" id="email-scan" role="tabpanel" aria-labelledby="email-scan-tab">
+                    <h3 class="tab-pane-title"><i class="fas fa-envelope-open-text"></i> Email Header & Spam Entropy Check</h3>
+                    <p class="tab-pane-desc">Audit raw email text templates or drop direct .eml file streams to identify spoofs and verify DKIM records.</p>
+                    
+                    <form id="emailScanForm" enctype="multipart/form-data" aria-label="Email Scan Form">
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <label for="emailTextInput" class="form-label text-muted small fw-semibold">PASTE BODY CONTENT</label>
+                                <textarea id="emailTextInput" class="form-control bg-dark border-secondary border-opacity-20 text-white rounded-3 small p-3" rows="6" placeholder="Paste suspicious email headers and message body here..."></textarea>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label text-muted small fw-semibold">OR DROP RAW EML FILE</label>
+                                <div class="file-drop-zone" onclick="document.getElementById('emlFileInput').click()">
+                                    <i class="fas fa-file-arrow-up text-muted fs-3 mb-2"></i>
+                                    <span class="d-block small text-white">Click or Drag EML File</span>
+                                    <span class="text-muted small" style="font-size:0.7rem">Valid formats: .eml</span>
+                                    <input type="file" id="emlFileInput" class="d-none" accept=".eml">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-end">
+                            <button type="submit" class="btn-search-soc"><i class="fas fa-envelope-open-text"></i> ANALYZE EMAIL CORPUS</button>
+                        </div>
+                    </form>
+
+                    <!-- Loader -->
+                    <div id="email-loading" class="scanning-container mt-4 d-none text-center p-4 rounded bg-black bg-opacity-20 border border-info border-opacity-10">
+                        <div class="scan-line"></div>
+                        <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
+                        <h4 class="brand-font text-info fs-6">EVALUATING SENDER AUTHS & WORD FREQUENCY...</h4>
+                    </div>
+
+                    <!-- Results Sheet -->
+                    <div id="email-result" class="mt-4 d-none"></div>
+                </div>
+
+                <!-- 3. QR Code Scanner Sheet -->
+                <div class="tab-pane fade" id="qr-scan" role="tabpanel" aria-labelledby="qr-scan-tab">
+                    <h3 class="tab-pane-title"><i class="fas fa-qrcode"></i> QR Code Matrix Decoder</h3>
+                    <p class="tab-pane-desc">Upload a high-resolution QR image payload to decode embedded link redirects and verify target safety levels.</p>
+                    
+                    <form id="qrScanForm" enctype="multipart/form-data" aria-label="QR Scan Form">
+                        <div class="file-drop-zone mx-auto" style="max-width: 500px;" onclick="document.getElementById('qrFileInput').click()">
+                            <i class="fas fa-qrcode text-muted fs-2 mb-2"></i>
+                            <span class="d-block small text-white">Select QR Code Image Payload</span>
+                            <span class="text-muted small" style="font-size:0.7rem">PNG, JPG, JPEG, GIF formats supported</span>
+                            <input type="file" id="qrFileInput" class="d-none" accept="image/*" required>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <button type="submit" class="btn-search-soc"><i class="fas fa-qrcode"></i> DECODE & AUDIT LINK</button>
+                        </div>
+                    </form>
+
+                    <!-- Loader -->
+                    <div id="qr-loading" class="scanning-container mt-4 d-none text-center p-4 rounded bg-black bg-opacity-20 border border-info border-opacity-10">
+                        <div class="scan-line"></div>
+                        <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
+                        <h4 class="brand-font text-info fs-6">EXTRACTING URL MATRIX DATA...</h4>
+                    </div>
+
+                    <!-- Results Sheet -->
+                    <div id="qr-result" class="mt-4 d-none"></div>
+                </div>
+
+                <!-- 4. Screenshot Sandbox Sheet -->
+                <div class="tab-pane fade" id="screenshot" role="tabpanel" aria-labelledby="screenshot-tab">
+                    <h3 class="tab-pane-title"><i class="fas fa-desktop"></i> Visual Impersonation & Spoofing Sandbox</h3>
+                    <p class="tab-pane-desc">Launch a sandbox environment to take a screenshot and analyze visual similarity to corporate banking portals.</p>
+                    
+                    <form id="screenshotForm" class="search-wrapper-soc" aria-label="Screenshot Form">
+                        <i class="fas fa-desktop main-icon"></i>
+                        <input type="text" id="screenshotUrlInput" placeholder="Enter target site URL (e.g. http://secure-login-chase-update.com)" required>
+                        <button type="submit" class="btn-search-soc">DETECT VISUAL SPOOF</button>
+                    </form>
+                    
+                    <!-- Suggestions Box -->
+                    <div class="suggestions-box">
+                        <span class="small text-muted font-monospace me-1">Targets:</span>
+                        <button class="suggestion-chip" type="button" data-fill="http://paypal-verification.com">paypal-verification.com</button>
+                        <button class="suggestion-chip" type="button" data-fill="https://github.com">github.com</button>
+                    </div>
+
+                    <!-- Loader -->
+                    <div id="ss-loading" class="scanning-container mt-4 d-none text-center p-4 rounded bg-black bg-opacity-20 border border-info border-opacity-10">
+                        <div class="scan-line"></div>
+                        <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
+                        <h4 class="brand-font text-info fs-6">CAPTURING SURFACE RENDERING IMAGE...</h4>
+                        <p class="text-secondary small mb-0">Running computer vision comparison algorithms</p>
+                    </div>
+
+                    <!-- Results Sheet -->
+                    <div id="ss-result" class="mt-4 d-none"></div>
+                </div>
+
+                <!-- 5. Domain Intelligence Sheet (New 5th Tab) -->
+                <div class="tab-pane fade" id="domain-intel" role="tabpanel" aria-labelledby="domain-intel-tab">
+                    <h3 class="tab-pane-title"><i class="fas fa-shield-halved"></i> Domain Reputation & Threat Indicators</h3>
+                    <p class="tab-pane-desc">Check domain name system records, registrar details, authority certificates, and blacklist reputation indexes.</p>
+                    
+                    <form id="domainIntelForm" class="search-wrapper-soc" aria-label="Domain Intelligence Form">
+                        <i class="fas fa-server main-icon"></i>
+                        <input type="text" id="domainIntelInput" placeholder="Enter host domain name (e.g. microsoft-office-update.net)" required>
+                        <button type="submit" class="btn-search-soc">QUERY INDICATORS</button>
+                    </form>
+                    
+                    <!-- Suggestions Box -->
+                    <div class="suggestions-box">
+                        <span class="small text-muted font-monospace me-1">Targets:</span>
+                        <button class="suggestion-chip" type="button" data-fill="facebook-login-help.xyz">facebook-login-help.xyz</button>
+                        <button class="suggestion-chip" type="button" data-fill="microsoft.com">microsoft.com</button>
+                        <button class="suggestion-chip" type="button" data-fill="aws-billing-reset.info">aws-billing-reset.info</button>
+                    </div>
+
+                    <!-- Loader -->
+                    <div id="domain-loading" class="scanning-container mt-4 d-none text-center p-4 rounded bg-black bg-opacity-20 border border-info border-opacity-10">
+                        <div class="scan-line"></div>
+                        <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
+                        <h4 class="brand-font text-info fs-6">RESOLVING DOMAIN INFRASTRUCTURE ENTRIES...</h4>
+                        <p class="text-secondary small mb-0">Checking authoritative nameservers, MX records, and blacklist blacklists</p>
+                    </div>
+
+                    <!-- Results Sheet -->
+                    <div id="domain-result" class="mt-4 d-none"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- GLOBAL THREAT INTELLIGENCE FEED WIDGET -->
+        <section class="panel-card-soc" style="border-color: var(--color-danger);" aria-label="Global Threat Intel Feed">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-20">
+                <h2 class="panel-title-soc border-0 m-0 p-0" style="color: var(--color-danger)">
+                    <i class="fas fa-rss text-danger fa-spin-slow"></i> Global HoneyNet Threat Stream (OpenPhish)
+                </h2>
+                <span class="badge-status badge-status-danger"><i class="fas fa-shield-virus"></i> Active Blacklist</span>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-dark table-striped align-middle table-sm font-monospace" style="font-size:0.75rem">
+                    <thead>
+                        <tr>
+                            <th>Identified Target Brand</th>
+                            <th>Host / URL Link</th>
+                            <th>IP Address</th>
+                            <th>Classification Type</th>
+                            <th>Mapped Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if threats %}
+                            {% for feed in threats %}
+                            <tr>
+                                <td><span class="badge bg-danger bg-opacity-15 text-danger border border-danger px-2 py-0.5">{{ feed.brand }}</span></td>
+                                <td><code class="text-secondary text-break">{{ feed.url }}</code></td>
+                                <td><span class="text-info">{{ feed.ip }}</span></td>
+                                <td><span class="text-warning">{{ feed.type }}</span></td>
+                                <td class="text-muted">{{ feed.detected_at[11:19] }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="fas fa-triangle-exclamation me-1"></i> No indicators received from external blacklist nodes.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 
-    <!-- Footer -->
-    <footer class="text-center py-4 text-muted border-top border-secondary-subtle mt-5" style="background-color: var(--bg-darker)">
-        <p class="small mb-0">&copy; 2026 TR-PHISH Security Operations Center. Real-Time AI Phishing Detection System.</p>
+    <!-- FOOTER -->
+    <footer class="text-center py-4 text-muted border-top border-secondary-subtle mt-5" style="background-color: var(--bg-surface)">
+        <p class="small mb-0">&copy; 2026 AI Shield. Real-Time Phishing Threat Intelligence Center. All rights reserved.</p>
     </footer>
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Custom JS -->
+    
+    <!-- Custom Core Scanners & Notifications Logic -->
     <script src="/static/js/main.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const notifBadge = document.getElementById('notifBadge');
-            const notifList = document.getElementById('notifList');
-            const markAllReadBtn = document.getElementById('markAllReadBtn');
-            
-            function fetchNotifications() {
-                fetch('/notifications')
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            if (data.unread_count > 0) {
-                                notifBadge.textContent = data.unread_count;
-                                notifBadge.classList.remove('d-none');
-                            } else {
-                                notifBadge.classList.add('d-none');
-                            }
-                            
-                            if (data.notifications.length === 0) {
-                                notifList.innerHTML = '<div class="p-3 text-center text-muted">No new security logs.</div>';
-                            } else {
-                                notifList.innerHTML = data.notifications.map(n => `
-                                    <div class="p-3 border-bottom border-secondary border-opacity-20 ${n.is_read ? '' : 'bg-info bg-opacity-10'}" id="notif-item-${n.id}" style="transition: all 0.2s;">
-                                        <div class="d-flex justify-content-between align-items-start mb-1">
-                                            <strong class="text-white small">${n.title}</strong>
-                                            <div class="d-flex gap-2">
-                                                ${!n.is_read ? `<button class="btn btn-link p-0 text-info mark-read-btn" data-id="${n.id}"><i class="fas fa-check text-opacity-50"></i></button>` : ''}
-                                                <button class="btn btn-link p-0 text-danger delete-notif-btn" data-id="${n.id}"><i class="fas fa-trash-can text-opacity-50"></i></button>
-                                            </div>
-                                        </div>
-                                        <p class="text-secondary mb-1" style="font-size: 0.75rem;">${n.message}</p>
-                                        <span class="text-muted" style="font-size: 0.65rem;">${n.created_at}</span>
-                                    </div>
-                                `).join('');
-                            }
-                        }
-                    });
-            }
-            
-            markAllReadBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                fetch('/notifications/read-all', {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': csrfToken }
-                }).then(() => fetchNotifications());
-            });
-            
-            notifList.addEventListener('click', function(e) {
-                const markBtn = e.target.closest('.mark-read-btn');
-                const deleteBtn = e.target.closest('.delete-notif-btn');
-                
-                if (markBtn) {
-                    e.stopPropagation();
-                    const notifId = markBtn.dataset.id;
-                    fetch(`/notifications/read/${notifId}`, {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': csrfToken }
-                    }).then(() => fetchNotifications());
-                }
-                
-                if (deleteBtn) {
-                    e.stopPropagation();
-                    const notifId = deleteBtn.dataset.id;
-                    fetch(`/notifications/delete/${notifId}`, {
-                        method: 'DELETE',
-                        headers: { 'X-CSRFToken': csrfToken }
-                    }).then(() => fetchNotifications());
-                }
-            });
-            
-            fetchNotifications();
-            setInterval(fetchNotifications, 30000);
-        });
-    </script>
 </body>
 </html>

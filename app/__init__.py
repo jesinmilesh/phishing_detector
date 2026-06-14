@@ -20,6 +20,15 @@ app.config.from_object(Config)
 # Initialize CSRF Protection
 csrf = CSRFProtect(app)
 
+# Flask 3.x compatibility patch for Flask-Mail
+import flask
+import werkzeug.utils
+flask.safe_join = werkzeug.utils.safe_join
+from flask_mail import Mail
+
+# Initialize Flask-Mail
+mail = Mail(app)
+
 # Initialize Database Manager
 db_manager = DatabaseManager()
 
@@ -49,6 +58,7 @@ def setup_logger(name, log_file, level=logging.INFO):
 app_logger = setup_logger('app_logger', 'logs/app.log')
 error_logger = setup_logger('error_logger', 'logs/errors.log', logging.ERROR)
 security_logger = setup_logger('security_logger', 'logs/security.log')
+email_logger = setup_logger('email_logger', 'logs/email.log')
 
 # Error handler and security headers
 @app.errorhandler(CSRFError)

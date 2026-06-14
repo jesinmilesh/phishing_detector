@@ -1,11 +1,13 @@
+import os
 import smtplib
 import logging
 from datetime import datetime
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from flask import current_app
+from flask_mail import Message
 from app.config import Config
 
-logger = logging.getLogger('ai-shield')
+# Get email logger configured in app/__init__.py
+logger = logging.getLogger('email_logger')
 
 def safe_print_email(to_email, subject, body, sender=None):
     try:
@@ -26,83 +28,149 @@ def safe_print_email(to_email, subject, body, sender=None):
     except Exception:
         pass
 
-def send_smtp_email_sync(to_email, subject, html_content):
+def validate_smtp_config():
     """
-    Synchronous SMTP sender execution.
+    Validates SMTP configurations and returns list of warnings/instructions.
     """
-    sender = Config.MAIL_DEFAULT_SENDER
-    username = Config.MAIL_USERNAME
-    password = Config.MAIL_PASSWORD
-    server = Config.MAIL_SERVER
-    port = Config.MAIL_PORT
+    warnings = []
     
-    # If credentials are not set, run in dry-run simulation mode
-    if not username or not password:
-        logger.info(f"[EMAIL SIMULATION/DRY-RUN]")
-        logger.info(f"To: {to_email}")
-        logger.info(f"Subject: {subject}")
-        logger.info(f"Sender: {sender}")
-        logger.info(f"Body: {html_content[:500]}...")
-        safe_print_email(to_email, subject, html_content, sender=sender)
-        return True
+    # 1. Check empty credentials
+    if not Config.MAIL_USERNAME:
+        warnings.append("MAIL_USERNAME is empty. Emails will be run in SIMULATION/DRY-RUN mode.")
+    if not Config.MAIL_PASSWORD:
+        warnings.append("MAIL_PASSWORD is empty. Emails will be run in SIMULATION/DRY-RUN mode.")
+        
+    # 2. Check types
+    if not isinstance(Config.MAIL_PORT, int):
+        warnings.append(f"MAIL_PORT must be an integer, got: {type(Config.MAIL_PORT)}")
+        
+    # 3. Gmail security checks
+    if Config.MAIL_SERVER == "smtp.gmail.com" and Config.MAIL_USERNAME:
+        clean_pwd = Config.MAIL_PASSWORD.replace(" ", "")
+        if len(clean_pwd) != 16:
+            warnings.append(
+                "WARNING: Gmail SMTP is configured but the password is NOT a 16-character App Password. "
+                "Normal passwords WILL fail. Please enable 2-Step Verification on Gmail and generate an App Password."
+            )
+            
+    # Log validation warnings
+    for warn in warnings:
+        logger.warning(f"SMTP Config Warning: {warn}")
+        print(f"[SMTP WARNING] {warn}")
+        
+    return warnings
 
-    try:
-        msg = MIMEMultipart('related')
-        msg['Subject'] = subject
-        msg['From'] = sender
-        msg['To'] = to_email
-
-        # Create alternative container for text/HTML compatibility
-        msg_alt = MIMEMultipart('alternative')
-        msg.attach(msg_alt)
-
-        part = MIMEText(html_content, 'html')
-        msg_alt.attach(part)
-
-        # Attach Jesin Technologies Logo inline if it exists
-        import os
-        from email.mime.image import MIMEImage
-        logo_path = os.path.join(Config.BASE_DIR, 'static', 'assets', 'logo', 'Jeisn Tech Logo.png')
-        if os.path.exists(logo_path):
-            with open(logo_path, 'rb') as f:
-                img_data = f.read()
-            msg_img = MIMEImage(img_data)
-            msg_img.add_header('Content-ID', '<jesin_tech_logo>')
-            msg_img.add_header('Content-Disposition', 'inline', filename='jesin_tech_logo.png')
-            msg.attach(msg_img)
-
-        # Connect using TLS
-        if port == 587:
-            smtp_conn = smtplib.SMTP(server, port, timeout=10)
-            smtp_conn.starttls()
-        else:
-            smtp_conn = smtplib.SMTP_SSL(server, port, timeout=10)
-
-        smtp_conn.login(username, password)
-        smtp_conn.sendmail(sender, [to_email], msg.as_string())
-        smtp_conn.quit()
-        logger.info(f"Email sent successfully to {to_email}")
-        return True
-    except Exception as e:
-        logger.error(f"Failed to send email to {to_email}: {str(e)}")
-        # Print fallback securely so it doesn't fail on system encoding limits
-        safe_print_email(to_email, subject, html_content)
-        return False
-
-
-def send_smtp_email(to_email, subject, html_content):
+def notify_admin_of_failure(db_manager, to_email, subject, error_msg):
     """
-    Asynchronous SMTP sender wrapper to prevent main thread blocking.
+    Alerts the administrator by adding a platform notification on email failure.
+    """
+    try:
+        admin_user = db_manager.get_user_by_username("admin")
+        if admin_user:
+            db_manager.add_notification(
+                user_id=admin_user['id'],
+                title="Email Delivery Alert",
+                message=f"Failed to deliver '{subject}' to {to_email}. Error: {error_msg}",
+                type_="email_failure"
+            )
+            logger.info("Admin notified in SOC platform about email failure.")
+    except Exception as notify_err:
+        logger.error(f"Failed to record admin alert: {str(notify_err)}")
+
+def send_smtp_email_sync(app, to_email, subject, html_content, text_content=None):
+    """
+    Synchronous SMTP sender execution using Flask-Mail.
+    """
+    with app.app_context():
+        # Lazy imports to prevent circular dependencies at startup
+        from app import mail, db_manager
+        
+        sender = Config.MAIL_DEFAULT_SENDER
+        username = Config.MAIL_USERNAME
+        password = Config.MAIL_PASSWORD
+        server = Config.MAIL_SERVER
+        port = Config.MAIL_PORT
+        
+        # Dry-run/simulation mode
+        if not username or not password:
+            logger.info(f"[EMAIL SIMULATION/DRY-RUN]")
+            logger.info(f"To: {to_email}")
+            logger.info(f"Subject: {subject}")
+            logger.info(f"Sender: {sender}")
+            safe_print_email(to_email, subject, html_content, sender=sender)
+            return True
+
+        # Run SMTP and App Password checks
+        validate_smtp_config()
+
+        try:
+            print("[DEBUG] SMTP Connected")
+            logger.info(f"Initiating email send to {to_email} (Subject: {subject})")
+            
+            msg = Message(
+                subject=subject,
+                sender=sender,
+                recipients=[to_email]
+            )
+            msg.html = html_content
+            
+            if text_content:
+                msg.body = text_content
+            else:
+                # Basic text strip fallback
+                import re
+                msg.body = re.sub('<[^<]+?>', '', html_content)
+
+
+            # Send the email
+            mail.send(msg)
+            
+            logger.info(f"Email delivery status: Sent successfully to {to_email}")
+            print("[DEBUG] Email Sent Successfully")
+            return True
+            
+        except smtplib.SMTPAuthenticationError as auth_err:
+            error_msg = f"SMTP Authentication Failed: {str(auth_err)}"
+            logger.error(f"{error_msg} (Recipient: {to_email})")
+            print(f"[-] {error_msg}")
+            notify_admin_of_failure(db_manager, to_email, subject, error_msg)
+            safe_print_email(to_email, subject, html_content)
+            return False
+            
+        except smtplib.SMTPConnectError as conn_err:
+            error_msg = f"SMTP Connection Failed: {str(conn_err)}"
+            logger.error(f"{error_msg} (Recipient: {to_email})")
+            print(f"[-] {error_msg}")
+            notify_admin_of_failure(db_manager, to_email, subject, error_msg)
+            safe_print_email(to_email, subject, html_content)
+            return False
+            
+        except Exception as e:
+            error_msg = f"Email delivery failure: {str(e)}"
+            logger.error(f"{error_msg} (Recipient: {to_email})")
+            print(f"[-] {error_msg}")
+            notify_admin_of_failure(db_manager, to_email, subject, error_msg)
+            safe_print_email(to_email, subject, html_content)
+            return False
+
+def send_smtp_email(to_email, subject, html_content, text_content=None):
+    """
+    Asynchronous SMTP sender wrapper to prevent blocking the main request thread.
     """
     import threading
+    try:
+        app = current_app._get_current_object()
+    except RuntimeError:
+        # Fallback for out-of-context execution (like command line tests)
+        from app import app
+        
     thread = threading.Thread(
         target=send_smtp_email_sync,
-        args=(to_email, subject, html_content)
+        args=(app, to_email, subject, html_content, text_content)
     )
     thread.daemon = True
     thread.start()
     return True
-
 
 # ----------------------------------------------------------------------
 # Platform Email Workflows
@@ -110,9 +178,10 @@ def send_smtp_email(to_email, subject, html_content):
 
 def send_welcome_email(user_email, username, login_url):
     """
-    Sends responsive HTML onboarding email.
+    Sends responsive HTML welcome / onboarding email.
     """
     subject = "Welcome to AI Shield"
+    
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -158,21 +227,32 @@ def send_welcome_email(user_email, username, login_url):
             </div>
             <div class="footer">
                 <p>&copy; 2026 AI Shield SOC. All rights reserved.</p>
-                <div style="margin-top: 15px; border-top: 1px solid rgba(56, 189, 248, 0.15); padding-top: 15px; text-align: center;">
-                    <img src="cid:jesin_tech_logo" alt="Jesin Technologies" style="height: 35px; max-width: 140px; display: inline-block;">
-                </div>
             </div>
         </div>
     </body>
     </html>
     """
-    return send_smtp_email(user_email, subject, html_content)
+    
+    text_content = (
+        f"Hello {username},\n\n"
+        f"Thank you for verifying your email. Your analyst node has been successfully authorized and activated "
+        f"on AI Shield – the enterprise real-time phishing detection and threat intelligence platform.\n\n"
+        f"You can now access your Security Operations Center (SOC) dashboard at: {login_url}\n\n"
+        f"Platform features:\n"
+        f"- AI Phishing Classifier: Machine learning URL risk auditing.\n"
+        f"- Visual Brand Spoofing Sandbox: Domain verification to detect fraudulent branding assets.\n"
+        f"- Security Alerts: Instant notifications for critical server threats.\n\n"
+        f"AI Shield SOC Team."
+    )
+    
+    return send_smtp_email(user_email, subject, html_content, text_content)
 
 def send_verification_email(user_email, username, verification_url):
     """
-    Sends explicit email verification link.
+    Sends email verification link.
     """
     subject = "Verify Your AI Shield Node"
+    
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -204,21 +284,28 @@ def send_verification_email(user_email, username, verification_url):
             </div>
             <div class="footer">
                 <p>&copy; 2026 AI Shield SOC. All rights reserved.</p>
-                <div style="margin-top: 15px; border-top: 1px solid rgba(56, 189, 248, 0.15); padding-top: 15px; text-align: center;">
-                    <img src="cid:jesin_tech_logo" alt="Jesin Technologies" style="height: 35px; max-width: 140px; display: inline-block;">
-                </div>
             </div>
         </div>
     </body>
     </html>
     """
-    return send_smtp_email(user_email, subject, html_content)
+    
+    text_content = (
+        f"Hello {username},\n\n"
+        f"A request was received to verify the email address associated with your AI Shield portal account.\n\n"
+        f"Please click the link below to confirm your correspondence node:\n{verification_url}\n\n"
+        f"If you did not initiate this request, you can safely ignore this email.\n\n"
+        f"AI Shield SOC Team."
+    )
+    
+    return send_smtp_email(user_email, subject, html_content, text_content)
 
 def send_password_reset_email(user_email, username, reset_url):
     """
     Sends secure password reset authorization token.
     """
     subject = "Reset Your AI Shield Password"
+    
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -250,21 +337,29 @@ def send_password_reset_email(user_email, username, reset_url):
             </div>
             <div class="footer">
                 <p>&copy; 2026 AI Shield SOC. All rights reserved.</p>
-                <div style="margin-top: 15px; border-top: 1px solid rgba(56, 189, 248, 0.15); padding-top: 15px; text-align: center;">
-                    <img src="cid:jesin_tech_logo" alt="Jesin Technologies" style="height: 35px; max-width: 140px; display: inline-block;">
-                </div>
             </div>
         </div>
     </body>
     </html>
     """
-    return send_smtp_email(user_email, subject, html_content)
+    
+    text_content = (
+        f"Hello {username},\n\n"
+        f"You are receiving this email because a request was submitted to reset the password for your account.\n\n"
+        f"Please click the link below to reset your passcode (this link is valid for 1 hour):\n{reset_url}\n\n"
+        f"If you did not request a password change, please update your security credentials immediately.\n\n"
+        f"AI Shield SOC Team."
+    )
+    
+    return send_smtp_email(user_email, subject, html_content, text_content)
 
 def send_security_alert_email(user_email, username, alert_type, details):
     """
     Sends automated system security notices.
     """
     subject = f"[AI SHIELD ALERT] Security Notice: {alert_type}"
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
+    
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -290,7 +385,7 @@ def send_security_alert_email(user_email, username, alert_type, details):
                 
                 <div class="alert-box">
                     <strong>Event Type:</strong> {alert_type}<br>
-                    <strong>Timestamp:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}<br>
+                    <strong>Timestamp:</strong> {timestamp}<br>
                     <strong>Trigger Details:</strong> {details}
                 </div>
                 
@@ -298,12 +393,20 @@ def send_security_alert_email(user_email, username, alert_type, details):
             </div>
             <div class="footer">
                 <p>&copy; 2026 AI Shield SOC. All rights reserved.</p>
-                <div style="margin-top: 15px; border-top: 1px solid rgba(239, 68, 68, 0.15); padding-top: 15px; text-align: center;">
-                    <img src="cid:jesin_tech_logo" alt="Jesin Technologies" style="height: 35px; max-width: 140px; display: inline-block;">
-                </div>
             </div>
         </div>
     </body>
     </html>
     """
-    return send_smtp_email(user_email, subject, html_content)
+    
+    text_content = (
+        f"Hello {username},\n\n"
+        f"The AI Shield Security Engine resolved a security alert event for your registered SOC node:\n\n"
+        f"Event Type: {alert_type}\n"
+        f"Timestamp: {timestamp}\n"
+        f"Trigger Details: {details}\n\n"
+        f"Please log in to your dashboard to inspect recent scan entries.\n\n"
+        f"AI Shield SOC Team."
+    )
+    
+    return send_smtp_email(user_email, subject, html_content, text_content)

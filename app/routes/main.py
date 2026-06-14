@@ -13,13 +13,41 @@ def index():
     if 'user' not in session:
         return render_template('landing.html')
     user = db_manager.get_user_by_id(session['user']['id'])
-    return render_template('index.html', user=user)
+    stats = db_manager.get_scan_statistics()
+    recent_scans = db_manager.get_all_scans(limit=10)
+    threats = fetch_threat_feed(limit=7)
+    
+    total = stats['total_scans']
+    det_rate = (((stats['phishing_count'] + stats['suspicious_count']) / total) * 100) if total > 0 else 0.0
+    stats['detection_rate'] = round(det_rate, 2)
+    
+    return render_template(
+        'index.html', 
+        user=user, 
+        stats=stats, 
+        recent_scans=recent_scans, 
+        threats=threats
+    )
 
 @app.route('/scanner')
 @login_required
 def scanner():
     user = db_manager.get_user_by_id(session['user']['id'])
-    return render_template('index.html', user=user)
+    stats = db_manager.get_scan_statistics()
+    recent_scans = db_manager.get_all_scans(limit=10)
+    threats = fetch_threat_feed(limit=7)
+    
+    total = stats['total_scans']
+    det_rate = (((stats['phishing_count'] + stats['suspicious_count']) / total) * 100) if total > 0 else 0.0
+    stats['detection_rate'] = round(det_rate, 2)
+    
+    return render_template(
+        'index.html', 
+        user=user, 
+        stats=stats, 
+        recent_scans=recent_scans, 
+        threats=threats
+    )
 
 @app.route('/dashboard')
 @login_required
