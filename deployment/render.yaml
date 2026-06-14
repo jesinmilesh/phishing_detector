@@ -11,3 +11,25 @@ services:
         value: "False"
       - key: SECRET_KEY
         generateValue: true
+      # ─── SMTP Email Configuration ─────────────────────────────────────────
+      # Set the values for these keys in the Render Dashboard → Environment tab.
+      # Do NOT commit real credentials here.
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USE_TLS
+        value: "True"
+      - key: MAIL_USE_SSL
+        value: "False"
+      - key: MAIL_USERNAME
+        sync: false   # Set in Render dashboard
+      - key: MAIL_PASSWORD
+        sync: false   # Set in Render dashboard (use Gmail App Password, NOT your main password)
+      - key: MAIL_DEFAULT_SENDER
+        sync: false   # Set in Render dashboard
+      # ─── Application URL ──────────────────────────────────────────────────
+      - key: APP_BASE_URL
+        sync: false   # e.g. https://phishing-detector-5mx5.onrender.com
+      - key: PREFERRED_URL_SCHEME
+        value: https

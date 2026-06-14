@@ -26,6 +26,9 @@ EXPOSE 5000
 ENV FLASK_APP=app
 ENV DEBUG=False
 ENV PORT=5000
+# Force UTF-8 I/O encoding — prevents UnicodeEncodeError for emojis/special chars in print()
+ENV PYTHONIOENCODING=utf-8
+ENV PYTHONUNBUFFERED=1
 
 # Run model training first to generate ml/models/phishing_model.pkl, then start Flask app
 CMD python ml/training/train.py && python -m app

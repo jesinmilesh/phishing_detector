@@ -1,4 +1,5 @@
 import os
+import sys
 import smtplib
 import logging
 import threading
@@ -6,6 +7,24 @@ from datetime import datetime
 from flask import current_app
 from flask_mail import Message
 from app.config import Config
+
+# Ensure stdout is UTF-8 safe (critical on Windows cp1252 terminals / Gunicorn).
+# Without this, any print() containing non-ASCII characters (emojis, etc.) will
+# raise UnicodeEncodeError inside the success path, causing the function to
+# erroneously return False even after a successful mail.send().
+try:
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
+
+
+def _safe_print(msg: str) -> None:
+    """Print that never raises UnicodeEncodeError on narrow-encoding terminals."""
+    try:
+        print(msg)
+    except UnicodeEncodeError:
+        print(msg.encode('ascii', errors='replace').decode('ascii'))
 
 # ---------------------------------------------------------------------------
 # Loggers
@@ -20,7 +39,7 @@ def _get_registration_logger():
         import logging.handlers as lh
         os.makedirs('logs', exist_ok=True)
         formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
-        handler = lh.RotatingFileHandler('logs/registration.log', maxBytes=5 * 1024 * 1024, backupCount=3)
+        handler = lh.RotatingFileHandler('logs/registration.log', maxBytes=5 * 1024 * 1024, backupCount=3, encoding='utf-8')
         handler.setFormatter(formatter)
         reg_logger.setLevel(logging.DEBUG)
         reg_logger.addHandler(handler)
@@ -30,7 +49,7 @@ def _get_registration_logger():
 
 def _log_reg(level, msg):
     """Helper to write to both console and registration log."""
-    print(f"[REGISTRATION] {msg}")
+    _safe_print(f"[REGISTRATION] {msg}")
     getattr(_get_registration_logger(), level)(msg)
 
 
@@ -126,7 +145,7 @@ def send_smtp_email_sync(app, to_email, subject, html_content, text_content=None
 
         try:
             logger.info(f"Initiating email send to {to_email} (Subject: {subject})")
-            print(f"[EMAIL] Sending to: {to_email} | Subject: {subject}")
+            _safe_print(f"[EMAIL] Sending to: {to_email} | Subject: {subject}")
 
             msg = Message(
                 subject=subject,
@@ -144,14 +163,14 @@ def send_smtp_email_sync(app, to_email, subject, html_content, text_content=None
             mail.send(msg)
 
             logger.info(f"[SUCCESS] Email delivered to {to_email} | Subject: {subject}")
-            print(f"[EMAIL] ✅ Sent successfully to {to_email}")
+            _safe_print(f"[EMAIL] [OK] Sent successfully to {to_email}")
             return True
 
         except smtplib.SMTPAuthenticationError as auth_err:
             error_msg = f"SMTPAuthenticationError: {str(auth_err)}"
             logger.error(f"[FAIL] {error_msg} | Recipient: {to_email} | Subject: {subject}")
             logger.error("HINT: For Gmail, ensure you are using an App Password (not your normal password) and 2FA is enabled.")
-            print(f"[EMAIL FAIL] {error_msg}")
+            _safe_print(f"[EMAIL FAIL] {error_msg}")
             notify_admin_of_failure(db_manager, to_email, subject, error_msg)
             safe_print_email(to_email, subject, html_content)
             return False
@@ -159,7 +178,7 @@ def send_smtp_email_sync(app, to_email, subject, html_content, text_content=None
         except smtplib.SMTPConnectError as conn_err:
             error_msg = f"SMTPConnectError: {str(conn_err)}"
             logger.error(f"[FAIL] {error_msg} | Recipient: {to_email} | Server: {Config.MAIL_SERVER}:{Config.MAIL_PORT}")
-            print(f"[EMAIL FAIL] {error_msg}")
+            _safe_print(f"[EMAIL FAIL] {error_msg}")
             notify_admin_of_failure(db_manager, to_email, subject, error_msg)
             safe_print_email(to_email, subject, html_content)
             return False
@@ -167,35 +186,35 @@ def send_smtp_email_sync(app, to_email, subject, html_content, text_content=None
         except smtplib.SMTPRecipientsRefused as ref_err:
             error_msg = f"SMTPRecipientsRefused: Recipient address rejected by server: {str(ref_err)}"
             logger.error(f"[FAIL] {error_msg} | Recipient: {to_email}")
-            print(f"[EMAIL FAIL] {error_msg}")
+            _safe_print(f"[EMAIL FAIL] {error_msg}")
             notify_admin_of_failure(db_manager, to_email, subject, error_msg)
             return False
 
         except smtplib.SMTPSenderRefused as sender_err:
             error_msg = f"SMTPSenderRefused: Sender address rejected: {str(sender_err)}"
             logger.error(f"[FAIL] {error_msg} | Sender: {sender} | Recipient: {to_email}")
-            print(f"[EMAIL FAIL] {error_msg}")
+            _safe_print(f"[EMAIL FAIL] {error_msg}")
             notify_admin_of_failure(db_manager, to_email, subject, error_msg)
             return False
 
         except smtplib.SMTPDataError as data_err:
             error_msg = f"SMTPDataError (server rejected message body): {str(data_err)}"
             logger.error(f"[FAIL] {error_msg} | Recipient: {to_email}")
-            print(f"[EMAIL FAIL] {error_msg}")
+            _safe_print(f"[EMAIL FAIL] {error_msg}")
             notify_admin_of_failure(db_manager, to_email, subject, error_msg)
             return False
 
         except TimeoutError as t_err:
             error_msg = f"TimeoutError: SMTP connection timed out: {str(t_err)}"
             logger.error(f"[FAIL] {error_msg} | Server: {Config.MAIL_SERVER}:{Config.MAIL_PORT}")
-            print(f"[EMAIL FAIL] {error_msg}")
+            _safe_print(f"[EMAIL FAIL] {error_msg}")
             notify_admin_of_failure(db_manager, to_email, subject, error_msg)
             return False
 
         except ConnectionRefusedError as cr_err:
             error_msg = f"ConnectionRefusedError: SMTP server refused connection: {str(cr_err)}"
             logger.error(f"[FAIL] {error_msg} | Server: {Config.MAIL_SERVER}:{Config.MAIL_PORT}")
-            print(f"[EMAIL FAIL] {error_msg}")
+            _safe_print(f"[EMAIL FAIL] {error_msg}")
             notify_admin_of_failure(db_manager, to_email, subject, error_msg)
             return False
 
@@ -205,7 +224,7 @@ def send_smtp_email_sync(app, to_email, subject, html_content, text_content=None
             tb = traceback.format_exc()
             logger.error(f"[FAIL] {error_msg} | Recipient: {to_email} | Subject: {subject}")
             logger.error(f"Traceback:\n{tb}")
-            print(f"[EMAIL FAIL] {error_msg}")
+            _safe_print(f"[EMAIL FAIL] {error_msg}")
             notify_admin_of_failure(db_manager, to_email, subject, error_msg)
             safe_print_email(to_email, subject, html_content)
             return False
