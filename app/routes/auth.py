@@ -192,7 +192,8 @@ def register():
 
         full_name = request.form.get('full_name', '').strip()
         username = request.form.get('username', '').strip()
-        email = request.form.get('email', '').strip()
+        # Normalize email: strip whitespace and lowercase to prevent delivery failures
+        email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
         
@@ -248,6 +249,7 @@ def register():
             # ---- Send Verification Email ----
             reg_logger.info(f"Step 6: Sending verification email to {email}")
             print(f"[REGISTRATION] Step 6: Sending email to {email}")
+            email_sent = False
             try:
                 email_sent = send_verification_email(email, username, verification_url)
                 if email_sent:
@@ -261,12 +263,26 @@ def register():
                 reg_logger.error(f"Step 7: Email send raised exception: {str(email_exc)}")
                 error_logger.error(f"REGISTRATION EMAIL EXCEPTION | User: {username} | Email: {email} | Error: {email_exc}")
                 print(f"[REGISTRATION] Step 7: EMAIL EXCEPTION — {email_exc}")
-                # User is still registered — they can request resend
+                email_sent = False
 
-            security_logger.info(f"USER REGISTRATION | User: {username} | Email: {email} | IP: {request.remote_addr}")
-            reg_logger.info(f"Step 8: Registration complete — redirecting to login")
-            print("[REGISTRATION] Step 8: Registration complete")
-            flash("Account created! A verification link has been sent to your email address. Please check your inbox (and spam folder).", "success")
+            security_logger.info(f"USER REGISTRATION | User: {username} | Email: {email} | IP: {request.remote_addr} | EmailSent: {email_sent}")
+            reg_logger.info(f"Step 8: Registration complete — email_sent={email_sent} — redirecting to login")
+            print(f"[REGISTRATION] Step 8: Registration complete — email_sent={email_sent}")
+
+            # ---- ACCURATE UI FEEDBACK — only claim success when email was actually delivered ----
+            if email_sent:
+                flash(
+                    "Account created! ✅ A verification link has been sent to your email address. "
+                    "Please check your inbox (and spam/junk folder).",
+                    "success"
+                )
+            else:
+                flash(
+                    "Account created, but the verification email could not be delivered. "
+                    "Please use the 'Resend Verification Email' option on the login page, "
+                    "or contact support if the problem persists.",
+                    "warning"
+                )
             return redirect(url_for('login'))
         else:
             reg_logger.error(f"FAILED: Username or email collision — username={username}, email={email}")
@@ -304,7 +320,7 @@ def verify_email():
 @app.route('/verify-email/resend', methods=['POST'])
 @limiter.limit("3 per minute")
 def verify_email_resend():
-    email = request.form.get('email', '').strip()
+    email = request.form.get('email', '').strip().lower()
     if not email:
         flash("Email is required.", "danger")
         return redirect(url_for('verify_email'))
@@ -317,11 +333,15 @@ def verify_email_resend():
             
         token = secrets.token_urlsafe(32)
         db_manager.set_user_verification_token(user['id'], token)
-        verification_url = url_for('verify_email', token=token, _external=True)
-        send_verification_email(email, user['username'], verification_url)
-        flash("A new verification link has been sent to your email.", "success")
+        base_url = Config.APP_BASE_URL.rstrip('/')
+        verification_url = f"{base_url}/verify-email?token={token}"
+        resend_sent = send_verification_email(email, user['username'], verification_url)
+        if resend_sent:
+            flash("✅ A new verification link has been sent to your email. Please check your inbox and spam folder.", "success")
+        else:
+            flash("⚠️ Failed to send the verification email. Please wait a moment and try again, or contact support.", "danger")
     else:
-        # Prevent user enumeration
+        # Prevent user enumeration — always show neutral message
         flash("If that email address is registered, a new verification link has been sent.", "success")
         
     return redirect(url_for('verify_email'))
@@ -357,9 +377,13 @@ def resend_verification():
             
         token = secrets.token_urlsafe(32)
         db_manager.set_user_verification_token(user['id'], token)
-        verification_url = url_for('verify_email', token=token, _external=True)
-        send_verification_email(user['email'], user['username'], verification_url)
-        flash("Verification email has been resent. Please check your inbox.", "success")
+        base_url = Config.APP_BASE_URL.rstrip('/')
+        verification_url = f"{base_url}/verify-email?token={token}"
+        resend_sent = send_verification_email(user['email'], user['username'], verification_url)
+        if resend_sent:
+            flash("✅ Verification email has been resent. Please check your inbox (and spam folder).", "success")
+        else:
+            flash("⚠️ Failed to send the verification email. Please try again later or contact support.", "danger")
     else:
         flash("User record not found.", "danger")
     return redirect(url_for('index'))
@@ -545,16 +569,21 @@ def debug_registration_email():
 
 @app.route('/test-email')
 def test_email():
-    recipient = request.args.get('email', '').strip()
-    if not recipient:
-        recipient = Config.MAIL_USERNAME or "jesinmilesh@gmail.com"
-        
-    print(f"[DEBUG] Initiating Sync Test Email to: {recipient}")
-    
+    """
+    Diagnostic route: Send a test email and return full SMTP status.
+    Usage: GET /test-email?email=your@address.com
+    """
     from app.services.email_service import send_smtp_email_sync, validate_smtp_config
     from app import app as current_flask_app
-    
-    test_subject = "AI Shield Diagnostics: Test Email Route"
+    import smtplib
+
+    recipient = request.args.get('email', '').strip().lower()
+    if not recipient:
+        recipient = Config.MAIL_USERNAME or "admin@ai-shield.local"
+
+    print(f"[TEST-EMAIL] Initiating diagnostic test email to: {recipient}")
+
+    test_subject = "AI Shield Diagnostics: SMTP Test"
     test_html = """
     <!DOCTYPE html>
     <html>
@@ -565,47 +594,81 @@ def test_email():
             body { font-family: Arial, sans-serif; background-color: #060913; color: #cbd5e1; padding: 20px; }
             .card { max-width: 600px; margin: 0 auto; background: #0d1423; border: 1px solid #0ea5e9; border-radius: 8px; padding: 25px; }
             h1 { color: #0ea5e9; margin-top: 0; }
-            .success-msg { color: #10b981; font-weight: bold; }
+            .success-msg { color: #10b981; font-weight: bold; font-size: 18px; }
+            .info { color: #94a3b8; font-size: 13px; margin-top: 20px; }
         </style>
     </head>
     <body>
         <div class="card">
-            <h1>🛡️ AI Shield Diagnostics</h1>
-            <p class="success-msg">Email Sent Successfully!</p>
-            <p>This is an automated diagnostics and verification message transmitted from the <strong>/test-email</strong> route.</p>
-            <p>If you received this message, your Flask-Mail and SMTP integration is fully functional and emails are active!</p>
-            <div style="margin-top: 30px; border-top: 1px solid rgba(56,189,248,0.15); padding-top: 15px;">
-                <img src="cid:jesin_tech_logo" alt="Jesin Technologies Logo" style="height: 35px; max-width: 140px;">
-            </div>
+            <h1>&#127313; AI Shield — Diagnostic Email</h1>
+            <p class="success-msg">&#10003; SMTP Delivery Confirmed</p>
+            <p>This is a diagnostic message from the <strong>/test-email</strong> route.</p>
+            <p>If you received this, your Flask-Mail SMTP integration is fully operational.</p>
+            <p class="info">This email was sent synchronously to verify end-to-end deliverability.</p>
         </div>
     </body>
     </html>
     """
-    
-    # Pre-validate and collect any warning notifications
+
+    # Step 1: Validate SMTP configuration
     warnings = validate_smtp_config()
-    
-    # Transmit test email synchronously to wait and capture exact status
+
+    # Step 2: Attempt raw SMTP connection test before sending
+    smtp_conn_status = "unknown"
+    smtp_conn_error = None
+    try:
+        with smtplib.SMTP(Config.MAIL_SERVER, Config.MAIL_PORT, timeout=10) as smtp:
+            smtp.ehlo()
+            if Config.MAIL_USE_TLS:
+                smtp.starttls()
+                smtp.ehlo()
+            if Config.MAIL_USERNAME and Config.MAIL_PASSWORD:
+                smtp.login(Config.MAIL_USERNAME, Config.MAIL_PASSWORD)
+            smtp_conn_status = "connected_and_authenticated"
+            print(f"[TEST-EMAIL] SMTP connection to {Config.MAIL_SERVER}:{Config.MAIL_PORT} succeeded.")
+    except smtplib.SMTPAuthenticationError as auth_e:
+        smtp_conn_status = "authentication_failed"
+        smtp_conn_error = str(auth_e)
+        print(f"[TEST-EMAIL] SMTP Auth failed: {auth_e}")
+    except (smtplib.SMTPConnectError, ConnectionRefusedError, OSError) as conn_e:
+        smtp_conn_status = "connection_refused"
+        smtp_conn_error = str(conn_e)
+        print(f"[TEST-EMAIL] SMTP connection refused: {conn_e}")
+    except Exception as raw_e:
+        smtp_conn_status = "error"
+        smtp_conn_error = str(raw_e)
+        print(f"[TEST-EMAIL] SMTP raw error: {raw_e}")
+
+    # Step 3: Attempt full email send via Flask-Mail
     success = send_smtp_email_sync(current_flask_app, recipient, test_subject, test_html)
-    
-    if success:
-        print("[DEBUG] Email Sent Successfully")
-        return jsonify({
-            "success": True,
-            "status": "Email Sent Successfully",
-            "recipient": recipient,
-            "warnings": warnings,
-            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
-        })
-    else:
-        print("[-] SMTP Transmission Failed")
-        return jsonify({
-            "success": False,
-            "status": "SMTP Transmission Failed",
-            "recipient": recipient,
-            "warnings": warnings,
-            "details": "Check logs/email.log for connection, SSL/TLS handshake, or authentication credentials errors.",
-            "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
-        }), 500
+
+    status_code = 200 if success else 500
+    return jsonify({
+        "success": success,
+        "status": "Email Sent Successfully" if success else "Email Delivery Failed",
+        "recipient": recipient,
+        "smtp_config": {
+            "MAIL_SERVER": Config.MAIL_SERVER,
+            "MAIL_PORT": Config.MAIL_PORT,
+            "MAIL_USE_TLS": Config.MAIL_USE_TLS,
+            "MAIL_USE_SSL": Config.MAIL_USE_SSL,
+            "MAIL_USERNAME": Config.MAIL_USERNAME,
+            "MAIL_PASSWORD_SET": bool(Config.MAIL_PASSWORD),
+            "MAIL_DEFAULT_SENDER": Config.MAIL_DEFAULT_SENDER,
+            "APP_BASE_URL": Config.APP_BASE_URL,
+        },
+        "smtp_connection_test": {
+            "status": smtp_conn_status,
+            "error": smtp_conn_error
+        },
+        "config_warnings": warnings,
+        "advice": (
+            "Email delivered. Check inbox and spam/promotions folder."
+            if success else
+            "Delivery failed. See smtp_connection_test and logs/email.log for details."
+        ),
+        "logs": "Check logs/email.log and logs/registration.log for full trace.",
+        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
+    }), status_code
 
 
