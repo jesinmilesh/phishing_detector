@@ -48,12 +48,22 @@ class Config:
     
     # Email SMTP configuration
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    
+    _mail_port = os.environ.get('MAIL_PORT', '587')
+    try:
+        MAIL_PORT = int(_mail_port) if _mail_port else 587
+    except ValueError:
+        MAIL_PORT = 587
+        
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
     MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'False').lower() == 'true'
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'no-reply@ai-shield.local')
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '').strip()
+    
+    # Strip spaces from Gmail App Passwords if present
+    _mail_pwd = os.environ.get('MAIL_PASSWORD', '')
+    MAIL_PASSWORD = _mail_pwd.replace(' ', '') if _mail_pwd else ''
+    
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'no-reply@ai-shield.local').strip()
 
     # Application URL Configuration
     # APP_BASE_URL is used to build external URLs (e.g. in verification emails).

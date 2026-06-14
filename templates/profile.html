@@ -228,7 +228,6 @@
                         <button class="nav-link" id="tab-preferences-btn" data-bs-toggle="pill" data-bs-target="#tab-preferences" type="button" role="tab"><i class="fas fa-sliders me-2"></i> Preferences</button>
                         <button class="nav-link" id="tab-history-btn" data-bs-toggle="pill" data-bs-target="#tab-history" type="button" role="tab"><i class="fas fa-clock-rotate-left me-2"></i> Threat Scan History</button>
                         <button class="nav-link" id="tab-reports-btn" data-bs-toggle="pill" data-bs-target="#tab-reports" type="button" role="tab"><i class="fas fa-file-pdf me-2"></i> Report Manager</button>
-                        <button class="nav-link" id="tab-subscription-btn" data-bs-toggle="pill" data-bs-target="#tab-subscription" type="button" role="tab"><i class="fas fa-credit-card me-2"></i> Subscription Plan</button>
                         <button class="nav-link" id="tab-privacy-btn" data-bs-toggle="pill" data-bs-target="#tab-privacy" type="button" role="tab"><i class="fas fa-user-shield me-2"></i> Privacy & Account</button>
                     </div>
                 </div>
@@ -602,83 +601,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 6: SUBSCRIPTION -->
-                    <div class="tab-pane fade" id="tab-subscription">
-                        <div class="cyber-card p-4">
-                            <h4 class="brand-font text-white mb-2 border-bottom border-secondary border-opacity-20 pb-3"><i class="fas fa-credit-card text-info"></i> Node License & Plan</h4>
-                            
-                            <!-- Quota Metrics -->
-                            <div class="row g-4 mb-4 mt-2">
-                                <div class="col-md-4">
-                                    <div class="p-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10 rounded">
-                                        <div class="text-muted small mb-1">URLs Scanned Today</div>
-                                        <h3 class="brand-font text-white mb-2">{{ stats.total_scans or 0 }} / 100</h3>
-                                        <div class="progress bg-darker" style="height: 6px;">
-                                            <div class="progress-bar bg-info" style="width: {{ [stats.total_scans or 0, 100]|min }}%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="p-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10 rounded">
-                                        <div class="text-muted small mb-1">Detections Accuracy</div>
-                                        <h3 class="brand-font text-white mb-2">99.4%</h3>
-                                        <div class="progress bg-darker" style="height: 6px;">
-                                            <div class="progress-bar bg-success" style="width: 99.4%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="p-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10 rounded">
-                                        <div class="text-muted small mb-1">Threats Logged</div>
-                                        <h3 class="brand-font text-white mb-2">{{ stats.phishing_count + stats.suspicious_count }} Dets</h3>
-                                        <div class="progress bg-darker" style="height: 6px;">
-                                            <div class="progress-bar bg-danger" style="width: 100%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <!-- Subscription Tier Cards -->
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="card bg-darker border-secondary p-3 text-center position-relative h-100">
-                                        <h6 class="brand-font text-white">Free Sandbox</h6>
-                                        <h4 class="text-info font-monospace my-2">$0</h4>
-                                        <ul class="text-muted small list-unstyled my-3 text-start">
-                                            <li><i class="fas fa-check text-info me-1"></i> 10 URL scans / day</li>
-                                            <li><i class="fas fa-check text-info me-1"></i> Standard WHOIS info</li>
-                                            <li><i class="fas fa-xmark text-danger me-1"></i> No Brand Spoofing SS</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="card bg-dark border-info p-3 text-center position-relative h-100 border-glow">
-                                        <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-info text-dark brand-font fw-bold" style="font-size: 0.65rem;">ACTIVE SUBSCRIPTION</span>
-                                        <h6 class="brand-font text-white mt-1">Analyst Pro</h6>
-                                        <h4 class="text-info font-monospace my-2">$29<span class="fs-6 text-muted">/mo</span></h4>
-                                        <ul class="text-white small list-unstyled my-3 text-start">
-                                            <li><i class="fas fa-check text-info me-1"></i> 1,000 scans / day</li>
-                                            <li><i class="fas fa-check text-info me-1"></i> Brand Spoofing Sandbox</li>
-                                            <li><i class="fas fa-check text-info me-1"></i> Custom PDF Reports</li>
-                                            <li><i class="fas fa-check text-info me-1"></i> API Key Access</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="card bg-darker border-secondary p-3 text-center position-relative h-100">
-                                        <h6 class="brand-font text-white">Sentinel Enterprise</h6>
-                                        <h4 class="text-info font-monospace my-2">$99<span class="fs-6 text-muted">/mo</span></h4>
-                                        <ul class="text-muted small list-unstyled my-3 text-start">
-                                            <li><i class="fas fa-check text-info me-1"></i> Unlimited queries</li>
-                                            <li><i class="fas fa-check text-info me-1"></i> Dedicated Intel feeds</li>
-                                            <li><i class="fas fa-check text-info me-1"></i> Priority model execution</li>
-                                            <li><i class="fas fa-check text-info me-1"></i> Dedicated SLA support</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- TAB 7: PRIVACY & ACCOUNT -->
                     <div class="tab-pane fade" id="tab-privacy">

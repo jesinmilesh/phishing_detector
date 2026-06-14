@@ -4,6 +4,7 @@ import random
 import pandas as pd
 import numpy as np
 import joblib
+from datetime import datetime
 
 # Add project root to path to resolve imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -15,6 +16,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_auc_score
+from joblib import Parallel, delayed
 
 from app.config import Config
 from ml.feature_extraction.feature_extractor import extract_features, get_feature_names
@@ -25,6 +27,13 @@ try:
     XGBOOST_AVAILABLE = True
 except ImportError:
     XGBOOST_AVAILABLE = False
+
+# Try to import lightgbm
+try:
+    import lightgbm as lgb
+    LIGHTGBM_AVAILABLE = True
+except ImportError:
+    LIGHTGBM_AVAILABLE = False
 
 # Set random seed for reproducibility
 random.seed(42)
@@ -56,12 +65,9 @@ def load_unified_dataset():
             try:
                 df = pd.read_csv(path)
                 print(f"    Loaded {name} dataset ({len(df)} rows)")
-                # Standardize column names
                 df.columns = [col.lower().strip() for col in df.columns]
                 
-                # Check for required columns
                 if 'url' not in df.columns or 'label' not in df.columns:
-                    # Try to map columns if they have different names
                     col_map = {}
                     for col in df.columns:
                         if col in ['url_string', 'link', 'address']:
@@ -73,7 +79,7 @@ def load_unified_dataset():
                 if 'url' in df.columns and 'label' in df.columns:
                     dfs.append(df[['url', 'label']])
                 else:
-                    print(f"    [!] Skipping {name}: Missing 'url' or 'label' column. Columns found: {list(df.columns)}")
+                    print(f"    [!] Skipping {name}: Missing 'url' or 'label' column. Columns: {list(df.columns)}")
             except Exception as e:
                 print(f"    [!] Error loading {name}: {e}")
         else:
@@ -85,20 +91,16 @@ def load_unified_dataset():
     unified_df = pd.concat(dfs, ignore_index=True)
     initial_len = len(unified_df)
     
-    # Preprocessing
-    # 1. Clean labels
     unified_df['label'] = unified_df['label'].apply(clean_label)
     unified_df = unified_df.dropna(subset=['url', 'label'])
     unified_df['label'] = unified_df['label'].astype(int)
     
-    # 2. Remove duplicates
     unified_df = unified_df.drop_duplicates(subset=['url'])
     final_len = len(unified_df)
     print(f"[+] Unified dataset statistics:")
     print(f"    - Initial rows: {initial_len}")
     print(f"    - Final rows after clean & deduplication: {final_len} (Removed {initial_len - final_len} records)")
     
-    # 3. Class balance check
     class_counts = unified_df['label'].value_counts()
     print(f"    - Legitimate: {class_counts.get(0, 0)} ({class_counts.get(0, 0)/final_len*100:.2f}%)")
     print(f"    - Phishing: {class_counts.get(1, 0)} ({class_counts.get(1, 0)/final_len*100:.2f}%)")
@@ -106,28 +108,24 @@ def load_unified_dataset():
     return unified_df
 
 def train_and_evaluate_models():
-    # Make sure output directory exists
     os.makedirs(os.path.dirname(Config.MODEL_PATH), exist_ok=True)
     
     df = load_unified_dataset()
     
-    print("[*] Extracting features from URLs...")
-    features_list = []
-    for idx, row in df.iterrows():
-        if idx > 0 and idx % 400 == 0:
-            print(f"    Processed {idx}/{len(df)} URLs...")
-        features_list.append(extract_features(row['url'], online=False))
+    print("[*] Extracting features from URLs in parallel...")
+    # Extract features in parallel using joblib
+    features_list = Parallel(n_jobs=-1)(
+        delayed(extract_features)(url, False) for url in df['url']
+    )
         
     X = pd.DataFrame(features_list)[get_feature_names()]
     y = df['label']
     
-    # Train/test split with stratify to maintain class ratios
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
     
     print(f"\n[*] Training dataset size: {X_train.shape[0]} samples")
     print(f"[*] Testing dataset size: {X_test.shape[0]} samples")
     
-    # Define models dictionary
     models = {
         "Random Forest": RandomForestClassifier(n_estimators=100, max_depth=15, random_state=42, class_weight='balanced'),
         "Decision Tree": DecisionTreeClassifier(max_depth=10, random_state=42, class_weight='balanced'),
@@ -136,13 +134,17 @@ def train_and_evaluate_models():
     }
     
     if XGBOOST_AVAILABLE:
-        # Calculate scale_pos_weight for class imbalance
         neg_count = sum(y_train == 0)
         pos_count = sum(y_train == 1)
         scale_pos_weight = neg_count / pos_count if pos_count > 0 else 1.0
         models["XGBoost"] = xgb.XGBClassifier(n_estimators=100, max_depth=6, scale_pos_weight=scale_pos_weight, random_state=42, eval_metric='logloss')
     else:
         print("[!] XGBoost not available. Skipping XGBoost model training.")
+        
+    if LIGHTGBM_AVAILABLE:
+        models["LightGBM"] = lgb.LGBMClassifier(n_estimators=100, random_state=42, verbosity=-1)
+    else:
+        print("[!] LightGBM not available. Skipping LightGBM model training.")
         
     best_model_name = None
     best_model_obj = None
@@ -154,12 +156,17 @@ def train_and_evaluate_models():
     for name, clf in models.items():
         print(f"\n[*] Training {name} Classifier...")
         try:
+            # Measure time and memory roughly
+            import time
+            t0 = time.time()
             clf.fit(X_train, y_train)
+            train_time = time.time() - t0
             
             # Predict
+            t_inf = time.time()
             y_pred = clf.predict(X_test)
+            inf_time = (time.time() - t_inf) / len(X_test) * 1000  # Latency per sample in ms
             
-            # Predict probabilities for ROC-AUC
             if hasattr(clf, "predict_proba"):
                 y_prob = clf.predict_proba(X_test)[:, 1]
             elif hasattr(clf, "decision_function"):
@@ -167,7 +174,6 @@ def train_and_evaluate_models():
             else:
                 y_prob = y_pred
                 
-            # Compute metrics
             acc = accuracy_score(y_test, y_pred)
             prec = precision_score(y_test, y_pred, zero_division=0)
             rec = recall_score(y_test, y_pred, zero_division=0)
@@ -175,11 +181,13 @@ def train_and_evaluate_models():
             roc = roc_auc_score(y_test, y_prob)
             cm = confusion_matrix(y_test, y_pred)
             
-            print(f"    - Accuracy:  {acc:.4f}")
-            print(f"    - Precision: {prec:.4f}")
-            print(f"    - Recall:    {rec:.4f}")
-            print(f"    - F1 Score:  {f1:.4f}")
-            print(f"    - ROC-AUC:   {roc:.4f}")
+            print(f"    - Train Time:  {train_time:.2f}s")
+            print(f"    - Latency:     {inf_time:.4f}ms/sample")
+            print(f"    - Accuracy:    {acc:.4f}")
+            print(f"    - Precision:   {prec:.4f}")
+            print(f"    - Recall:      {rec:.4f}")
+            print(f"    - F1 Score:    {f1:.4f}")
+            print(f"    - ROC-AUC:     {roc:.4f}")
             
             comparison_results.append({
                 "Model": name,
@@ -187,10 +195,11 @@ def train_and_evaluate_models():
                 "Precision": prec,
                 "Recall": rec,
                 "F1 Score": f1,
-                "ROC-AUC": roc
+                "ROC-AUC": roc,
+                "Latency_ms": inf_time,
+                "Train_Time_s": train_time
             })
             
-            # Update best model based on F1-Score
             if f1 > best_f1:
                 best_f1 = f1
                 best_model_name = name
@@ -201,24 +210,23 @@ def train_and_evaluate_models():
                     "recall": rec,
                     "f1_score": f1,
                     "roc_auc": roc,
-                    "confusion_matrix": cm.tolist()
+                    "confusion_matrix": cm.tolist(),
+                    "latency_ms": inf_time
                 }
         except Exception as e:
             print(f"    [!] Error training {name}: {e}")
             
-    # Print comparison table
-    print("\n" + "="*80)
-    print(f"{'MODEL COMPARISON REPORT':^80}")
-    print("="*80)
-    print(f"{'Classifier Name':<25} | {'Accuracy':<10} | {'Precision':<10} | {'Recall':<10} | {'F1 Score':<10} | {'ROC-AUC':<10}")
-    print("-"*80)
+    print("\n" + "="*95)
+    print(f"{'MODEL COMPARISON REPORT':^95}")
+    print("="*95)
+    print(f"{'Classifier Name':<22} | {'Accuracy':<8} | {'Precision':<9} | {'Recall':<8} | {'F1 Score':<8} | {'ROC-AUC':<8} | {'Latency (ms)':<12}")
+    print("-"*95)
     for res in comparison_results:
-        print(f"{res['Model']:<25} | {res['Accuracy']:<10.4f} | {res['Precision']:<10.4f} | {res['Recall']:<10.4f} | {res['F1 Score']:<10.4f} | {res['ROC-AUC']:<10.4f}")
-    print("="*80)
+        print(f"{res['Model']:<22} | {res['Accuracy']:<8.4f} | {res['Precision']:<9.4f} | {res['Recall']:<8.4f} | {res['F1 Score']:<8.4f} | {res['ROC-AUC']:<8.4f} | {res['Latency_ms']:<12.4f}")
+    print("="*95)
     
     print(f"\n[+] Automatically selected best model: {best_model_name} (F1 Score: {best_f1:.4f})")
     
-    # Save Model data
     print(f"[*] Saving best model data to {Config.MODEL_PATH}...")
     joblib.dump({
         'model': best_model_obj,
@@ -229,7 +237,6 @@ def train_and_evaluate_models():
     }, Config.MODEL_PATH)
     print("[+] Model saved successfully!")
     
-    # Generate static report file for the frontend dashboard
     model_report_dir = os.path.dirname(Config.MODEL_PATH)
     with open(os.path.join(model_report_dir, 'model_report.json'), 'w') as f:
         import json

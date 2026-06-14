@@ -13,7 +13,8 @@ from app.services.email_service import (
     send_welcome_email,
     send_verification_email,
     send_password_reset_email,
-    send_security_alert_email
+    send_security_alert_email,
+    send_newsletter_subscription_email
 )
 
 # Registration-specific logger
@@ -187,6 +188,7 @@ def register():
         return redirect(url_for('dashboard'))
         
     if request.method == 'POST':
+        print("Registration Started")
         reg_logger.info(f"--- REGISTRATION STARTED | IP: {request.remote_addr} ---")
         print("[REGISTRATION] Step 1: Form submitted")
 
@@ -225,6 +227,7 @@ def register():
         user_id = db_manager.create_user(username, email, password)
 
         if user_id:
+            print("User Saved")
             reg_logger.info(f"Step 3: User saved successfully — user_id={user_id}")
             print(f"[REGISTRATION] Step 3: User created — ID={user_id}")
 
@@ -235,6 +238,7 @@ def register():
             # ---- Generate Verification Token ----
             token = secrets.token_urlsafe(32)
             db_manager.set_user_verification_token(user_id, token)
+            print("Token Generated")
             reg_logger.info(f"Step 4: Verification token generated and stored for user_id={user_id}")
             print("[REGISTRATION] Step 4: Verification token created")
 
@@ -251,7 +255,7 @@ def register():
             print(f"[REGISTRATION] Step 6: Sending email to {email}")
             email_sent = False
             try:
-                email_sent = send_verification_email(email, username, verification_url)
+                email_sent = send_verification_email(email, username, verification_url, token=token)
                 if email_sent:
                     reg_logger.info(f"Step 7: Verification email sent successfully to {email}")
                     print(f"[REGISTRATION] Step 7: Email sent OK")
@@ -278,10 +282,8 @@ def register():
                 )
             else:
                 flash(
-                    "Account created, but the verification email could not be delivered. "
-                    "Please use the 'Resend Verification Email' option on the login page, "
-                    "or contact support if the problem persists.",
-                    "warning"
+                    "Verification email could not be delivered.",
+                    "danger"
                 )
             return redirect(url_for('login'))
         else:
@@ -325,6 +327,21 @@ def verify_email_resend():
         flash("Email is required.", "danger")
         return redirect(url_for('verify_email'))
         
+    # Check cooldown (60 seconds)
+    cooldown = 60
+    session_key = f"last_resend_{email}"
+    last_resend = session.get(session_key)
+    if last_resend:
+        try:
+            last_resend_dt = datetime.fromisoformat(last_resend)
+            time_elapsed = (datetime.now() - last_resend_dt).total_seconds()
+            if time_elapsed < cooldown:
+                remaining = int(cooldown - time_elapsed)
+                flash(f"Please wait {remaining} seconds before requesting another verification email.", "danger")
+                return redirect(url_for('verify_email'))
+        except Exception:
+            pass
+
     user = db_manager.get_user_by_email(email)
     if user:
         if user.get('is_verified', 0):
@@ -335,13 +352,15 @@ def verify_email_resend():
         db_manager.set_user_verification_token(user['id'], token)
         base_url = Config.APP_BASE_URL.rstrip('/')
         verification_url = f"{base_url}/verify-email?token={token}"
-        resend_sent = send_verification_email(email, user['username'], verification_url)
+        resend_sent = send_verification_email(email, user['username'], verification_url, token=token)
         if resend_sent:
+            session[session_key] = datetime.now().isoformat()
             flash("✅ A new verification link has been sent to your email. Please check your inbox and spam folder.", "success")
         else:
-            flash("⚠️ Failed to send the verification email. Please wait a moment and try again, or contact support.", "danger")
+            flash("Verification email could not be delivered.", "danger")
     else:
-        # Prevent user enumeration — always show neutral message
+        # Prevent user enumeration — always show neutral message, but record send attempts to session
+        session[session_key] = datetime.now().isoformat()
         flash("If that email address is registered, a new verification link has been sent.", "success")
         
     return redirect(url_for('verify_email'))
@@ -375,15 +394,31 @@ def resend_verification():
             flash("Your account is already verified.", "info")
             return redirect(url_for('dashboard'))
             
+        email = user['email']
+        cooldown = 60
+        session_key = f"last_resend_{email}"
+        last_resend = session.get(session_key)
+        if last_resend:
+            try:
+                last_resend_dt = datetime.fromisoformat(last_resend)
+                time_elapsed = (datetime.now() - last_resend_dt).total_seconds()
+                if time_elapsed < cooldown:
+                    remaining = int(cooldown - time_elapsed)
+                    flash(f"Please wait {remaining} seconds before requesting another verification email.", "danger")
+                    return redirect(url_for('dashboard'))
+            except Exception:
+                pass
+                
         token = secrets.token_urlsafe(32)
         db_manager.set_user_verification_token(user['id'], token)
         base_url = Config.APP_BASE_URL.rstrip('/')
         verification_url = f"{base_url}/verify-email?token={token}"
-        resend_sent = send_verification_email(user['email'], user['username'], verification_url)
+        resend_sent = send_verification_email(user['email'], user['username'], verification_url, token=token)
         if resend_sent:
+            session[session_key] = datetime.now().isoformat()
             flash("✅ Verification email has been resent. Please check your inbox (and spam folder).", "success")
         else:
-            flash("⚠️ Failed to send the verification email. Please try again later or contact support.", "danger")
+            flash("Verification email could not be delivered.", "danger")
     else:
         flash("User record not found.", "danger")
     return redirect(url_for('index'))
@@ -478,6 +513,10 @@ def newsletter_subscribe():
     success = db_manager.add_newsletter_subscriber(email)
     if success:
         security_logger.info(f"NEWSLETTER SUBSCRIPTION | Email: {email} | IP: {request.remote_addr}")
+        try:
+            send_newsletter_subscription_email(email)
+        except Exception as e:
+            error_logger.error(f"Newsletter confirmation email failed: {e}")
         return jsonify({"success": True, "message": "Subscribed successfully! Thank you for staying informed."})
     else:
         return jsonify({"success": True, "message": "Email is already subscribed."})
@@ -570,11 +609,12 @@ def debug_registration_email():
 @app.route('/test-email')
 def test_email():
     """
-    Diagnostic route: Send a test email and return full SMTP status.
+    Diagnostic route: Send a test email and return sequential checks in plain text.
     Usage: GET /test-email?email=your@address.com
     """
-    from app.services.email_service import send_smtp_email_sync, validate_smtp_config
+    from app.services.email_service import send_smtp_email_sync
     from app import app as current_flask_app
+    from flask import Response
     import smtplib
 
     recipient = request.args.get('email', '').strip().lower()
@@ -610,65 +650,45 @@ def test_email():
     </html>
     """
 
-    # Step 1: Validate SMTP configuration
-    warnings = validate_smtp_config()
+    steps = []
 
-    # Step 2: Attempt raw SMTP connection test before sending
-    smtp_conn_status = "unknown"
-    smtp_conn_error = None
+    # Step 1: SMTP Connection Test
     try:
-        with smtplib.SMTP(Config.MAIL_SERVER, Config.MAIL_PORT, timeout=10) as smtp:
+        smtp = smtplib.SMTP(Config.MAIL_SERVER, Config.MAIL_PORT, timeout=10)
+        steps.append("SMTP Connected")
+    except Exception as e:
+        steps.append(f"SMTP Connection Failed: {str(e)}")
+        return Response("\n".join(steps), mimetype='text/plain'), 500
+
+    # Step 2: Authentication Test
+    try:
+        smtp.ehlo()
+        if Config.MAIL_USE_TLS:
+            smtp.starttls()
             smtp.ehlo()
-            if Config.MAIL_USE_TLS:
-                smtp.starttls()
-                smtp.ehlo()
-            if Config.MAIL_USERNAME and Config.MAIL_PASSWORD:
-                smtp.login(Config.MAIL_USERNAME, Config.MAIL_PASSWORD)
-            smtp_conn_status = "connected_and_authenticated"
-            print(f"[TEST-EMAIL] SMTP connection to {Config.MAIL_SERVER}:{Config.MAIL_PORT} succeeded.")
-    except smtplib.SMTPAuthenticationError as auth_e:
-        smtp_conn_status = "authentication_failed"
-        smtp_conn_error = str(auth_e)
-        print(f"[TEST-EMAIL] SMTP Auth failed: {auth_e}")
-    except (smtplib.SMTPConnectError, ConnectionRefusedError, OSError) as conn_e:
-        smtp_conn_status = "connection_refused"
-        smtp_conn_error = str(conn_e)
-        print(f"[TEST-EMAIL] SMTP connection refused: {conn_e}")
-    except Exception as raw_e:
-        smtp_conn_status = "error"
-        smtp_conn_error = str(raw_e)
-        print(f"[TEST-EMAIL] SMTP raw error: {raw_e}")
+        if Config.MAIL_USERNAME and Config.MAIL_PASSWORD:
+            smtp.login(Config.MAIL_USERNAME, Config.MAIL_PASSWORD)
+        smtp.close()
+        steps.append("Authentication Success")
+    except Exception as e:
+        try:
+            smtp.close()
+        except Exception:
+            pass
+        steps.append(f"Authentication Failed: {str(e)}")
+        return Response("\n".join(steps), mimetype='text/plain'), 500
 
-    # Step 3: Attempt full email send via Flask-Mail
-    success = send_smtp_email_sync(current_flask_app, recipient, test_subject, test_html)
-
-    status_code = 200 if success else 500
-    return jsonify({
-        "success": success,
-        "status": "Email Sent Successfully" if success else "Email Delivery Failed",
-        "recipient": recipient,
-        "smtp_config": {
-            "MAIL_SERVER": Config.MAIL_SERVER,
-            "MAIL_PORT": Config.MAIL_PORT,
-            "MAIL_USE_TLS": Config.MAIL_USE_TLS,
-            "MAIL_USE_SSL": Config.MAIL_USE_SSL,
-            "MAIL_USERNAME": Config.MAIL_USERNAME,
-            "MAIL_PASSWORD_SET": bool(Config.MAIL_PASSWORD),
-            "MAIL_DEFAULT_SENDER": Config.MAIL_DEFAULT_SENDER,
-            "APP_BASE_URL": Config.APP_BASE_URL,
-        },
-        "smtp_connection_test": {
-            "status": smtp_conn_status,
-            "error": smtp_conn_error
-        },
-        "config_warnings": warnings,
-        "advice": (
-            "Email delivered. Check inbox and spam/promotions folder."
-            if success else
-            "Delivery failed. See smtp_connection_test and logs/email.log for details."
-        ),
-        "logs": "Check logs/email.log and logs/registration.log for full trace.",
-        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
-    }), status_code
+    # Step 3: Send Test Email via Flask-Mail
+    try:
+        success = send_smtp_email_sync(current_flask_app, recipient, test_subject, test_html)
+        if success:
+            steps.append("Email Sent Successfully")
+            return Response("\n".join(steps), mimetype='text/plain'), 200
+        else:
+            steps.append("Email Delivery Failed: Flask-Mail returned False. Check logs/email.log.")
+            return Response("\n".join(steps), mimetype='text/plain'), 500
+    except Exception as e:
+        steps.append(f"Email Delivery Failed: {str(e)}")
+        return Response("\n".join(steps), mimetype='text/plain'), 500
 
 

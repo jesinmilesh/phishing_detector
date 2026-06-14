@@ -190,5 +190,55 @@ class TestFlaskAPI(unittest.TestCase):
         self.assertEqual(notif_res.status_code, 200)
         self.assertTrue(json.loads(notif_res.data)['success'])
 
+from unittest.mock import patch, MagicMock
+
+class TestEmailFeatures(unittest.TestCase):
+    def setUp(self):
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        self.client = app.test_client()
+
+    @patch('smtplib.SMTP')
+    def test_diagnostic_route_success(self, mock_smtp):
+        instance = mock_smtp.return_value
+        instance.ehlo.return_value = None
+        instance.starttls.return_value = None
+        instance.login.return_value = None
+        
+        response = self.client.get('/test-email?email=test@example.com')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, 'text/plain')
+        self.assertIn(b'SMTP Connected', response.data)
+        self.assertIn(b'Authentication Success', response.data)
+        self.assertIn(b'Email Sent Successfully', response.data)
+
+    @patch('smtplib.SMTP')
+    def test_diagnostic_route_connection_failure(self, mock_smtp):
+        mock_smtp.side_effect = Exception("Connection refused by target host")
+        
+        response = self.client.get('/test-email?email=test@example.com')
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.mimetype, 'text/plain')
+        self.assertIn(b'SMTP Connection Failed', response.data)
+
+    def test_resend_cooldown_enforced(self):
+        email = "cooldown@test.com"
+        
+        with patch('app.routes.auth.send_verification_email') as mock_send:
+            mock_send.return_value = True
+            
+            # First resend
+            res1 = self.client.post('/verify-email/resend', data={"email": email})
+            self.assertEqual(res1.status_code, 302)
+            
+            # Second resend immediately
+            res2 = self.client.post('/verify-email/resend', data={"email": email})
+            self.assertEqual(res2.status_code, 302)
+            
+            with self.client.session_transaction() as sess:
+                flashes = sess.get('_flashes', [])
+                cooldown_flashed = any("seconds before requesting another" in msg[1] for msg in flashes)
+                self.assertTrue(cooldown_flashed)
+
 if __name__ == '__main__':
     unittest.main()

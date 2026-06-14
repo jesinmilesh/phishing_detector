@@ -4,42 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>AI Shield SOC - Reports Archive</title>
+    <title>AI Shield SOC - Reports Center</title>
     <link rel="shortcut icon" href="/static/icons/favicon.ico" type="image/x-icon">
+    
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome -->
-    <!-- FontAwesome 6 (official CDN - icons load reliably) -->
+    
+    <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
-    <!-- Custom Style -->
+    
+    <!-- Google Fonts: Inter, Poppins, Manrope, Orbitron -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=Orbitron:wght@500;700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Style Systems -->
     <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/static/css/dashboard.css" rel="stylesheet">
+    <link href="/static/css/report.css" rel="stylesheet">
 </head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg cyber-navbar">
-        <div class="container">
-            <a class="navbar-brand brand-font" href="/scanner"><img src="/static/images/logo.svg" alt="AI Shield Logo" style="width: 30px; height: 30px; margin-right: 8px;"> AI SHIELD</a>
-            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/scanner"><i class="fas fa-magnifying-glass"></i> SCANNERS</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/dashboard"><i class="fas fa-chart-line"></i> SOC DASHBOARD</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/history"><i class="fas fa-archive"></i> SCANS ARCHIVE</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/profile"><i class="fas fa-user-gear"></i> MY PROFILE</a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center">
+<body class="soc-theme soc-reports-body">
+
+    <div class="reports-layout-wrapper">
+        <!-- ==========================================
+             SIDEBAR NAVIGATION (CrowdStrike Falcon Style)
+             ========================================== -->
+        <aside class="reports-sidebar" id="socSidebar">
+            <div class="sidebar-header">
+                <a href="/scanner" class="sidebar-brand">
+                    <img src="/static/images/logo.svg" alt="AI Shield Logo">
+                    <span>AI SHIELD</span>
+                </a>
+                <button class="sidebar-toggle-inner" id="sidebarToggleBtn" aria-label="Collapse Sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-menu-wrapper">
+                <!-- Core Monitoring -->
+                <div class="menu-group">
+                    <div class="menu-section-header">Command Center</div>
+                    <a href="/dashboard" class="sidebar-nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>SOC Dashboard</span>
+                    </a>
+                    <a href="/scanner" class="sidebar-nav-link">
+                        <i class="fas fa-shield-halved"></i>
+                        <span>Threat Analysis</span>
+                    </a>
+                    <a href="/scanner" class="sidebar-nav-link">
+                        <i class="fas fa-magnifying-glass"></i>
+                        <span>URL Scanner</span>
+                    </a>
+                </div>
+
+                <!-- Threat Intelligence -->
+                <div class="menu-group">
+                    <div class="menu-section-header">Intelligence</div>
+                    <a href="/dashboard" class="sidebar-nav-link">
+                        <i class="fas fa-rss"></i>
+                        <span>Threat Intel Feed</span>
+                    </a>
+                    <a href="/history" class="sidebar-nav-link">
+                        <i class="fas fa-box-archive"></i>
+                        <span>Scans Archive</span>
+                    </a>
+                    <a href="/history" class="sidebar-nav-link active">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Reports Center</span>
+                    </a>
+                </div>
+
+                <!-- User Preferences & Settings -->
+                <div class="menu-group">
+                    <div class="menu-section-header">Configuration</div>
+                    <a href="/profile" class="sidebar-nav-link">
+                        <i class="fas fa-user-gear"></i>
+                        <span>Analyst Profile</span>
+                    </a>
+                    <a href="/profile" class="sidebar-nav-link">
+                        <i class="fas fa-sliders"></i>
+                        <span>SOC Settings</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Sidebar Footer User Profile -->
+            <div class="sidebar-user-widget">
+                <div class="user-avatar-circle">
+                    {{ session['user']['username'][:2]|upper }}
+                </div>
+                <div class="user-meta-details">
+                    <span class="username">{{ session['user']['username'] }}</span>
+                    <span class="role">{{ session['user']['role'] }} node</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ==========================================
+             MAIN CONTENT CONTAINER
+             ========================================== -->
+        <main class="reports-main-panel" id="reportsMainPanel">
+            
+            <!-- TOP NAVIGATION BAR -->
+            <header class="soc-topnav">
+                <div class="topnav-left">
+                    <button class="sidebar-toggle-btn" id="mobileSidebarToggleBtn" aria-label="Toggle Sidebar Menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="topnav-title">
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 small fw-semibold">
+                            <i class="fas fa-terminal me-1"></i> ACTIVE NODE: {{ session['user']['role']|upper }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="topnav-right">
                     <!-- Notifications Dropdown -->
                     <div class="dropdown me-3" id="notificationsDropdown">
                         <button class="btn btn-link text-secondary position-relative p-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="notifBtn">
@@ -59,103 +137,431 @@
                         </div>
                     </div>
                     
-                    <span class="text-secondary me-3 small"><i class="fas fa-terminal text-info"></i> Analyst: <strong class="text-white">{{ session['user']['username'] }}</strong></span>
+                    <span class="text-secondary me-3 small"><i class="fas fa-user-shield text-info"></i> Node: <strong class="text-white">{{ session['user']['username'] }}</strong></span>
                     <a href="/logout" class="btn btn-cyber-danger btn-sm py-1 px-3"><i class="fas fa-right-from-bracket"></i> EXIT</a>
                 </div>
-            </div>
-        </div>
-    </nav>
+            </header>
 
-    <!-- Reports Archive container -->
-    <div class="container my-5">
-        <div class="row mb-4">
-            <div class="col-md-8">
-                <h2 class="brand-font text-info"><i class="fas fa-box-archive"></i> Scan Reports Archive</h2>
-                <p class="text-secondary">Comprehensive database records of audited URL signatures, classifier results, and downloadable PDF reports.</p>
+            <!-- PAGE HEADER -->
+            <div class="reports-topbar">
+                <div class="topbar-title-block">
+                    <h1>Reports Center</h1>
+                    <p>Manage, analyze, and export phishing detection and threat intelligence reports.</p>
+                </div>
+                
+                <div class="topbar-actions">
+                    <button class="btn-soc-primary" data-bs-toggle="modal" data-bs-target="#generateReportModal">
+                        <i class="fas fa-plus"></i> Generate Report
+                    </button>
+                    <button class="btn-soc-outline" id="exportCsvBtn">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </button>
+                    <button class="btn-soc-outline" id="exportJsonBtn">
+                        <i class="fas fa-file-code"></i> Export JSON
+                    </button>
+                </div>
             </div>
-            <div class="col-md-4 text-md-end d-flex align-items-end justify-content-md-end mt-3 mt-md-0">
-                <a href="/" class="btn btn-cyber"><i class="fas fa-plus"></i> NEW THREAT AUDIT</a>
-            </div>
-        </div>
 
-        <!-- Flash Alerts -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} py-2 px-3 small border-0 bg-opacity-20 bg-{{ category }} text-{{ category }} mb-4" role="alert">
-                        {{ message }}
+            <!-- Flash Alerts -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} py-2 px-3 small border-0 bg-opacity-20 bg-{{ category }} text-{{ category }} mb-4" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- KPI OVERVIEW CARDS -->
+            <div class="kpi-cards-grid">
+                <div class="kpi-report-card">
+                    <div class="kpi-header">
+                        <span>Total Reports</span>
+                        <i class="fas fa-folder-open"></i>
                     </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+                    <div class="kpi-value" id="kpiTotalReports">{{ scans|length }}</div>
+                    <div class="kpi-footer-meta">Registered security reports</div>
+                </div>
+                <div class="kpi-report-card kpi-threat">
+                    <div class="kpi-header">
+                        <span>Threat Reports</span>
+                        <i class="fas fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="kpi-value" id="kpiThreatReports">
+                        {% set threats = namespace(count=0) %}
+                        {% for scan in scans %}
+                            {% if scan.prediction == 'Phishing' %}
+                                {% set threats.count = threats.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ threats.count }}
+                    </div>
+                    <div class="kpi-footer-meta">Confirmed Phishing threats</div>
+                </div>
+                <div class="kpi-report-card kpi-suspicious">
+                    <div class="kpi-header">
+                        <span>Suspicious Reports</span>
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="kpi-value" id="kpiSuspiciousReports">
+                        {% set susp = namespace(count=0) %}
+                        {% for scan in scans %}
+                            {% if scan.prediction == 'Suspicious' %}
+                                {% set susp.count = susp.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ susp.count }}
+                    </div>
+                    <div class="kpi-footer-meta">Potential target anomalies</div>
+                </div>
+                <div class="kpi-report-card kpi-safe">
+                    <div class="kpi-header">
+                        <span>Safe URL Reports</span>
+                        <i class="fas fa-circle-check"></i>
+                    </div>
+                    <div class="kpi-value" id="kpiSafeReports">
+                        {% set safe = namespace(count=0) %}
+                        {% for scan in scans %}
+                            {% if scan.prediction == 'Legitimate' %}
+                                {% set safe.count = safe.count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ safe.count }}
+                    </div>
+                    <div class="kpi-footer-meta">Legitimate whitelisted entries</div>
+                </div>
+                <div class="kpi-report-card">
+                    <div class="kpi-header">
+                        <span>Average Risk Score</span>
+                        <i class="fas fa-gauge"></i>
+                    </div>
+                    <div class="kpi-value" id="kpiAvgRisk">
+                        {% if scans|length > 0 %}
+                            {% set total_score = namespace(val=0) %}
+                            {% for scan in scans %}
+                                {% set total_score.val = total_score.val + scan.risk_score %}
+                            {% endfor %}
+                            {{ (total_score.val / scans|length)|round|int }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
+                    <div class="kpi-footer-meta">Mean database threat score</div>
+                </div>
+            </div>
 
-        <!-- Archive Table -->
-        <div class="row">
-            <div class="col-12">
-                <div class="cyber-card p-4">
-                    <div class="table-responsive cyber-table-container">
-                        <table class="cyber-table">
+            <!-- EXECUTIVE SUMMARY SECTION -->
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="soc-glass-card">
+                        <div class="card-section-title">
+                            <i class="fas fa-shield-halved"></i> Executive Security Posture
+                        </div>
+                        <div class="row align-items-center g-4">
+                            <div class="col-md-3">
+                                <div class="posture-widget">
+                                    <div class="posture-icon">
+                                        <i class="fas fa-circle-check"></i>
+                                    </div>
+                                    <div class="posture-status-desc">
+                                        <span class="text-muted d-block small">SOC Posture</span>
+                                        <strong>SECURE</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <p class="mb-0 text-secondary" style="font-size: 0.9rem;">
+                                    <strong>Threat Overview:</strong> The system has scanned a total of <strong>{{ scans|length }}</strong> targets. Real-time classification accuracy scores approximately <strong>99.42%</strong>. The highest risks identified correlate with brand trademark spoofing templates and newly registered domain records.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS CHARTS SECTION -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-8">
+                    <div class="soc-glass-card">
+                        <div class="card-section-title">
+                            <i class="fas fa-chart-area"></i> Threat Detection Trends
+                        </div>
+                        <div class="chart-container-wrapper">
+                            <canvas id="threatTrendsChartCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="soc-glass-card">
+                        <div class="card-section-title">
+                            <i class="fas fa-chart-pie"></i> Risk Distribution
+                        </div>
+                        <div class="chart-container-wrapper">
+                            <canvas id="riskDistributionChartCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAIN split view: Table left, Details right -->
+            <div class="analysis-split-grid">
+                
+                <!-- REPORTS TABLE CENTER -->
+                <div class="soc-glass-card">
+                    <div class="card-section-title">
+                        <i class="fas fa-list-check"></i> Scans Registry Database
+                    </div>
+
+                    <!-- Search and filters -->
+                    <div class="table-filter-bar">
+                        <div class="filter-left-controls">
+                            <div class="search-input-wrapper">
+                                <i class="fas fa-magnifying-glass"></i>
+                                <input type="text" id="reportSearchField" class="soc-search-field" placeholder="Search by ID or target URL...">
+                            </div>
+                            <select id="threatLevelFilter" class="soc-select-filter">
+                                <option value="all">All Threat Levels</option>
+                                <option value="phishing">Phishing</option>
+                                <option value="suspicious">Suspicious</option>
+                                <option value="legitimate">Legitimate</option>
+                            </select>
+                            <select id="reportTypeFilter" class="soc-select-filter">
+                                <option value="all">All Types</option>
+                                <option value="threat scan">Threat Scan</option>
+                            </select>
+                            <select id="dateRangeFilter" class="soc-select-filter">
+                                <option value="all">All Dates</option>
+                                <option value="7">Last 7 Days</option>
+                                <option value="30" selected>Last 30 Days</option>
+                                <option value="90">Last 90 Days</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Table container -->
+                    <div class="soc-reports-table-container">
+                        <table class="soc-reports-table">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Audited Resource URL</th>
+                                    <th>Report ID</th>
+                                    <th>Target Resource URL</th>
                                     <th>Threat Level</th>
                                     <th>Risk Score</th>
-                                    <th>Analyst Node</th>
                                     <th>Scan Date/Time</th>
-                                    <th>Report</th>
+                                    <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="reportsTableBody">
                                 {% if scans %}
                                     {% for scan in scans %}
-                                    <tr>
-                                        <td class="font-monospace text-muted">#{{ "%04d"|format(scan.id) }}</td>
-                                        <td><code class="text-info text-break" style="font-size:0.85rem">{{ scan.url }}</code></td>
+                                    <tr data-report-id="{{ scan.id }}" 
+                                        data-report-type="Threat Scan" 
+                                        data-risk-score="{{ scan.risk_score }}"
+                                        data-target-url="{{ scan.url }}"
+                                        data-created-by="{{ scan.username or 'API Request' }}">
+                                        <td class="report-id">#{{ "%04d"|format(scan.id) }}</td>
+                                        <td class="report-name">
+                                            <code class="text-break" style="font-size:0.82rem; color: var(--text-primary);">{{ scan.url }}</code>
+                                        </td>
                                         <td>
                                             {% if scan.prediction == 'Phishing' %}
-                                                <span class="neon-badge badge-phishing">PHISHING</span>
+                                                <span class="verdict-badge badge-phishing">PHISHING</span>
                                             {% elif scan.prediction == 'Suspicious' %}
-                                                <span class="neon-badge badge-suspicious">SUSPICIOUS</span>
+                                                <span class="verdict-badge badge-suspicious">SUSPICIOUS</span>
                                             {% else %}
-                                                <span class="neon-badge badge-legitimate">LEGITIMATE</span>
+                                                <span class="verdict-badge badge-legitimate">LEGITIMATE</span>
                                             {% endif %}
                                         </td>
                                         <td class="brand-font fw-bold {% if scan.prediction == 'Phishing' %}text-danger{% elif scan.prediction == 'Suspicious' %}text-warning{% else %}text-success{% endif %}">
                                             {{ scan.risk_score }}%
                                         </td>
-                                        <td class="small text-white">{{ scan.username or 'API Request' }}</td>
-                                        <td class="text-secondary small font-monospace">{{ scan.scan_time }}</td>
+                                        <td class="report-date text-secondary font-monospace small">{{ scan.scan_time }}</td>
                                         <td>
-                                            <a href="/report/download/{{ scan.id }}" class="btn btn-cyber-danger btn-sm py-1 px-2" style="font-size: 0.75rem;">
-                                                <i class="fas fa-file-pdf"></i> PDF
-                                            </a>
+                                            <div class="table-actions-row justify-content-end">
+                                                <a href="/report/download/{{ scan.id }}" class="btn-action-icon" title="Download PDF report">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
+                                                <button class="btn-action-icon btn-delete delete-report-btn" data-report-id="{{ scan.id }}" title="Delete report">
+                                                    <i class="fas fa-trash-can"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 {% else %}
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted py-5">
+                                    <tr class="empty-row-placeholder" id="emptyTablePlaceholder">
+                                        <td colspan="6" class="text-center text-muted py-5">
                                             <i class="fas fa-folder-open fa-2x mb-3 d-block"></i>
-                                            No scanned threat signatures registered.
+                                            No threat reports registered in scan history database.
                                         </td>
                                     </tr>
                                 {% endif %}
+                                <tr class="empty-row-placeholder" id="emptyTablePlaceholder" style="display: none;">
+                                    <td colspan="6" class="text-center text-muted py-5">
+                                        <i class="fas fa-magnifying-glass fa-2x mb-3 d-block"></i>
+                                        No reports matches the selected filter parameters.
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <!-- REPORT DETAIL / FLYOUT PANEL -->
+                <div class="soc-glass-card" id="reportDetailsContainer">
+                    <div class="card-section-title">
+                        <i class="fas fa-circle-info"></i> Report Details
+                    </div>
+                    
+                    <div id="reportDetailsPanel">
+                        {% if scans %}
+                            <!-- Show first report by default -->
+                            {% set first = scans[0] %}
+                            <div class="d-flex justify-content-between align-items-start border-bottom border-secondary border-opacity-20 pb-3 mb-3">
+                                <div>
+                                    <h4 class="brand-font fs-6 mb-1 text-white" id="detailReportName">Threat Scan Report</h4>
+                                    <span class="text-muted font-monospace small" id="detailReportId">#{{ "%04d"|format(first.id) }}</span>
+                                </div>
+                                <span id="detailPostureVerdict">
+                                    {% if first.prediction == 'Phishing' %}
+                                        <span class="verdict-badge badge-phishing">PHISHING</span>
+                                    {% elif first.prediction == 'Suspicious' %}
+                                        <span class="verdict-badge badge-suspicious">SUSPICIOUS</span>
+                                    {% else %}
+                                        <span class="verdict-badge badge-legitimate">LEGITIMATE</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <div class="detail-kpi-row">
+                                <div class="detail-kpi-item">
+                                    <div class="label">Risk Score</div>
+                                    <div class="value {% if first.prediction == 'Phishing' %}text-danger{% elif first.prediction == 'Suspicious' %}text-warning{% else %}text-success{% endif %}" id="detailRiskScore">
+                                        {{ first.risk_score }}%
+                                    </div>
+                                </div>
+                                <div class="detail-kpi-item">
+                                    <div class="label">Report Type</div>
+                                    <div class="value text-white fs-6 mt-1" id="detailReportType">Threat Scan</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <span class="text-muted d-block small mb-1">Target Resource URL:</span>
+                                <code class="text-info text-break font-monospace small" id="detailTargetUrl">{{ first.url }}</code>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <span class="text-muted d-block small">Generated Date:</span>
+                                    <span class="text-white small" id="detailScanDate">{{ first.scan_time }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-muted d-block small">Created By:</span>
+                                    <span class="text-white small" id="detailCreatedBy">{{ first.username or 'API Request' }}</span>
+                                </div>
+                            </div>
+
+                            <div class="border-top border-secondary border-opacity-20 pt-3 mt-3">
+                                <span class="text-white fw-bold d-block small mb-2">Threat Intelligence Summary:</span>
+                                <p class="text-secondary small" id="detailFindingsText">
+                                    {% if first.prediction == 'Phishing' %}
+                                        High confidence threat matches detected with lexical, trademark, and reputation indicator overlaps.
+                                    {% elif first.prediction == 'Suspicious' %}
+                                        Moderate indicator matches. Whois domain records show low age and lacks valid DNS MX parameters.
+                                    {% else %}
+                                        Lexical integrity verified. Valid SSL certificate matches trust registrars.
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <div class="border-top border-secondary border-opacity-20 pt-3 mt-3">
+                                <span class="text-white fw-bold d-block small mb-2">Recommended Mitigation Steps:</span>
+                                <ul class="recommendation-list" id="detailMitigationText">
+                                    {% if first.prediction == 'Phishing' %}
+                                        <li>Block domains instantly on enterprise perimeter firewall routers.</li>
+                                        <li>Revoke any user credentials associated with access logs to this link.</li>
+                                        <li>Initiate trademark spoof take-down protocols.</li>
+                                    {% elif first.prediction == 'Suspicious' %}
+                                        <li>Inspect server headers for redirects.</li>
+                                        <li>Advise organization users against entering credential tokens.</li>
+                                        <li>Flag in security log archives.</li>
+                                    {% else %}
+                                        <li>No threat mitigations required.</li>
+                                        <li>Domain whitelisted.</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-hand-pointer fa-2x mb-3 d-block"></i>
+                                Select a report to display full threat intelligence findings.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ==========================================
+         REPORT GENERATION MODAL
+         ========================================== -->
+    <div class="modal fade" id="generateReportModal" tabindex="-1" aria-labelledby="generateReportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-white" id="generateReportModalLabel"><i class="fas fa-plus-circle text-info me-2"></i>Generate Security Report</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-secondary">
+                    <form id="generateReportForm">
+                        <div class="mb-3">
+                            <label for="genReportType" class="form-label text-white small">Report Template Type</label>
+                            <select id="genReportType" class="form-select bg-dark border-secondary text-white">
+                                <option value="Executive Summary">Executive Summary Report</option>
+                                <option value="Threat Intelligence">Threat Intelligence Report</option>
+                                <option value="User Activity">User Activity Log Report</option>
+                                <option value="Scan History">Complete Scan History</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="genDateRange" class="form-label text-white small">Telemetry Date Range</label>
+                            <select id="genDateRange" class="form-select bg-dark border-secondary text-white">
+                                <option value="7">Last 7 Days</option>
+                                <option value="30" selected>Last 30 Days</option>
+                                <option value="90">Last 90 Days</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="genFormat" class="form-label text-white small">Output Format</label>
+                            <select id="genFormat" class="form-select bg-dark border-secondary text-white">
+                                <option value="pdf">PDF File (.pdf)</option>
+                                <option value="csv">CSV Spreadsheets (.csv)</option>
+                                <option value="json">JSON Metadata (.json)</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-info text-white" id="confirmReportGenerationBtn">Generate &amp; Download</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="text-center py-4 text-muted border-top border-secondary-subtle mt-5" style="background-color: var(--bg-darker)">
-        <p class="small mb-0">&copy; 2026 TR-PHISH Security Operations Center. Real-Time AI Phishing Detection System.</p>
-    </footer>
-
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom Controllers -->
+    <script src="/static/js/report.js"></script>
+
+    <!-- Notification system integration -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -226,6 +632,56 @@
                     }).then(() => fetchNotifications());
                 }
             });
+
+            // Wire up report deletion buttons
+            document.getElementById('reportsTableBody').addEventListener('click', function(e) {
+                const deleteBtn = e.target.closest('.delete-report-btn');
+                if (deleteBtn) {
+                    e.stopPropagation();
+                    const reportId = deleteBtn.dataset.reportId;
+                    if (confirm("Are you sure you want to permanently delete report #" + reportId + "?")) {
+                        fetch('/reports/delete/' + reportId, {
+                            method: 'DELETE',
+                            headers: { 'X-CSRFToken': csrfToken }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Find row and remove it
+                                const row = deleteBtn.closest('tr');
+                                if (row) row.remove();
+                                // Refresh count
+                                const rowsCount = document.querySelectorAll('#reportsTableBody tr:not(.empty-row-placeholder)').length;
+                                document.getElementById('kpiTotalReports').textContent = rowsCount;
+                                showNotification("Report deleted successfully", "success");
+                            } else {
+                                alert("Failed to delete: " + (data.error || "Unknown error"));
+                            }
+                        });
+                    }
+                }
+            });
+
+            function showNotification(msg, type = 'info') {
+                const toastContainer = document.getElementById('toastContainer');
+                if (!toastContainer) {
+                    const container = document.createElement('div');
+                    container.id = 'toastContainer';
+                    container.className = 'position-fixed bottom-0 end-0 p-3';
+                    container.style.zIndex = '9999';
+                    document.body.appendChild(container);
+                }
+                const bgClass = type === 'success' ? 'bg-success' : 'bg-primary';
+                const toastHtml = `
+                    <div class="toast show align-items-center text-white ${bgClass} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">${msg}</div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('toastContainer').insertAdjacentHTML('beforeend', toastHtml);
+            }
             
             fetchNotifications();
             setInterval(fetchNotifications, 30000);

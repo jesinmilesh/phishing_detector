@@ -42,6 +42,11 @@ limiter = Limiter(
     default_limits=[Config.RATE_LIMIT]
 )
 
+@limiter.request_filter
+def ip_whitelist():
+    return request.remote_addr in ('127.0.0.1', 'localhost', '::1')
+
+
 # Setup loggers
 os.makedirs('logs', exist_ok=True)
 
@@ -60,6 +65,24 @@ error_logger = setup_logger('error_logger', 'logs/errors.log', logging.ERROR)
 security_logger = setup_logger('security_logger', 'logs/security.log')
 email_logger = setup_logger('email_logger', 'logs/email.log')
 registration_logger = setup_logger('registration_logger', 'logs/registration.log', logging.DEBUG)
+
+# Log SMTP config variables on startup
+app_logger.info("Initializing AI Shield application...")
+app_logger.info("SMTP Settings loaded:")
+app_logger.info(f"  MAIL_SERVER: {Config.MAIL_SERVER}")
+app_logger.info(f"  MAIL_PORT: {Config.MAIL_PORT}")
+app_logger.info(f"  MAIL_USE_TLS: {Config.MAIL_USE_TLS}")
+app_logger.info(f"  MAIL_USE_SSL: {Config.MAIL_USE_SSL}")
+app_logger.info(f"  MAIL_USERNAME: {Config.MAIL_USERNAME}")
+app_logger.info(f"  MAIL_DEFAULT_SENDER: {Config.MAIL_DEFAULT_SENDER}")
+
+print("[STARTUP] SMTP Configuration:")
+print(f"  MAIL_SERVER: {Config.MAIL_SERVER}")
+print(f"  MAIL_PORT: {Config.MAIL_PORT}")
+print(f"  MAIL_USE_TLS: {Config.MAIL_USE_TLS}")
+print(f"  MAIL_USE_SSL: {Config.MAIL_USE_SSL}")
+print(f"  MAIL_USERNAME: {Config.MAIL_USERNAME}")
+print(f"  MAIL_DEFAULT_SENDER: {Config.MAIL_DEFAULT_SENDER}")
 
 # Error handler and security headers
 @app.errorhandler(CSRFError)

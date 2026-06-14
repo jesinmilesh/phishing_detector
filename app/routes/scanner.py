@@ -21,6 +21,8 @@ from app.services.ssl_checker import check_ssl
 from app.services.threat_feed import fetch_threat_feed
 from app.services.report_generator import generate_pdf_report
 from app.services.scanner_service import run_url_analysis
+from app.services.email_service import send_security_alert_email
+
 
 @app.route('/scan/url', methods=['POST'])
 @login_required
