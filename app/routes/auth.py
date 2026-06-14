@@ -1,6 +1,7 @@
 import os
 import re
 import secrets
+import logging
 from datetime import datetime, timedelta, timezone
 from flask import render_template, request, jsonify, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -14,6 +15,9 @@ from app.services.email_service import (
     send_password_reset_email,
     send_security_alert_email
 )
+
+# Registration-specific logger
+reg_logger = logging.getLogger('registration_logger')
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -183,46 +187,89 @@ def register():
         return redirect(url_for('dashboard'))
         
     if request.method == 'POST':
-        print("[DEBUG] Registration Started")
+        reg_logger.info(f"--- REGISTRATION STARTED | IP: {request.remote_addr} ---")
+        print("[REGISTRATION] Step 1: Form submitted")
+
         full_name = request.form.get('full_name', '').strip()
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
         
-        # Validation
+        reg_logger.info(f"Form data: username={username}, email={email}, full_name={full_name}")
+
+        # ---- Validation ----
         if not username or not email or not password:
+            reg_logger.warning("Validation failed: missing required fields")
             flash("All fields are required.", "danger")
             return render_template('register.html')
             
         if password != confirm_password:
+            reg_logger.warning("Validation failed: passwords do not match")
             flash("Passwords do not match.", "danger")
             return render_template('register.html')
             
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            reg_logger.warning(f"Validation failed: invalid email format: {email}")
             flash("Invalid email address.", "danger")
             return render_template('register.html')
             
         if len(password) < 6:
+            reg_logger.warning("Validation failed: password too short")
             flash("Password must be at least 6 characters.", "danger")
             return render_template('register.html')
-            
+
+        # ---- Create User ----
+        reg_logger.info("Step 2: Creating user record in database")
         user_id = db_manager.create_user(username, email, password)
+
         if user_id:
-            print("[DEBUG] User Saved")
+            reg_logger.info(f"Step 3: User saved successfully — user_id={user_id}")
+            print(f"[REGISTRATION] Step 3: User created — ID={user_id}")
+
             if full_name:
                 db_manager.update_profile(user_id, full_name, '', '', '', '')
+                reg_logger.info(f"Step 3b: Profile updated with full_name={full_name}")
+
+            # ---- Generate Verification Token ----
             token = secrets.token_urlsafe(32)
-            print("[DEBUG] Token Created")
             db_manager.set_user_verification_token(user_id, token)
-            verification_url = url_for('verify_email', token=token, _external=True)
-            print("[DEBUG] Email Generated")
-            send_verification_email(email, username, verification_url)
+            reg_logger.info(f"Step 4: Verification token generated and stored for user_id={user_id}")
+            print("[REGISTRATION] Step 4: Verification token created")
+
+            # ---- Build Verification URL ----
+            # Use APP_BASE_URL from config to ensure the link resolves correctly
+            # regardless of SERVER_NAME or deployment environment.
+            base_url = Config.APP_BASE_URL.rstrip('/')
+            verification_url = f"{base_url}/verify-email?token={token}"
+            reg_logger.info(f"Step 5: Verification URL built: {verification_url}")
+            print(f"[REGISTRATION] Step 5: Verification URL = {verification_url}")
+
+            # ---- Send Verification Email ----
+            reg_logger.info(f"Step 6: Sending verification email to {email}")
+            print(f"[REGISTRATION] Step 6: Sending email to {email}")
+            try:
+                email_sent = send_verification_email(email, username, verification_url)
+                if email_sent:
+                    reg_logger.info(f"Step 7: Verification email sent successfully to {email}")
+                    print(f"[REGISTRATION] Step 7: Email sent OK")
+                else:
+                    reg_logger.error(f"Step 7: Verification email FAILED to send to {email}")
+                    print(f"[REGISTRATION] Step 7: Email send returned False")
+                    error_logger.error(f"REGISTRATION EMAIL FAILED | User: {username} | Email: {email}")
+            except Exception as email_exc:
+                reg_logger.error(f"Step 7: Email send raised exception: {str(email_exc)}")
+                error_logger.error(f"REGISTRATION EMAIL EXCEPTION | User: {username} | Email: {email} | Error: {email_exc}")
+                print(f"[REGISTRATION] Step 7: EMAIL EXCEPTION — {email_exc}")
+                # User is still registered — they can request resend
+
             security_logger.info(f"USER REGISTRATION | User: {username} | Email: {email} | IP: {request.remote_addr}")
-            flash("Registration successful! A verification link has been sent to your email.", "success")
+            reg_logger.info(f"Step 8: Registration complete — redirecting to login")
+            print("[REGISTRATION] Step 8: Registration complete")
+            flash("Account created! A verification link has been sent to your email address. Please check your inbox (and spam folder).", "success")
             return redirect(url_for('login'))
         else:
-            print("[DEBUG] User Registration Failed (Username/Email collision)")
+            reg_logger.error(f"FAILED: Username or email collision — username={username}, email={email}")
             security_logger.error(f"USER REGISTRATION FAILED | User: {username} | Email: {email} | IP: {request.remote_addr}")
             flash("Username or Email already exists.", "danger")
             
@@ -416,6 +463,85 @@ def newsletter_subscribe():
 # ==========================================
 # DIAGNOSTICS & SYSTEM ROUTES
 # ==========================================
+
+@app.route('/debug-registration-email')
+def debug_registration_email():
+    """
+    Diagnostic endpoint to test the full registration email pipeline.
+    Tests token generation, URL building, and SMTP delivery end-to-end.
+    Access: GET /debug-registration-email?email=your@email.com
+    """
+    import traceback as _tb
+    from app.services.email_service import send_verification_email, validate_smtp_config
+    
+    recipient = request.args.get('email', '').strip() or Config.MAIL_USERNAME or 'admin@ai-shield.local'
+    results = []
+
+    # Step 1: SMTP config validation
+    results.append({"step": 1, "name": "SMTP Config Validation", "status": "running"})
+    try:
+        warnings = validate_smtp_config()
+        results[-1]["status"] = "ok"
+        results[-1]["warnings"] = warnings
+        results[-1]["config"] = {
+            "MAIL_SERVER": Config.MAIL_SERVER,
+            "MAIL_PORT": Config.MAIL_PORT,
+            "MAIL_USE_TLS": Config.MAIL_USE_TLS,
+            "MAIL_USERNAME": Config.MAIL_USERNAME,
+            "MAIL_PASSWORD_SET": bool(Config.MAIL_PASSWORD),
+            "MAIL_DEFAULT_SENDER": Config.MAIL_DEFAULT_SENDER,
+            "APP_BASE_URL": Config.APP_BASE_URL,
+        }
+    except Exception as e:
+        results[-1]["status"] = "error"
+        results[-1]["error"] = str(e)
+
+    # Step 2: Token generation
+    results.append({"step": 2, "name": "Token Generation", "status": "running"})
+    try:
+        token = secrets.token_urlsafe(32)
+        results[-1]["status"] = "ok"
+        results[-1]["token_length"] = len(token)
+    except Exception as e:
+        results[-1]["status"] = "error"
+        results[-1]["error"] = str(e)
+        token = "fallback_debug_token"
+
+    # Step 3: URL building
+    results.append({"step": 3, "name": "Verification URL Build", "status": "running"})
+    try:
+        base_url = Config.APP_BASE_URL.rstrip('/')
+        verification_url = f"{base_url}/verify-email?token={token}"
+        results[-1]["status"] = "ok"
+        results[-1]["verification_url"] = verification_url
+    except Exception as e:
+        results[-1]["status"] = "error"
+        results[-1]["error"] = str(e)
+        verification_url = "http://localhost:5000/verify-email?token=debug"
+
+    # Step 4: Send verification email
+    results.append({"step": 4, "name": f"Send Verification Email to {recipient}", "status": "running"})
+    try:
+        success = send_verification_email(recipient, "debug_user", verification_url)
+        results[-1]["status"] = "ok" if success else "failed"
+        results[-1]["sent"] = success
+    except Exception as e:
+        results[-1]["status"] = "error"
+        results[-1]["error"] = str(e)
+        results[-1]["traceback"] = _tb.format_exc()
+
+    all_ok = all(r["status"] in ("ok",) for r in results)
+    return jsonify({
+        "overall_status": "ALL SYSTEMS GO" if all_ok else "ISSUES DETECTED",
+        "recipient": recipient,
+        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        "steps": results,
+        "advice": (
+            "All steps passed. Check recipient spam/promotions folder if email is not visible."
+            if all_ok else
+            "One or more steps failed. Check logs/email.log and logs/registration.log for details."
+        )
+    }), (200 if all_ok else 500)
 
 @app.route('/test-email')
 def test_email():

@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from env/.env
-load_dotenv(BASE_DIR / '.env')
 load_dotenv(BASE_DIR / 'env' / '.env')
 
 class Config:
@@ -55,5 +54,16 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'no-reply@ai-shield.local')
+
+    # Application URL Configuration
+    # APP_BASE_URL is used to build external URLs (e.g. in verification emails).
+    # Set this in your .env to your actual domain (e.g. https://yourdomain.com)
+    APP_BASE_URL = os.environ.get('APP_BASE_URL', 'http://localhost:5000').rstrip('/')
+    PREFERRED_URL_SCHEME = os.environ.get('PREFERRED_URL_SCHEME', 'http')
+    # SERVER_NAME must only be set if you need url_for(_external=True) to work.
+    # When not deployed on a known domain, leave empty and use APP_BASE_URL instead.
+    _server_name = os.environ.get('SERVER_NAME', '')
+    if _server_name:
+        SERVER_NAME = _server_name
 
 

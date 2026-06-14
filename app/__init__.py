@@ -59,6 +59,7 @@ app_logger = setup_logger('app_logger', 'logs/app.log')
 error_logger = setup_logger('error_logger', 'logs/errors.log', logging.ERROR)
 security_logger = setup_logger('security_logger', 'logs/security.log')
 email_logger = setup_logger('email_logger', 'logs/email.log')
+registration_logger = setup_logger('registration_logger', 'logs/registration.log', logging.DEBUG)
 
 # Error handler and security headers
 @app.errorhandler(CSRFError)
