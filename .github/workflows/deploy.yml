@@ -33,7 +33,7 @@ jobs:
 
     - name: Train Machine Learning Model
       run: |
-        python ml/train.py
+        python ml/training/train.py
 
     - name: Run Test Suite
       run: |
