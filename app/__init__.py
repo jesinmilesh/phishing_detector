@@ -20,14 +20,7 @@ app.config.from_object(Config)
 # Initialize CSRF Protection
 csrf = CSRFProtect(app)
 
-# Flask 3.x compatibility patch for Flask-Mail
-import flask
-import werkzeug.utils
-flask.safe_join = werkzeug.utils.safe_join
-from flask_mail import Mail
-
-# Initialize Flask-Mail
-mail = Mail(app)
+# Flask-Mail has been removed in favor of the Resend.com HTTP API.
 
 # Initialize Database Manager
 db_manager = DatabaseManager()

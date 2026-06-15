@@ -1,17 +1,11 @@
 import os
 import sys
-import smtplib
 import logging
-import threading
 from datetime import datetime
 from flask import current_app
-from flask_mail import Message
-from app.config import Config
+import resend
 
 # Ensure stdout is UTF-8 safe (critical on Windows cp1252 terminals / Gunicorn).
-# Without this, any print() containing non-ASCII characters (emojis, etc.) will
-# raise UnicodeEncodeError inside the success path, causing the function to
-# erroneously return False even after a successful mail.send().
 try:
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')
@@ -25,6 +19,7 @@ def _safe_print(msg: str) -> None:
         print(msg)
     except UnicodeEncodeError:
         print(msg.encode('ascii', errors='replace').decode('ascii'))
+
 
 # ---------------------------------------------------------------------------
 # Loggers
@@ -57,57 +52,12 @@ def _log_reg(level, msg):
 # Utilities
 # ---------------------------------------------------------------------------
 
-def safe_print_email(to_email, subject, body, sender=None):
-    try:
-        safe_body = body.encode('ascii', errors='replace').decode('ascii')
-        safe_subject = subject.encode('ascii', errors='replace').decode('ascii')
-        print("\n--- [EMAIL NOTIFICATION LOG] ---")
-        print(f"To: {to_email}")
-        print(f"Subject: {safe_subject}")
-        if sender:
-            print(f"Sender: {sender}")
-        print("Body Content:")
-        print(safe_body[:1000])
-        if len(safe_body) > 1000:
-            print("... [truncated]")
-        print("--------------------------------\n")
-    except Exception:
-        pass
-
-
 def validate_smtp_config():
-    """Validates SMTP config, returns list of warnings."""
+    """Validates configuration for email services. Returns list of warnings."""
     warnings = []
-
-    # Log loaded values except passwords
-    _log_reg('info', "SMTP Configuration Loaded:")
-    _log_reg('info', f"  MAIL_SERVER: {Config.MAIL_SERVER}")
-    _log_reg('info', f"  MAIL_PORT: {Config.MAIL_PORT}")
-    _log_reg('info', f"  MAIL_USE_TLS: {Config.MAIL_USE_TLS}")
-    _log_reg('info', f"  MAIL_USE_SSL: {Config.MAIL_USE_SSL}")
-    _log_reg('info', f"  MAIL_USERNAME: {Config.MAIL_USERNAME}")
-    _log_reg('info', f"  MAIL_DEFAULT_SENDER: {Config.MAIL_DEFAULT_SENDER}")
-
-    if not Config.MAIL_USERNAME:
-        warnings.append("MAIL_USERNAME is empty — emails will run in SIMULATION/DRY-RUN mode.")
-    if not Config.MAIL_PASSWORD:
-        warnings.append("MAIL_PASSWORD is empty — emails will run in SIMULATION/DRY-RUN mode.")
-
-    if not isinstance(Config.MAIL_PORT, int):
-        warnings.append(f"MAIL_PORT must be an integer, got: {type(Config.MAIL_PORT)}")
-
-    if Config.MAIL_SERVER == "smtp.gmail.com" and Config.MAIL_USERNAME:
-        clean_pwd = Config.MAIL_PASSWORD.replace(" ", "")
-        if len(clean_pwd) != 16:
-            warnings.append(
-                "WARNING: Gmail SMTP requires a 16-character App Password. "
-                "Normal passwords WILL fail. Enable 2-Step Verification and generate an App Password."
-            )
-
-    for warn in warnings:
-        logger.warning(f"SMTP Config Warning: {warn}")
-        print(f"[SMTP WARNING] {warn}")
-
+    api_key = os.environ.get("RESEND_API_KEY", "")
+    if not api_key:
+        warnings.append("RESEND_API_KEY is empty — email system will run in SIMULATION/DRY-RUN mode.")
     return warnings
 
 
@@ -128,15 +78,13 @@ def notify_admin_of_failure(db_manager, to_email, subject, error_msg):
 
 
 def log_advanced_email(recipient, smtp_status, auth_status, token_generated, email_sent, delivery_failed, error_details=None, stack_trace=None):
-    """
-    Writes a structured, detailed log entry to logs/email.log.
-    """
+    """Writes a structured, detailed log entry to logs/email.log."""
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
     log_msg = (
         f"\n==================================================\n"
         f"Timestamp: {timestamp}\n"
         f"Recipient: {recipient}\n"
-        f"SMTP Status: {smtp_status}\n"
+        f"HTTP Status: {smtp_status}\n"
         f"Authentication Status: {auth_status}\n"
         f"Token Generated: {token_generated or 'N/A'}\n"
         f"Email Sent: {'Yes' if email_sent else 'No'}\n"
@@ -149,250 +97,105 @@ def log_advanced_email(recipient, smtp_status, auth_status, token_generated, ema
 
 
 # ---------------------------------------------------------------------------
-# Core SMTP sender — synchronous
+# Core Resend sender
+# ---------------------------------------------------------------------------
+
+def send_with_resend(to_email, subject, html_content, retries=3):
+    """
+    Sends email via Resend API.
+    Includes 3-attempt automatic retry logic.
+    """
+    try:
+        is_testing = current_app.config.get('TESTING', False)
+    except RuntimeError:
+        is_testing = False
+
+    api_key = os.environ.get("RESEND_API_KEY", "")
+    
+    # Dry-run / simulation mode when API key is missing or we are in a test environment
+    if not api_key or is_testing:
+        _log_reg('info', "[EMAIL SIMULATION/DRY-RUN] — Resend API key not configured or in testing mode")
+        _log_reg('info', f"To: {to_email} | Subject: {subject}")
+        log_advanced_email(
+            recipient=to_email,
+            smtp_status="SIMULATED",
+            auth_status="SIMULATED",
+            token_generated=None,
+            email_sent=True,
+            delivery_failed=False,
+            error_details="Simulation mode active (no Resend API key configured or testing mode active)"
+        )
+        return True, None
+
+    resend.api_key = api_key
+
+    for attempt in range(1, retries + 1):
+        try:
+            _safe_print(f"[EMAIL] Sending to: {to_email} | Subject: {subject} | Attempt {attempt}")
+            response = resend.Emails.send({
+                "from": "AI Shield <jesintechnologies@gmail.com>",
+                "to": [to_email],
+                "subject": subject,
+                "html": html_content
+            })
+            
+            # Retrieve response email ID safely (can be dict or object depending on SDK version)
+            email_id = None
+            if isinstance(response, dict):
+                email_id = response.get("id")
+            elif hasattr(response, "id"):
+                email_id = getattr(response, "id")
+            elif hasattr(response, "get"):
+                email_id = response.get("id")
+
+            if email_id:
+                _safe_print(f"[EMAIL SUCCESS] Sent to {to_email} | ID: {email_id}")
+                log_advanced_email(
+                    recipient=to_email,
+                    smtp_status="SUCCESS",
+                    auth_status="SUCCESS",
+                    token_generated=None,
+                    email_sent=True,
+                    delivery_failed=False
+                )
+                return True, None
+            else:
+                _safe_print(f"[EMAIL FAIL] No ID returned on attempt {attempt}")
+        except Exception as e:
+            _safe_print(f"[EMAIL ERROR] Attempt {attempt} failed: {str(e)}")
+            if attempt == retries:
+                log_advanced_email(
+                    recipient=to_email,
+                    smtp_status="FAILED",
+                    auth_status="FAILED",
+                    token_generated=None,
+                    email_sent=False,
+                    delivery_failed=True,
+                    error_details=str(e)
+                )
+                return False, str(e)
+    return False, "All retry attempts failed"
+
+
+# ---------------------------------------------------------------------------
+# Compatibility Mappers (Legacy SMTP mappings to Resend)
 # ---------------------------------------------------------------------------
 
 def send_smtp_email_sync(app, to_email, subject, html_content, text_content=None, token=None):
-    """
-    Synchronous SMTP sender using Flask-Mail inside a pushed app context.
-    This is safe to call from background threads.
-    Includes 3-attempt automatic retry logic with 2-second delay.
-    """
+    """Synchronous sender mapped to Resend API."""
     with app.app_context():
-        from app import mail, db_manager
+        return send_with_resend(to_email, subject, html_content)
 
-        sender = Config.MAIL_DEFAULT_SENDER
-        username = Config.MAIL_USERNAME
-        password = Config.MAIL_PASSWORD
-
-        # Dry-run / simulation mode when credentials are absent
-        if not username or not password:
-            logger.info("[EMAIL SIMULATION/DRY-RUN] — credentials not configured")
-            logger.info(f"To: {to_email} | Subject: {subject} | Sender: {sender}")
-            safe_print_email(to_email, subject, html_content, sender=sender)
-            log_advanced_email(
-                recipient=to_email,
-                smtp_status="SIMULATED",
-                auth_status="SIMULATED",
-                token_generated=token,
-                email_sent=True,
-                delivery_failed=False,
-                error_details="Simulation mode active (no SMTP credentials configured)"
-            )
-            return (True, None)
-
-        validate_smtp_config()
-
-        print("Email Created")
-        msg = Message(
-            subject=subject,
-            sender=sender,
-            recipients=[to_email]
-        )
-        msg.html = html_content
-
-        if text_content:
-            msg.body = text_content
-        else:
-            import re
-            msg.body = re.sub('<[^<]+?>', '', html_content)
-
-        max_attempts = 3
-        delay_seconds = 2
-        smtp_status = "Not Connected"
-        auth_status = "Pending"
-        email_sent = False
-        delivery_failed = True
-        error_details = None
-        stack_trace = None
-
-        for attempt in range(1, max_attempts + 1):
-            try:
-                if attempt > 1:
-                    _safe_print(f"[SMTP] Attempt {attempt} of {max_attempts}...")
-                    import time
-                    time.sleep(delay_seconds)
-
-                logger.info(f"Initiating email send to {to_email} (Subject: {subject}) - Attempt {attempt}")
-                _safe_print(f"[EMAIL] Sending to: {to_email} | Subject: {subject} | Attempt {attempt}")
-
-                with mail.connect() as conn:
-                    print("SMTP Connected")
-                    smtp_status = "Connected"
-                    auth_status = "Success"
-                    conn.send(msg)
-
-                print("Email Sent Successfully")
-                logger.info(f"[SUCCESS] Email delivered to {to_email} | Subject: {subject}")
-                _safe_print(f"[EMAIL] [OK] Sent successfully to {to_email}")
-                email_sent = True
-                delivery_failed = False
-                error_details = None
-                stack_trace = None
-                break  # Success, break retry loop
-
-            except smtplib.SMTPAuthenticationError as auth_err:
-                auth_status = "Failed"
-                smtp_status = "Connected"
-                error_details = f"SMTPAuthenticationError: {str(auth_err)}"
-                import traceback
-                stack_trace = traceback.format_exc()
-                print("Email Failed")
-                print(f"Exception Details: {error_details}")
-                logger.error(f"[FAIL] {error_details} | Recipient: {to_email} | Subject: {subject}")
-                logger.error("HINT: For Gmail, ensure you are using an App Password (not your normal password) and 2FA is enabled.")
-                _safe_print(f"[EMAIL FAIL] {error_details}")
-                if attempt == max_attempts:
-                    notify_admin_of_failure(db_manager, to_email, subject, error_details)
-                    safe_print_email(to_email, subject, html_content)
-
-            except smtplib.SMTPConnectError as conn_err:
-                smtp_status = "Connection Failed"
-                error_details = f"SMTPConnectError: {str(conn_err)}"
-                import traceback
-                stack_trace = traceback.format_exc()
-                print("Email Failed")
-                print(f"Exception Details: {error_details}")
-                logger.error(f"[FAIL] {error_details} | Recipient: {to_email} | Server: {Config.MAIL_SERVER}:{Config.MAIL_PORT}")
-                _safe_print(f"[EMAIL FAIL] {error_details}")
-                if attempt == max_attempts:
-                    notify_admin_of_failure(db_manager, to_email, subject, error_details)
-                    safe_print_email(to_email, subject, html_content)
-
-            except smtplib.SMTPRecipientsRefused as ref_err:
-                smtp_status = "Recipient Refused"
-                error_details = f"SMTPRecipientsRefused: {str(ref_err)}"
-                import traceback
-                stack_trace = traceback.format_exc()
-                print("Email Failed")
-                print(f"Exception Details: {error_details}")
-                logger.error(f"[FAIL] {error_details} | Recipient: {to_email}")
-                _safe_print(f"[EMAIL FAIL] {error_details}")
-                if attempt == max_attempts:
-                    notify_admin_of_failure(db_manager, to_email, subject, error_details)
-                break  # Don't retry for refused recipient
-
-            except smtplib.SMTPSenderRefused as sender_err:
-                smtp_status = "Sender Refused"
-                error_details = f"SMTPSenderRefused: {str(sender_err)}"
-                import traceback
-                stack_trace = traceback.format_exc()
-                print("Email Failed")
-                print(f"Exception Details: {error_details}")
-                logger.error(f"[FAIL] {error_details} | Sender: {sender} | Recipient: {to_email}")
-                _safe_print(f"[EMAIL FAIL] {error_details}")
-                if attempt == max_attempts:
-                    notify_admin_of_failure(db_manager, to_email, subject, error_details)
-                break  # Don't retry for refused sender
-
-            except smtplib.SMTPDataError as data_err:
-                smtp_status = "Data Error"
-                error_details = f"SMTPDataError: {str(data_err)}"
-                import traceback
-                stack_trace = traceback.format_exc()
-                print("Email Failed")
-                print(f"Exception Details: {error_details}")
-                logger.error(f"[FAIL] {error_details} | Recipient: {to_email}")
-                _safe_print(f"[EMAIL FAIL] {error_details}")
-                if attempt == max_attempts:
-                    notify_admin_of_failure(db_manager, to_email, subject, error_details)
-                break  # Don't retry for data error
-
-            except TimeoutError as t_err:
-                smtp_status = "Timeout"
-                error_details = f"TimeoutError: {str(t_err)}"
-                import traceback
-                stack_trace = traceback.format_exc()
-                print("Email Failed")
-                print(f"Exception Details: {error_details}")
-                logger.error(f"[FAIL] {error_details} | Server: {Config.MAIL_SERVER}:{Config.MAIL_PORT}")
-                _safe_print(f"[EMAIL FAIL] {error_details}")
-                if attempt == max_attempts:
-                    notify_admin_of_failure(db_manager, to_email, subject, error_details)
-                    safe_print_email(to_email, subject, html_content)
-
-            except ConnectionRefusedError as cr_err:
-                smtp_status = "Connection Refused"
-                error_details = f"ConnectionRefusedError: {str(cr_err)}"
-                import traceback
-                stack_trace = traceback.format_exc()
-                print("Email Failed")
-                print(f"Exception Details: {error_details}")
-                logger.error(f"[FAIL] {error_details} | Server: {Config.MAIL_SERVER}:{Config.MAIL_PORT}")
-                _safe_print(f"[EMAIL FAIL] {error_details}")
-                if attempt == max_attempts:
-                    notify_admin_of_failure(db_manager, to_email, subject, error_details)
-                    safe_print_email(to_email, subject, html_content)
-
-            except Exception as e:
-                smtp_status = "Unexpected Error"
-                error_details = f"Unexpected email failure [{type(e).__name__}]: {str(e)}"
-                import traceback
-                stack_trace = traceback.format_exc()
-                print("Email Failed")
-                print(f"Exception Details: {error_details}")
-                logger.error(f"[FAIL] {error_details} | Recipient: {to_email} | Subject: {subject}")
-                logger.error(f"Traceback:\n{stack_trace}")
-                _safe_print(f"[EMAIL FAIL] {error_details}")
-                if attempt == max_attempts:
-                    notify_admin_of_failure(db_manager, to_email, subject, error_details)
-                    safe_print_email(to_email, subject, html_content)
-
-        # Write to advanced log
-        log_advanced_email(
-            recipient=to_email,
-            smtp_status=smtp_status,
-            auth_status=auth_status,
-            token_generated=token,
-            email_sent=email_sent,
-            delivery_failed=delivery_failed,
-            error_details=error_details,
-            stack_trace=stack_trace
-        )
-
-        return (email_sent, error_details)
-
-
-# ---------------------------------------------------------------------------
-# Async wrapper (fire-and-forget for non-critical emails)
-# ---------------------------------------------------------------------------
 
 def send_smtp_email(to_email, subject, html_content, text_content=None, token=None):
-    """
-    Asynchronous SMTP sender — spawns background thread.
-    Use for non-critical emails (login alerts, security notices).
-    For critical registration emails, use send_smtp_email_sync directly.
-    """
-    try:
-        app = current_app._get_current_object()
-    except RuntimeError:
-        from app import app  # noqa: F811
+    """Asynchronous sender mapped to Resend API."""
+    res, err = send_with_resend(to_email, subject, html_content)
+    return res
 
-    thread = threading.Thread(
-        target=send_smtp_email_sync,
-        args=(app, to_email, subject, html_content, text_content, token),
-        name=f"email-thread-{to_email}"
-    )
-    thread.daemon = True
-    thread.start()
-    return True
-
-
-# ---------------------------------------------------------------------------
-# Critical sender — synchronous with full registration logging
-# ---------------------------------------------------------------------------
 
 def send_smtp_email_critical(to_email, subject, html_content, text_content=None, token=None):
-    """
-    Synchronous sender for critical emails (registration verification).
-    Blocks until sent so the caller can log success/failure accurately.
-    """
-    try:
-        app = current_app._get_current_object()
-    except RuntimeError:
-        from app import app  # noqa: F811
-
-    return send_smtp_email_sync(app, to_email, subject, html_content, text_content, token)
+    """Synchronous critical sender mapped to Resend API."""
+    return send_with_resend(to_email, subject, html_content)
 
 
 # ---------------------------------------------------------------------------
@@ -400,16 +203,12 @@ def send_smtp_email_critical(to_email, subject, html_content, text_content=None,
 # ---------------------------------------------------------------------------
 
 def send_verification_email(user_email, username, verification_url, token=None):
-    """
-    Sends email verification link. Uses SYNCHRONOUS sending so failures
-    are caught immediately during registration.
-    """
+    """Sends email verification link via Resend."""
     _log_reg('info', f"STEP: Building verification email for {user_email} ({username})")
     _log_reg('info', f"STEP: Verification URL = {verification_url}")
 
     subject = "Verify Your AI Shield Node"
 
-    # If token wasn't passed directly, try to extract it from verification_url
     if not token and "token=" in verification_url:
         try:
             token = verification_url.split("token=")[1].split("&")[0]
@@ -593,32 +392,18 @@ def send_verification_email(user_email, username, verification_url, token=None):
 </body>
 </html>
 """
-
-    text_content = (
-        f"Hello {username},\n\n"
-        f"A request was received to verify the email address associated with your AI Shield portal account.\n\n"
-        f"Please click the link below to confirm your account:\n{verification_url}\n\n"
-        f"If you did not create this account, you can safely ignore this email.\n\n"
-        f"AI Shield SOC Team."
-    )
-
-    _log_reg('info', f"STEP: Calling SMTP sender for verification email to {user_email}")
-    res = send_smtp_email_critical(user_email, subject, html_content, text_content, token=token)
-    if isinstance(res, tuple):
-        success, error_details = res
-    else:
-        success, error_details = res, None
-
+    _log_reg('info', f"STEP: Calling Resend sender for verification email to {user_email}")
+    success, error_details = send_with_resend(user_email, subject, html_content)
     if success:
         _log_reg('info', f"SUCCESS: Verification email sent to {user_email}")
-        return (True, None)
+        return True, None
     else:
         _log_reg('error', f"FAILED: Verification email could NOT be sent to {user_email}. Error: {error_details}")
-        return (False, error_details)
+        return False, error_details
 
 
 def send_welcome_email(user_email, username, login_url):
-    """Sends responsive HTML welcome / onboarding email (async)."""
+    """Sends responsive HTML welcome / onboarding email via Resend."""
     subject = "Welcome to AI Shield"
 
     html_content = f"""
@@ -669,19 +454,11 @@ def send_welcome_email(user_email, username, login_url):
     </body>
     </html>
     """
-
-    text_content = (
-        f"Hello {username},\n\n"
-        f"Thank you for verifying your email. Your analyst node has been activated on AI Shield.\n\n"
-        f"Access your SOC dashboard at: {login_url}\n\n"
-        f"AI Shield SOC Team."
-    )
-
-    return send_smtp_email(user_email, subject, html_content, text_content)
+    return send_with_resend(user_email, subject, html_content)
 
 
-def send_password_reset_email(user_email, username, reset_url):
-    """Sends secure password reset token email (async)."""
+def send_password_reset_email(user_email, username, reset_url, token=None):
+    """Sends secure password reset token email via Resend."""
     subject = "Reset Your AI Shield Password"
 
     html_content = f"""
@@ -723,20 +500,11 @@ def send_password_reset_email(user_email, username, reset_url):
     </body>
     </html>
     """
-
-    text_content = (
-        f"Hello {username},\n\n"
-        f"A password reset request was submitted for your account.\n\n"
-        f"Reset link (valid for 1 hour):\n{reset_url}\n\n"
-        f"If you did not request this, please secure your credentials.\n\n"
-        f"AI Shield SOC Team."
-    )
-
-    return send_smtp_email(user_email, subject, html_content, text_content)
+    return send_with_resend(user_email, subject, html_content)
 
 
 def send_security_alert_email(user_email, username, alert_type, details):
-    """Sends automated system security notices (async)."""
+    """Sends automated system security notices via Resend."""
     subject = f"[AI SHIELD ALERT] Security Notice: {alert_type}"
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')
 
@@ -776,20 +544,17 @@ def send_security_alert_email(user_email, username, alert_type, details):
     </body>
     </html>
     """
+    return send_with_resend(user_email, subject, html_content)
 
-    text_content = (
-        f"Hello {username},\n\n"
-        f"Security Alert: {alert_type}\n"
-        f"Timestamp: {timestamp}\n"
-        f"Details: {details}\n\n"
-        f"AI Shield SOC Team."
-    )
 
-    return send_smtp_email(user_email, subject, html_content, text_content)
+def send_login_alert_email(user_email, username, ip_address, timestamp):
+    """Sends security alert on new login via Resend (mapped to send_security_alert_email)."""
+    details = f"New analyst login recorded from IP Address: {ip_address} at {timestamp}."
+    return send_security_alert_email(user_email, username, "New Access Node Authorized", details)
 
 
 def send_newsletter_subscription_email(user_email):
-    """Sends a professional newsletter subscription confirmation email (async)."""
+    """Sends a professional newsletter subscription confirmation email via Resend."""
     subject = "AI Shield Threat Intelligence - Subscription Confirmed"
     
     html_content = f"""
@@ -828,13 +593,4 @@ def send_newsletter_subscription_email(user_email):
     </body>
     </html>
     """
-    
-    text_content = (
-        f"Hello,\n\n"
-        f"You have successfully subscribed to the AI Shield Threat Intelligence newsletter.\n\n"
-        f"You will now receive weekly digests on active phishing campaigns, global threat feeds, and emerging zero-day intelligence reports.\n\n"
-        f"AI Shield SOC Team."
-    )
-    
-    return send_smtp_email(user_email, subject, html_content, text_content)
-
+    return send_with_resend(user_email, subject, html_content)

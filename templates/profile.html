@@ -1201,11 +1201,12 @@
                 fetch(`/history?format=json&page=${historyPage}&per_page=8&search=${search}&prediction=${prediction}&sort=${sort}`)
                     .then(res => res.json())
                     .then(data => {
-                        if (data.items.length === 0) {
+                        const scans = data.scans || [];
+                        if (scans.length === 0) {
                             historyTableBody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-muted">No phishing scans archived matching filters.</td></tr>';
                             historyPaginationInfo.textContent = 'Showing 0 to 0 of 0 scans';
                         } else {
-                            historyTableBody.innerHTML = data.items.map(s => `
+                            historyTableBody.innerHTML = scans.map(s => `
                                 <tr class="border-secondary border-opacity-20">
                                     <td><code class="text-info">${s.url}</code></td>
                                     <td>
@@ -1226,14 +1227,18 @@
                                 </tr>
                             `).join('');
                             
-                            const startItem = (data.page - 1) * data.per_page + 1;
-                            const endItem = Math.min(data.page * data.per_page, data.total);
-                            historyPaginationInfo.textContent = `Showing ${startItem} to ${endItem} of ${data.total} scans`;
+                            const currentPage = data.current_page || 1;
+                            const totalItems = data.total_items || 0;
+                            const startItem = (currentPage - 1) * data.per_page + 1;
+                            const endItem = Math.min(currentPage * data.per_page, totalItems);
+                            historyPaginationInfo.textContent = `Showing ${startItem} to ${endItem} of ${totalItems} scans`;
                         }
                         
                         // Disable / Enable pagination buttons
-                        document.getElementById('btnPrevHistory').classList.toggle('disabled', !data.has_prev);
-                        document.getElementById('btnNextHistory').classList.toggle('disabled', !data.has_next);
+                        const hasPrev = (data.current_page || 1) > 1;
+                        const hasNext = (data.current_page || 1) < (data.total_pages || 1);
+                        document.getElementById('btnPrevHistory').classList.toggle('disabled', !hasPrev);
+                        document.getElementById('btnNextHistory').classList.toggle('disabled', !hasNext);
                     });
             }
             
