@@ -611,7 +611,7 @@ def send_verification_email(user_email, username, verification_url, token=None):
 
     if success:
         _log_reg('info', f"SUCCESS: Verification email sent to {user_email}")
-        return True
+        return (True, None)
     else:
         _log_reg('error', f"FAILED: Verification email could NOT be sent to {user_email}. Error: {error_details}")
         return (False, error_details)

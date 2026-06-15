@@ -225,7 +225,7 @@ class TestEmailFeatures(unittest.TestCase):
         email = "cooldown@test.com"
         
         with patch('app.routes.auth.send_verification_email') as mock_send:
-            mock_send.return_value = True
+            mock_send.return_value = (True, None)
             
             # First resend
             res1 = self.client.post('/verify-email/resend', data={"email": email})
