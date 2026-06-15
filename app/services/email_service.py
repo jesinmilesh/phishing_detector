@@ -133,7 +133,7 @@ def send_with_resend(to_email, subject, html_content, retries=3):
         try:
             _safe_print(f"[EMAIL] Sending to: {to_email} | Subject: {subject} | Attempt {attempt}")
             response = resend.Emails.send({
-                "from": "AI Shield <jesintechnologies@gmail.com>",
+                "from": "AI Shield <onboarding@resend.dev>",
                 "to": [to_email],
                 "subject": subject,
                 "html": html_content
