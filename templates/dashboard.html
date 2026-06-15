@@ -50,18 +50,22 @@
                         <i class="fas fa-shield-halved"></i>
                         <span>Threat Analysis</span>
                     </a>
+                    <a href="/analytics" class="sidebar-nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Platform Analytics</span>
+                    </a>
                 </div>
 
                 <!-- Threat Intelligence -->
                 <div class="menu-group">
                     <div class="menu-group-title">Intelligence</div>
-                    <a href="/dashboard" class="sidebar-nav-link">
-                        <i class="fas fa-rss"></i>
-                        <span>Threat Intel Feed</span>
+                    <a href="/scan_history" class="sidebar-nav-link">
+                        <i class="fas fa-history"></i>
+                        <span>Scan History</span>
                     </a>
                     <a href="/history" class="sidebar-nav-link">
                         <i class="fas fa-box-archive"></i>
-                        <span>Scan Archive</span>
+                        <span>Reports Center</span>
                     </a>
                 </div>
 
@@ -339,28 +343,44 @@
                         </div>
                     </div>
 
-                    <!-- Threat category ratio pie chart -->
+                    <!-- Quick Scan Dashboard Card -->
                     <div class="premium-card">
                         <div class="premium-card-header">
-                            <h2 class="premium-card-title"><i class="fas fa-chart-pie"></i> Threat Ratio Breakdown</h2>
-                            <span class="text-muted small">Total Registry</span>
+                            <h2 class="premium-card-title"><i class="fas fa-search-plus"></i> Rapid URL Threat Scanner</h2>
+                            <span class="badge bg-opacity-10 bg-info text-info border border-info px-2 py-1 small">REAL-TIME SANDBOX</span>
                         </div>
-                        <div class="chart-wrapper" style="max-height: 220px;">
-                            <canvas id="threatCategoryCanvas" 
-                                    data-phishing="{{ stats['phishing_count'] }}"
-                                    data-suspicious="{{ stats['suspicious_count'] }}"
-                                    data-legitimate="{{ stats['legitimate_count'] }}"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Total scan volume trends -->
-                    <div class="premium-card">
-                        <div class="premium-card-header">
-                            <h2 class="premium-card-title"><i class="fas fa-chart-line"></i> Total Audit Load Trend</h2>
-                            <span class="text-muted small">Live Traffic Intensity</span>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="scanVolumeTrendCanvas"></canvas>
+                        
+                        <div class="p-1">
+                            <p class="text-secondary small">Execute real-time threat intelligence correlation on any suspicious URL from this console.</p>
+                            <form id="quickScanForm" class="d-flex gap-2 mb-3">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-dark border-secondary border-opacity-30 text-muted"><i class="fas fa-globe"></i></span>
+                                    <input type="text" id="quickScanInput" class="form-control bg-dark border-secondary border-opacity-30 text-white" placeholder="https://suspicious-domain-login.com" required>
+                                </div>
+                                <button type="submit" class="btn btn-info text-white brand-font" id="quickScanSubmitBtn">SCAN</button>
+                            </form>
+                            
+                            <!-- Quick Scan Loader -->
+                            <div id="quickScanLoading" class="d-none text-center p-3 rounded bg-black bg-opacity-20 border border-info border-opacity-10 mb-2">
+                                <i class="fas fa-spinner fa-spin fa-lg text-info mb-2"></i>
+                                <span class="brand-font text-info d-block small">RUNNING SOC ML CLASSIFIER...</span>
+                            </div>
+                            
+                            <!-- Quick Scan Result Panel -->
+                            <div id="quickScanResult" class="d-none p-3 rounded bg-black bg-opacity-30 border border-secondary border-opacity-20">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="small text-muted font-monospace" id="quickScanId">Scan ID: N/A</span>
+                                    <span class="badge" id="quickScanVerdictBadge">VERDICT</span>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="text-muted d-block small">Target Resource:</span>
+                                    <code class="text-info text-break font-monospace small" id="quickScanUrlVal">N/A</code>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary border-opacity-20">
+                                    <span class="small text-muted">Risk Score: <strong class="text-white" id="quickScanRiskVal">0%</strong></span>
+                                    <a href="#" class="btn btn-link btn-xs text-info p-0 text-decoration-none small" id="quickScanReportLink" target="_blank"><i class="fas fa-file-pdf"></i> Download PDF</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>

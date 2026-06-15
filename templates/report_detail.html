@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>AI Shield SOC - Threat Intelligence Log Detail</title>
+    <link rel="shortcut icon" href="/static/icons/favicon.ico" type="image/x-icon">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Theme CSS -->
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/static/css/dashboard.css" rel="stylesheet">
+    <link href="/static/css/reports.css" rel="stylesheet">
+</head>
+<body class="soc-theme">
+
+    <div class="soc-wrapper">
+        <!-- Sidebar overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- LEFT SIDEBAR -->
+        <aside class="soc-sidebar" id="socSidebar">
+            <div class="sidebar-header">
+                <a href="/scanner" class="sidebar-brand">
+                    <img src="/static/images/logo.svg" alt="AI Shield Logo">
+                    <span>AI SHIELD</span>
+                </a>
+                <button class="sidebar-toggle-inner" id="sidebarToggleInner" aria-label="Collapse Sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-menu">
+                <!-- Core Command Center -->
+                <div class="menu-group">
+                    <div class="menu-group-title">Command Center</div>
+                    <a href="/dashboard" class="sidebar-nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>SOC Dashboard</span>
+                    </a>
+                    <a href="/scanner" class="sidebar-nav-link">
+                        <i class="fas fa-shield-halved"></i>
+                        <span>Threat Analysis</span>
+                    </a>
+                    <a href="/analytics" class="sidebar-nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Platform Analytics</span>
+                    </a>
+                </div>
+
+                <!-- Threat Intelligence -->
+                <div class="menu-group">
+                    <div class="menu-group-title">Intelligence</div>
+                    <a href="/scan_history" class="sidebar-nav-link active">
+                        <i class="fas fa-history"></i>
+                        <span>Scan History</span>
+                    </a>
+                    <a href="/history" class="sidebar-nav-link">
+                        <i class="fas fa-box-archive"></i>
+                        <span>Reports Center</span>
+                    </a>
+                </div>
+
+                <!-- Profile -->
+                <div class="menu-group">
+                    <div class="menu-group-title">Configuration</div>
+                    <a href="/profile" class="sidebar-nav-link">
+                        <i class="fas fa-user-gear"></i>
+                        <span>Analyst Profile</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Profile Footer -->
+            <div class="sidebar-footer-profile">
+                <div class="analyst-avatar-container">
+                    <img src="{{ user.avatar_path or '/static/images/default_avatar.png' }}" alt="Avatar" class="avatar-img">
+                </div>
+                <div class="analyst-meta">
+                    <div class="analyst-name">{{ user.username }}</div>
+                    <div class="analyst-role">SOC analyst</div>
+                </div>
+                <a href="/logout" class="logout-btn-link" title="Logout session">
+                    <i class="fas fa-power-off"></i>
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN LAYOUT SPACE -->
+        <main class="soc-main-panel">
+            <!-- HEADER -->
+            <header class="soc-top-bar">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="/scan_history" class="btn btn-outline-secondary btn-sm text-white border-secondary border-opacity-30"><i class="fas fa-chevron-left"></i> Back</a>
+                    <div>
+                        <h1 class="soc-page-title mb-1">THREAT LOG DETAIL</h1>
+                        <p class="soc-page-subtitle mb-0">Deep lexical analysis, network registration profiles, and recommended actions.</p>
+                    </div>
+                </div>
+                
+                <div class="soc-top-bar-actions">
+                    <a href="/report/download/{{ scan.id }}" class="btn btn-info text-white brand-font"><i class="fas fa-download me-1"></i> DOWNLOAD PDF REPORT</a>
+                </div>
+            </header>
+
+            <div class="row g-4">
+                <!-- LEFT COLUMN: Posture Verdict -->
+                <div class="col-lg-5 col-md-12">
+                    <!-- Verdict Card -->
+                    <div class="soc-glass-card p-4 mb-4 text-center">
+                        <span class="text-muted small d-block mb-2 text-uppercase font-monospace" style="letter-spacing: 0.15em;">ML Classification Verdict</span>
+                        
+                        <div class="verdict-banner py-2 px-3 rounded mb-3 d-inline-block border {% if scan.prediction == 'Phishing' %}bg-danger bg-opacity-10 border-danger text-danger{% elif scan.prediction == 'Suspicious' %}bg-warning bg-opacity-10 border-warning text-warning{% else %}bg-success bg-opacity-10 border-success text-success{% endif %}">
+                            <h2 class="brand-font mb-0 fs-4"><i class="fas {% if scan.prediction == 'Phishing' %}fa-bug{% elif scan.prediction == 'Suspicious' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %} me-2"></i>{{ scan.prediction|upper }}</h2>
+                        </div>
+                        
+                        <!-- Score Display -->
+                        <div class="mb-4">
+                            <span class="text-muted small d-block mb-1">Threat Risk Index</span>
+                            <div class="fs-1 fw-bold font-monospace {% if scan.prediction == 'Phishing' %}text-danger{% elif scan.prediction == 'Suspicious' %}text-warning{% else %}text-success{% endif %}">
+                                {{ scan.risk_score }}%
+                            </div>
+                            <div class="progress bg-secondary bg-opacity-25 mx-auto" style="height: 8px; max-width: 200px;">
+                                <div class="progress-bar {% if scan.prediction == 'Phishing' %}bg-danger{% elif scan.prediction == 'Suspicious' %}bg-warning{% else %}bg-success{% endif %}" 
+                                     role="progressbar" style="width: {{ scan.risk_score}}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Target URL Box -->
+                        <div class="p-3 bg-black bg-opacity-30 rounded border border-secondary border-opacity-10 text-start">
+                            <span class="text-muted small d-block mb-1">Target Scanned URL:</span>
+                            <code class="text-info text-break font-monospace small">{{ scan.url }}</code>
+                        </div>
+                    </div>
+
+                    <!-- Recommendation Card -->
+                    <div class="soc-glass-card p-4">
+                        <div class="card-section-title mb-3">
+                            <i class="fas fa-shield-halved text-info"></i> Security Recommendations
+                        </div>
+                        <p class="text-secondary small mb-3">{{ scan.recommendations.summary }}</p>
+                        
+                        <div class="recommendations-box">
+                            {% for rec in scan.recommendations.recommendations %}
+                            <div class="d-flex align-items-start gap-2 mb-2">
+                                <i class="fas fa-circle-check {% if scan.prediction == 'Phishing' %}text-danger{% elif scan.prediction == 'Suspicious' %}text-warning{% else %}text-success{% endif %} mt-1" style="font-size: 0.85rem;"></i>
+                                <span class="text-white small">{{ rec }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: Intel & Domain Profile -->
+                <div class="col-lg-7 col-md-12">
+                    <!-- Domain Details -->
+                    <div class="soc-glass-card p-4 mb-4">
+                        <div class="card-section-title mb-3">
+                            <i class="fas fa-network-wired text-info"></i> Domain Profile
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <span class="text-muted d-block small">Domain Registrar:</span>
+                                <span class="text-white small fw-bold">{{ scan.details.whois.registrar or 'Unknown / Private' }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <span class="text-muted d-block small">Domain Age:</span>
+                                <span class="text-white small fw-bold">{{ scan.details.whois.domain_age_days }} Days (Created: {{ scan.details.whois.creation_date or 'N/A' }})</span>
+                            </div>
+                            <div class="col-md-6">
+                                <span class="text-muted d-block small">SSL State:</span>
+                                <span class="text-white small fw-bold">{{ scan.details.ssl.status or 'No Certificate Found' }}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <span class="text-muted d-block small">SSL Issuer:</span>
+                                <span class="text-white small fw-bold">{{ scan.details.ssl.issuer or 'N/A' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DNS Details -->
+                    <div class="soc-glass-card p-4 mb-4">
+                        <div class="card-section-title mb-3">
+                            <i class="fas fa-server text-info"></i> Active Name Resolution (DNS)
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-dark table-sm table-borderless mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td style="width: 120px;" class="text-muted small">A Records (IP):</td>
+                                        <td><code class="text-info small">{{ scan.details.dns.A|join(', ') or 'None' }}</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted small">MX Records (Mail):</td>
+                                        <td><code class="text-info small">{{ scan.details.dns.MX|join(', ') or 'None' }}</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted small">NS Records:</td>
+                                        <td><code class="text-info small">{{ scan.details.dns.NS|join(', ') or 'None' }}</code></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Structural Features -->
+                    <div class="soc-glass-card p-4">
+                        <div class="card-section-title mb-3">
+                            <i class="fas fa-list text-info"></i> Structural URL Indicators
+                        </div>
+                        
+                        <div class="row g-2">
+                            {% for f_name, f_val in scan.details.features.items() %}
+                            <div class="col-md-4 col-sm-6">
+                                <div class="p-2 bg-black bg-opacity-20 rounded border border-secondary border-opacity-10 text-center">
+                                    <span class="text-muted d-block" style="font-size: 0.7rem;">{{ f_name|replace('_', ' ')|upper }}</span>
+                                    <span class="text-white font-monospace fw-bold small">{{ f_val }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Script imports -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

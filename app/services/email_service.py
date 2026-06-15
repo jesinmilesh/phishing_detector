@@ -594,3 +594,53 @@ def send_newsletter_subscription_email(user_email):
     </html>
     """
     return send_with_resend(user_email, subject, html_content)
+
+
+def send_contact_email(name, from_email, subject, message):
+    """Sends contact form submission notification to the support team email."""
+    to_email = "jesintechnologies@gmail.com"
+    email_subject = f"[AI SHIELD CONTACT] {subject or 'New Inquiry'} from {name}"
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>New Contact Form Submission</title>
+        <style>
+            body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #060913; color: #cbd5e1; margin: 0; padding: 20px; }}
+            .container {{ max-width: 600px; margin: 0 auto; background: #0d1423; border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 12px; padding: 30px; box-shadow: 0 4px 24px rgba(0,0,0,0.3); }}
+            .header {{ text-align: center; border-bottom: 1px solid rgba(59, 130, 246, 0.1); padding-bottom: 20px; }}
+            .logo {{ color: #3b82f6; font-size: 24px; font-weight: bold; letter-spacing: 1px; }}
+            .title {{ font-size: 20px; margin-top: 25px; color: #f8fafc; text-align: center; }}
+            .content {{ line-height: 1.6; margin-top: 20px; font-size: 15px; }}
+            .detail-box {{ background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 8px; padding: 15px; margin: 20px 0; }}
+            .footer {{ font-size: 12px; color: #64748b; text-align: center; margin-top: 35px; border-top: 1px solid rgba(59, 130, 246, 0.1); padding-top: 20px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">🛡️ AI SHIELD SOC</div>
+            </div>
+            <div class="title">Incident Ticket / Inquiry Received</div>
+            <div class="content">
+                <p>Hello Admin,</p>
+                <p>A new contact form inquiry has been submitted from the platform landing page:</p>
+                <div class="detail-box">
+                    <strong>Submitter Name:</strong> {name}<br>
+                    <strong>Submitter Email:</strong> {from_email}<br>
+                    <strong>Subject:</strong> {subject or 'N/A'}<br><br>
+                    <strong>Message Body:</strong><br>
+                    {message}
+                </div>
+            </div>
+            <div class="footer">
+                <p>&copy; 2026 AI Shield SOC. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return send_with_resend(to_email, email_subject, html_content)

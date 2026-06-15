@@ -47,24 +47,31 @@ document.addEventListener('DOMContentLoaded', function() {
     const counters = document.querySelectorAll('.counter-val');
     const speed = 200; // The lower the slower
 
-    const startCounters = () => {
+    const startCounter = (counter) => {
+        const target = +counter.getAttribute('data-target');
+        const suffix = counter.getAttribute('data-suffix') || '';
+
+        const updateCount = () => {
+            const current = +counter.innerText.replace(/[^0-9]/g, '');
+            const inc = target / speed;
+
+            if (current < target) {
+                counter.innerText = Math.ceil(current + inc).toLocaleString() + suffix;
+                setTimeout(updateCount, 10);
+            } else {
+                counter.innerText = target.toLocaleString() + suffix;
+            }
+        };
+        updateCount();
+    };
+
+    const triggerCounters = () => {
         counters.forEach(counter => {
-            const target = +counter.getAttribute('data-target');
-            const suffix = counter.getAttribute('data-suffix') || '';
-            const count = +counter.innerText.replace(/[^0-9]/g, '');
-
-            const updateCount = () => {
-                const current = +counter.innerText.replace(/[^0-9]/g, '');
-                const inc = target / speed;
-
-                if (current < target) {
-                    counter.innerText = Math.ceil(current + inc).toLocaleString() + suffix;
-                    setTimeout(updateCount, 10);
-                } else {
-                    counter.innerText = target.toLocaleString() + suffix;
-                }
-            };
-            updateCount();
+            const card = counter.closest('.counter-card');
+            const delay = parseInt(card ? card.getAttribute('data-delay') : '0') || 0;
+            setTimeout(() => {
+                startCounter(counter);
+            }, delay);
         });
     };
 
@@ -73,10 +80,10 @@ document.addEventListener('DOMContentLoaded', function() {
         threshold: 0.5
     };
 
-    const observer = new IntersectionObserver((entries, observer) => {
+    const statsObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                startCounters();
+                triggerCounters();
                 observer.unobserve(entry.target);
             }
         });
@@ -84,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const statsSection = document.querySelector('.trust-section');
     if (statsSection) {
-        observer.observe(statsSection);
+        statsObserver.observe(statsSection);
     }
 
     // ==========================================
@@ -257,5 +264,127 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         setInterval(insertFeedItem, 8000);
+    }
+
+    // ==========================================
+    // 7. SCROLL-TO-TOP BUTTON
+    // ==========================================
+    const scrollBtn = document.getElementById('scrollTopBtn');
+    if (scrollBtn) {
+        window.addEventListener('scroll', () => {
+            scrollBtn.style.display = window.scrollY > 400 ? 'flex' : 'none';
+            scrollBtn.style.alignItems = 'center';
+            scrollBtn.style.justifyContent = 'center';
+        });
+        scrollBtn.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+    }
+
+    // ==========================================
+    // 8. SECTION REVEAL ON SCROLL
+    // ==========================================
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) { 
+                e.target.classList.add('visible'); 
+            }
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => revealObserver.observe(el));
+
+    // ==========================================
+    // 9. CONTACT FORM HANDLER (AJAX)
+    // ==========================================
+    const contactForm = document.getElementById('contactForm');
+    const contactResponse = document.getElementById('contactResponse');
+    
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('contactName').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+            const subject = document.getElementById('contactSubject').value.trim();
+            const message = document.getElementById('contactMessage').value.trim();
+            const submitBtn = document.getElementById('contactSubmitBtn');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            if (!name || !email || !message) {
+                contactResponse.className = "mt-3 text-danger";
+                contactResponse.textContent = "Please fill in all required fields.";
+                contactResponse.classList.remove('d-none');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span>Sending Incident Ticket...</span> <i class="fas fa-spinner fa-spin"></i>`;
+            
+            fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ name, email, subject, message })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    contactResponse.className = "mt-3 text-success";
+                    contactResponse.textContent = data.message;
+                    contactForm.reset();
+                } else {
+                    contactResponse.className = "mt-3 text-danger";
+                    contactResponse.textContent = data.error || "Failed to submit ticket. Please check inputs.";
+                }
+                contactResponse.classList.remove('d-none');
+            })
+            .catch(() => {
+                contactResponse.className = "mt-3 text-danger";
+                contactResponse.textContent = "Network error. Failed to connect to secure mail node.";
+                contactResponse.classList.remove('d-none');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<span>Send Incident Ticket</span> <i class="fas fa-paper-plane"></i>`;
+            });
+        });
+    }
+
+    // ==========================================
+    // 10. REAL-TIME VISIT COUNT POLISHING
+    // ==========================================
+    const visitCountEl = document.getElementById('visitCount');
+    if (visitCountEl) {
+        let lastCount = 0;
+        
+        const updateVisitCount = () => {
+            fetch('/api/visit-count')
+                .then(res => res.json())
+                .then(data => {
+                    const count = data.visits || 0;
+                    visitCountEl.textContent = count.toLocaleString();
+                    
+                    // Add micro-glow animation if count increases
+                    if (lastCount > 0 && count > lastCount) {
+                        visitCountEl.style.color = '#3b82f6';
+                        visitCountEl.style.textShadow = '0 0 10px rgba(59, 130, 246, 0.8)';
+                        visitCountEl.style.transition = 'none';
+                        
+                        setTimeout(() => {
+                            visitCountEl.style.color = '#fff';
+                            visitCountEl.style.textShadow = 'none';
+                            visitCountEl.style.transition = 'all 1s ease';
+                        }, 1000);
+                    }
+                    lastCount = count;
+                })
+                .catch(() => {
+                    // Suppress network logs for clean background polling
+                });
+        };
+        
+        // Initial call and poll every 5 seconds
+        updateVisitCount();
+        setInterval(updateVisitCount, 5000);
     }
 });

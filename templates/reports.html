@@ -50,25 +50,21 @@
                         <i class="fas fa-shield-halved"></i>
                         <span>Threat Analysis</span>
                     </a>
-                    <a href="/scanner" class="sidebar-nav-link">
-                        <i class="fas fa-magnifying-glass"></i>
-                        <span>URL Scanner</span>
+                    <a href="/analytics" class="sidebar-nav-link">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Platform Analytics</span>
                     </a>
                 </div>
 
                 <!-- Threat Intelligence -->
                 <div class="menu-group">
                     <div class="menu-section-header">Intelligence</div>
-                    <a href="/dashboard" class="sidebar-nav-link">
-                        <i class="fas fa-rss"></i>
-                        <span>Threat Intel Feed</span>
-                    </a>
-                    <a href="/history" class="sidebar-nav-link">
-                        <i class="fas fa-box-archive"></i>
-                        <span>Scans Archive</span>
+                    <a href="/scan_history" class="sidebar-nav-link">
+                        <i class="fas fa-history"></i>
+                        <span>Scan History</span>
                     </a>
                     <a href="/history" class="sidebar-nav-link active">
-                        <i class="fas fa-file-invoice"></i>
+                        <i class="fas fa-box-archive"></i>
                         <span>Reports Center</span>
                     </a>
                 </div>
@@ -79,10 +75,6 @@
                     <a href="/profile" class="sidebar-nav-link">
                         <i class="fas fa-user-gear"></i>
                         <span>Analyst Profile</span>
-                    </a>
-                    <a href="/profile" class="sidebar-nav-link">
-                        <i class="fas fa-sliders"></i>
-                        <span>SOC Settings</span>
                     </a>
                 </div>
             </div>
@@ -280,7 +272,7 @@
                 </div>
             </div>
 
-            <!-- ANALYTICS CHARTS SECTION -->
+             <!-- ANALYTICS CHARTS SECTION -->
             <div class="row g-4 mb-4">
                 <div class="col-md-8">
                     <div class="soc-glass-card">
@@ -288,7 +280,7 @@
                             <i class="fas fa-chart-area"></i> Threat Detection Trends
                         </div>
                         <div class="chart-container-wrapper">
-                            <canvas id="threatTrendsChartCanvas"></canvas>
+                            <canvas id="threatTrendsChartCanvas" data-daily-scans="{{ stats['daily_scans']|tojson }}"></canvas>
                         </div>
                     </div>
                 </div>
@@ -298,7 +290,10 @@
                             <i class="fas fa-chart-pie"></i> Risk Distribution
                         </div>
                         <div class="chart-container-wrapper">
-                            <canvas id="riskDistributionChartCanvas"></canvas>
+                            <canvas id="riskDistributionChartCanvas" 
+                                    data-phishing="{{ stats['phishing_count'] }}"
+                                    data-suspicious="{{ stats['suspicious_count'] }}"
+                                    data-legitimate="{{ stats['legitimate_count'] }}"></canvas>
                         </div>
                     </div>
                 </div>

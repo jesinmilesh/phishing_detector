@@ -189,16 +189,68 @@ document.addEventListener('DOMContentLoaded', function() {
             const modalInstance = bootstrap.Modal.getInstance(modalEl);
             if (modalInstance) modalInstance.hide();
 
-            // Simulate Generation Loader
             showNotification('Generating ' + reportType + ' report (' + format + ')...', 'info');
 
-            setTimeout(() => {
-                showNotification('Report #' + Math.floor(Math.random() * 9000 + 1000) + ' created successfully!', 'success');
-                // Reload or append mock row dynamically
-                location.reload();
-            }, 2500);
+            fetch('/api/reports/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    report_type: reportType,
+                    date_range: range,
+                    format: format
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showNotification('Error generating report: ' + (data.error || 'Unknown error'), 'danger');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showNotification('Network error during report generation.', 'danger');
+            });
         });
     }
+
+    // 5.2 Individual Report Deletion Handler
+    document.querySelectorAll('.delete-report-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const reportId = this.getAttribute('data-report-id');
+            if (confirm('Are you sure you want to delete report record #' + reportId + '?')) {
+                fetch('/api/history/delete/' + reportId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Report deleted successfully.', 'success');
+                        const row = document.querySelector(`tr[data-report-id="${reportId}"]`);
+                        if (row) row.remove();
+                    } else {
+                        showNotification('Failed to delete report: ' + (data.error || 'Unknown error'), 'danger');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showNotification('Network error during deletion.', 'danger');
+                });
+            }
+        });
+    });
 
     // 6. Export Center Controller (Bulk Downloads)
     const exportCsvBtn = document.getElementById('exportCsvBtn');
@@ -296,14 +348,25 @@ function initializeCharts() {
     // 1. Threat Trends Chart
     const trendCtx = document.getElementById('threatTrendsChartCanvas');
     if (trendCtx) {
+        const dailyData = JSON.parse(trendCtx.dataset.dailyScans || '[]');
+        const sortedData = [...dailyData].reverse();
+        
+        const labels = sortedData.length > 0 ? sortedData.map(d => {
+            const date = new Date(d.date);
+            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }) : ['No Data'];
+        
+        const phishingData = sortedData.length > 0 ? sortedData.map(d => d.phishing || 0) : [0];
+        const legitimateData = sortedData.length > 0 ? sortedData.map(d => d.legitimate || 0) : [0];
+
         window.threatTrendsChart = new Chart(trendCtx.getContext('2d'), {
             type: 'line',
             data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                labels: labels,
                 datasets: [
                     {
                         label: 'Phishing Scans',
-                        data: [45, 59, 80, 51, 96, 110],
+                        data: phishingData,
                         borderColor: '#ef4444',
                         backgroundColor: 'rgba(239, 68, 68, 0.05)',
                         borderWidth: 2,
@@ -312,7 +375,7 @@ function initializeCharts() {
                     },
                     {
                         label: 'Safe Scans',
-                        data: [120, 150, 180, 140, 210, 245],
+                        data: legitimateData,
                         borderColor: '#10b981',
                         backgroundColor: 'rgba(16, 185, 129, 0.05)',
                         borderWidth: 2,
@@ -346,12 +409,16 @@ function initializeCharts() {
     // 2. Risk Distribution Chart
     const riskCtx = document.getElementById('riskDistributionChartCanvas');
     if (riskCtx) {
+        const totalPhish = parseInt(riskCtx.dataset.phishing || '0');
+        const totalSusp = parseInt(riskCtx.dataset.suspicious || '0');
+        const totalSafe = parseInt(riskCtx.dataset.legitimate || '0');
+
         window.riskDistChart = new Chart(riskCtx.getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: ['Legitimate', 'Suspicious', 'Phishing'],
                 datasets: [{
-                    data: [65, 20, 15],
+                    data: [totalSafe, totalSusp, totalPhish],
                     backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
                     borderColor: 'rgba(30, 41, 59, 0.8)',
                     borderWidth: 2

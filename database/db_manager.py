@@ -236,6 +236,39 @@ class DatabaseManager:
             if not cursor.fetchone():
                 cursor.execute("INSERT INTO security_settings (user_id) VALUES (?)", (uid,))
 
+        # Create contact_messages table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS contact_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                subject TEXT,
+                message TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        # Create site_stats table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS site_stats (
+                key TEXT PRIMARY KEY,
+                value INTEGER DEFAULT 0
+            )
+        ''')
+        cursor.execute("INSERT OR IGNORE INTO site_stats (key, value) VALUES ('visits', 0)")
+
+        # Create analytics table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS analytics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type TEXT NOT NULL,
+                user_id INTEGER,
+                details TEXT,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+            )
+        ''')
+
         conn.commit()
         conn.close()
 
@@ -961,3 +994,42 @@ class DatabaseManager:
             'active_sessions': serialized_sessions,
             'notifications': serialized_notifications
         }
+
+    def increment_visit_count(self):
+        """Increments the site visit count in the database."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("INSERT OR IGNORE INTO site_stats (key, value) VALUES ('visits', 0)")
+            cursor.execute("UPDATE site_stats SET value = value + 1 WHERE key = 'visits'")
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_visit_count(self):
+        """Fetches the current site visit count from the database."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("INSERT OR IGNORE INTO site_stats (key, value) VALUES ('visits', 0)")
+            cursor.execute("SELECT value FROM site_stats WHERE key = 'visits'")
+            row = cursor.fetchone()
+            return row['value'] if row else 0
+        finally:
+            conn.close()
+
+    def add_contact_message(self, name, email, subject, message):
+        """Saves a new contact us form submission into the database."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)",
+                (name, email, subject, message)
+            )
+            conn.commit()
+            return True
+        except Exception:
+            return False
+        finally:
+            conn.close()

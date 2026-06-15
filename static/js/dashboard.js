@@ -111,7 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const legitimateData = sortedData.map(d => d.legitimate || 0);
         const suspiciousData = sortedData.map(d => d.suspicious || 0);
         const phishingData = sortedData.map(d => d.phishing || 0);
-        const totalCounts = sortedData.map(d => d.count || 0);
 
         // -- Chart 1: Daily Target Resolution (Bar) --
         new Chart(canvasBar, {
@@ -169,88 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
-
-        // -- Chart 2: Threat Category Breakdown (Pie/Doughnut) --
-        const canvasPie = document.getElementById('threatCategoryCanvas');
-        if (canvasPie) {
-            // Aggregate totals from current statistics
-            const totalPhish = parseInt(canvasPie.dataset.phishing || '0');
-            const totalSusp = parseInt(canvasPie.dataset.suspicious || '0');
-            const totalSafe = parseInt(canvasPie.dataset.legitimate || '0');
-
-            new Chart(canvasPie, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Safe', 'Suspicious', 'Phishing'],
-                    datasets: [{
-                        data: [totalSafe, totalSusp, totalPhish],
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                        borderWidth: 1,
-                        borderColor: '#0b0f19'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: '#f9fafb', font: { family: 'Orbitron', size: 9 }, padding: 10 }
-                        },
-                        tooltip: {
-                            backgroundColor: '#0b0f19',
-                            borderColor: 'rgba(0, 229, 255, 0.2)',
-                            borderWidth: 1
-                        }
-                    }
-                }
-            });
-        }
-
-        // -- Chart 3: Scan Volume Trend (Line) --
-        const canvasTrend = document.getElementById('scanVolumeTrendCanvas');
-        if (canvasTrend) {
-            new Chart(canvasTrend, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Audit Volume',
-                        data: totalCounts,
-                        borderColor: '#00e5ff',
-                        backgroundColor: 'rgba(0, 229, 255, 0.05)',
-                        fill: true,
-                        tension: 0.4,
-                        borderWidth: 2,
-                        pointBackgroundColor: '#00e5ff',
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#9ca3af', font: { size: 10 } }
-                        },
-                        y: {
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            ticks: { color: '#9ca3af', font: { size: 10 } }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#0b0f19',
-                            borderColor: 'rgba(0, 229, 255, 0.2)',
-                            borderWidth: 1
-                        }
-                    }
-                }
-            });
-        }
     }
 
     // ----------------------------------------------------
@@ -606,5 +523,78 @@ document.addEventListener('DOMContentLoaded', () => {
                 '"': '&quot;'
             }[tag] || tag)
         );
+    }
+
+    // ----------------------------------------------------
+    // 9. QUICK SCAN HANDLER
+    // ----------------------------------------------------
+    const quickScanForm = document.getElementById('quickScanForm');
+    if (quickScanForm) {
+        quickScanForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('quickScanInput');
+            const submitBtn = document.getElementById('quickScanSubmitBtn');
+            const loader = document.getElementById('quickScanLoading');
+            const resultPanel = document.getElementById('quickScanResult');
+            
+            let urlVal = input.value.trim();
+            if (!urlVal) return;
+            
+            if (!urlVal.startsWith('http://') && !urlVal.startsWith('https://')) {
+                urlVal = 'http://' + urlVal;
+            }
+            
+            submitBtn.disabled = true;
+            loader.classList.remove('d-none');
+            resultPanel.classList.add('d-none');
+            
+            try {
+                const formData = new FormData();
+                formData.append('url', urlVal);
+                
+                const response = await fetch('/scan/url', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken },
+                    body: formData
+                });
+                
+                const res = await response.json();
+                if (res.success) {
+                    const data = res.data;
+                    document.getElementById('quickScanId').textContent = `Scan ID: SEC-${data.scan_id}`;
+                    document.getElementById('quickScanUrlVal').textContent = data.url;
+                    document.getElementById('quickScanRiskVal').textContent = `${data.risk_score}%`;
+                    
+                    const reportLink = document.getElementById('quickScanReportLink');
+                    reportLink.href = `/report/download/${data.scan_id}`;
+                    
+                    const badge = document.getElementById('quickScanVerdictBadge');
+                    badge.textContent = data.prediction.toUpperCase();
+                    
+                    badge.className = 'badge';
+                    if (data.prediction === 'Phishing') {
+                        badge.classList.add('bg-danger');
+                    } else if (data.prediction === 'Suspicious') {
+                        badge.classList.add('bg-warning');
+                    } else {
+                        badge.classList.add('bg-success');
+                    }
+                    
+                    resultPanel.classList.remove('d-none');
+                    showToast("Scan completed successfully", "success");
+                    
+                    if (typeof fetchTableData === 'function') {
+                        fetchTableData();
+                    }
+                } else {
+                    showToast(res.error || "Scan failed", "danger");
+                }
+            } catch (err) {
+                showToast("Connection to security engine lost.", "danger");
+            } finally {
+                submitBtn.disabled = false;
+                loader.classList.add('d-none');
+            }
+        });
     }
 });

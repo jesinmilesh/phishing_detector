@@ -38,7 +38,7 @@
     <a href="#main-content" class="visually-hidden-focusable py-2 px-3 bg-dark text-white position-absolute start-0 top-0 z-3">Skip to main content</a>
 
     <!-- ==========================================
-         SECTION 1: sticky NAVBAR
+         SECTION 1: STICKY NAVBAR
          ========================================== -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-glass sticky-top py-3" aria-label="Main Navigation">
         <div class="container">
@@ -55,7 +55,7 @@
             <div class="collapse navbar-collapse" id="navbarContent">
                 <!-- Navigation Menu Links -->
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="#hero">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="#hero">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
                     <li class="nav-item"><a class="nav-link" href="#how-it-works">Solutions</a></li>
                     <li class="nav-item"><a class="nav-link" href="#live-demo">Live Demo</a></li>
@@ -66,7 +66,7 @@
                 <!-- CTA buttons and Theme Toggle -->
                 <div class="d-flex align-items-center gap-3">
                     <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Dark or Light Interface Theme">
-                        <i class="fas fa-sun"></i>
+                        <i class="fas fa-moon"></i>
                     </button>
                     <a href="/login" class="btn-premium-outline" id="nav-login-btn">Login</a>
                     <a href="/register" class="btn-premium-primary" id="nav-register-btn">Get Started</a>
@@ -81,13 +81,13 @@
         <!-- ==========================================
              SECTION 2: HERO SECTION
              ========================================== -->
-        <header id="hero" class="hero-wrapper">
+        <header id="hero" class="hero-wrapper reveal-on-scroll">
             <div class="container">
                 <div class="row align-items-center g-5">
                     <!-- Left Marketing Copy -->
                     <div class="col-lg-7">
                         <div class="hero-subtitle-badge">
-                            <i class="fas fa-circle-check text-success me-1"></i> Enterprise Threat Shield Active
+                            <span class="live-dot"></span> System Online — Threat Detection Active
                         </div>
                         <h1 class="hero-title">
                             AI-Powered Phishing <span>Detection & Threat</span> Intelligence
@@ -96,7 +96,7 @@
                             Protect your organization, employees, and credentials from brand impersonations and malicious email scams in real time. Powered by heuristic ML models and live indicators.
                         </p>
                         
-                        <div class="d-flex flex-wrap gap-3">
+                        <div class="d-flex flex-wrap gap-3 hero-btn-group">
                             <a href="#live-demo" class="btn-premium-primary btn-lg px-4 py-3">
                                 <span>Start Free Scan</span>
                                 <i class="fas fa-shield-halved"></i>
@@ -107,7 +107,7 @@
                         </div>
                     </div>
                     <!-- Right Floating Graphic -->
-                    <div class="col-lg-5 hero-illustration-container">
+                    <div class="col-lg-5 hero-illustration-container d-none d-lg-block">
                         <img src="/static/images/hero-illustration.svg" alt="Cryptographic security nodes guarding data nodes illustration" class="hero-float-img">
                     </div>
                 </div>
@@ -115,31 +115,31 @@
         </header>
 
         <!-- ==========================================
-             SECTION 3: TRUST SECTION (COUNTERS)
+             SECTION 3: TRUST/COUNTER STATS SECTION
              ========================================== -->
-        <section class="trust-section">
+        <section class="trust-section reveal-on-scroll">
             <div class="container">
                 <div class="row g-4">
                     <div class="col-md-3 col-6">
-                        <div class="counter-card">
+                        <div class="counter-card" data-delay="0">
                             <div class="counter-val" data-target="99" data-suffix=".42%">0%</div>
                             <div class="counter-label">Detection Accuracy</div>
                         </div>
                     </div>
                     <div class="col-md-3 col-6">
-                        <div class="counter-card">
+                        <div class="counter-card" data-delay="150">
                             <div class="counter-val" data-target="84924" data-suffix="">0</div>
                             <div class="counter-label">Threats Prevented</div>
                         </div>
                     </div>
                     <div class="col-md-3 col-6">
-                        <div class="counter-card">
+                        <div class="counter-card" data-delay="300">
                             <div class="counter-val" data-target="1500000" data-suffix="+">0</div>
                             <div class="counter-label">URLs Scanned</div>
                         </div>
                     </div>
                     <div class="col-md-3 col-6">
-                        <div class="counter-card">
+                        <div class="counter-card" data-delay="450">
                             <div class="counter-val" data-target="12500" data-suffix="+">0</div>
                             <div class="counter-label">Active Analyst Nodes</div>
                         </div>
@@ -149,9 +149,9 @@
         </section>
 
         <!-- ==========================================
-             SECTION 4: FEATURES SECTION
+             SECTION 4: FEATURES SECTION (6 cards)
              ========================================== -->
-        <section id="features" class="features-section">
+        <section id="features" class="features-section reveal-on-scroll">
             <div class="container text-center">
                 <span class="section-tag">Capabilities</span>
                 <h2 class="section-title">Comprehensive Security Diagnostics</h2>
@@ -159,48 +159,48 @@
                 
                 <div class="row g-4 text-start">
                     <!-- Card 1 -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="premium-card">
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="premium-card feature-card-blue">
                             <div class="card-icon"><i class="fas fa-network-wired"></i></div>
                             <h3 class="card-title text-white">AI URL Detection</h3>
                             <p class="card-text">Classify malicious target domains instantly with random forest models based on entropy, DNS records, and SSL integrity.</p>
                         </div>
                     </div>
                     <!-- Card 2 -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="premium-card">
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="premium-card feature-card-green">
                             <div class="card-icon"><i class="fas fa-envelope-open-text"></i></div>
                             <h3 class="card-title text-white">Email Scans</h3>
                             <p class="card-text">Analyze text body structures and EML attachments for deceptive headers, sender spoofs, and phishing payloads.</p>
                         </div>
                     </div>
                     <!-- Card 3 -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="premium-card">
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="premium-card feature-card-purple">
                             <div class="card-icon"><i class="fas fa-qrcode"></i></div>
                             <h3 class="card-title text-white">QR Code Decoding</h3>
                             <p class="card-text">Scan and extract hidden links inside target QR code badges to prevent mobile redirection (Quishing) fraud.</p>
                         </div>
                     </div>
                     <!-- Card 4 -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="premium-card">
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="premium-card feature-card-orange">
                             <div class="card-icon"><i class="fas fa-desktop"></i></div>
                             <h3 class="card-title text-white">Visual Spoof Alerts</h3>
                             <p class="card-text">Capture remote layout screenshots and run OpenCV comparisons against trademark brand templates for similarity mismatches.</p>
                         </div>
                     </div>
                     <!-- Card 5 -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="premium-card">
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="premium-card feature-card-cyan">
                             <div class="card-icon"><i class="fas fa-database"></i></div>
                             <h3 class="card-title text-white">Threat Intelligence</h3>
                             <p class="card-text">Leverage public feeds and global blacklists to ensure zero-day protection against emerging brand hijacking attempts.</p>
                         </div>
                     </div>
                     <!-- Card 6 -->
-                    <div class="col-lg-4 col-md-6">
-                        <div class="premium-card">
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="premium-card feature-card-red">
                             <div class="card-icon"><i class="fas fa-code"></i></div>
                             <h3 class="card-title text-white">Enterprise APIs</h3>
                             <p class="card-text">Integrate security controls directly into your workspace pipeline via secure REST API nodes and webhooks.</p>
@@ -211,9 +211,9 @@
         </section>
 
         <!-- ==========================================
-             SECTION 5: HOW IT WORKS
+             SECTION 5: HOW IT WORKS / TIMELINE SECTION (5 steps)
              ========================================== -->
-        <section id="how-it-works" class="timeline-section">
+        <section id="how-it-works" class="timeline-section reveal-on-scroll">
             <div class="container text-center">
                 <span class="section-tag">Workflow</span>
                 <h2 class="section-title">Unified Scanning Pipeline</h2>
@@ -276,9 +276,9 @@
         </section>
 
         <!-- ==========================================
-             SECTION 6: LIVE DEMO SECTION
+             SECTION 6: LIVE DEMO CONSOLE SECTION
              ========================================== -->
-        <section id="live-demo" class="demo-section">
+        <section id="live-demo" class="demo-section reveal-on-scroll">
             <div class="container text-center">
                 <span class="section-tag">Interactive Sandbox</span>
                 <h2 class="section-title">Live Diagnostics Console</h2>
@@ -291,7 +291,7 @@
                             <div class="console-dot console-dot-yellow"></div>
                             <div class="console-dot console-dot-green"></div>
                         </div>
-                        <div class="console-title">SANDBOX_ANALYZER_NODE_v1.0</div>
+                        <div class="console-title">SANDBOX_ANALYZER_NODE_v2.0</div>
                         <div class="text-muted"><i class="fas fa-terminal"></i></div>
                     </div>
                     
@@ -303,8 +303,12 @@
                         </button>
                     </div>
                     
-                    <div id="consoleOutput" class="text-start p-3 bg-dark bg-opacity-50 border border-secondary border-opacity-10 rounded mb-4 monospace" style="min-height: 120px; font-family: monospace; font-size: 0.85rem; color: #10b981; overflow-y: auto; max-height: 200px;">
-                        [i] Ready. Input a URL and click Analyze Target to establish credentials and trigger heuristics.
+                    <div id="consoleOutput" class="text-start p-3 bg-dark bg-opacity-50 border border-secondary border-opacity-10 rounded mb-4 monospace" style="min-height: 120px; font-family: monospace; font-size: 0.85rem; color: #10b981; overflow-y: auto; max-height: 200px; line-height: 1.5;">
+                        <span class="text-info">AI_SHIELD_SOC v2.0.1 — Diagnostic Engine Online</span><br>
+                        <span class="text-success">✓ ML Classifier loaded (Random Forest, 47 features)</span><br>
+                        <span class="text-success">✓ Threat Intel feeds connected (OpenPhish, PhishStats)</span><br>
+                        <span class="text-muted">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><br>
+                        <span class="text-secondary">[ READY ] — Input a URL above and click Analyze Target.</span>
                     </div>
                     
                     <!-- Result score card -->
@@ -325,9 +329,9 @@
         </section>
 
         <!-- ==========================================
-             SECTION 7: THREAT INTELLIGENCE (LIVE FEED)
+             SECTION 7: THREAT INTELLIGENCE FEED SECTION
              ========================================== -->
-        <section id="threat-feed" class="intel-section">
+        <section id="threat-feed" class="intel-section reveal-on-scroll">
             <div class="container">
                 <div class="row align-items-center g-5">
                     <div class="col-lg-5">
@@ -388,15 +392,19 @@
                                 </table>
                             </div>
                         </div>
+                        <p class="text-muted small text-center mt-2">
+                            <i class="fas fa-circle-info me-1"></i>
+                            Sample indicators shown. Live feeds available after login.
+                        </p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- ==========================================
-             SECTION 8: DASHBOARD PREVIEW
+             SECTION 8: DASHBOARD PREVIEW SECTION
              ========================================== -->
-        <section class="preview-section">
+        <section class="preview-section reveal-on-scroll">
             <div class="container text-center">
                 <span class="section-tag">Analyst Panel</span>
                 <h2 class="section-title">Enterprise Dashboard Control</h2>
@@ -408,9 +416,115 @@
         </section>
 
         <!-- ==========================================
-             SECTION 9: SYSTEM FAQS
+             SECTION 9: BENEFITS SECTION
              ========================================== -->
-        <section id="faqs" class="faq-section">
+        <section id="benefits" class="benefits-section reveal-on-scroll">
+            <div class="container text-center">
+                <span class="section-tag">Why Choose Us</span>
+                <h2 class="section-title">Designed for Enterprise Security Operations</h2>
+                <p class="section-desc text-muted">Protect your brand assets, client data, and analyst teams with high-speed intelligence nodes.</p>
+                
+                <div class="row g-4 text-start">
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="premium-card feature-card-blue">
+                            <div class="card-icon"><i class="fas fa-gauge-high"></i></div>
+                            <h3 class="card-title text-white">Zero Latency Protection</h3>
+                            <p class="card-text">Catch spoofing and phishing campaigns at the moment of creation. Our real-time crawler evaluates targets within milliseconds.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="premium-card feature-card-green">
+                            <div class="card-icon"><i class="fas fa-circle-check"></i></div>
+                            <h3 class="card-title text-white">Ultra-Low False Positives</h3>
+                            <p class="card-text">Our machine learning models use advanced heuristic optimization to maintain a false positive rate of less than 0.1%.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-12 col-12">
+                        <div class="premium-card feature-card-purple">
+                            <div class="card-icon"><i class="fas fa-network-wired"></i></div>
+                            <h3 class="card-title text-white">Seamless Integration</h3>
+                            <p class="card-text">Automate scans directly inside your existing SOAR and SIEM pipelines using our secure, well-documented REST APIs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SECTION 10: TESTIMONIALS SECTION
+             ========================================== -->
+        <section id="testimonials" class="testimonials-section reveal-on-scroll">
+            <div class="container text-center">
+                <span class="section-tag">Testimonials</span>
+                <h2 class="section-title">Trusted by SOC Specialists Worldwide</h2>
+                <p class="section-desc text-muted">See how cybersecurity professionals leverage AI Shield to prevent brand impersonations.</p>
+                
+                <div class="row g-4 text-start">
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="premium-card">
+                            <div class="mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                            <p class="card-text text-muted italic mb-4">"AI Shield transformed our email gateway defense. We saw a 90% reduction in successful credential harvest page clicks."</p>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="user-avatar-circle" style="width: 40px; height: 40px; font-size: 0.9rem; background-color: var(--primary-glow); border: 1px solid var(--border-hover); display: flex; align-items: center; justify-content: center; font-family: var(--font-cyber); font-weight: bold; color: var(--primary); border-radius: 50%;">MV</div>
+                                <div>
+                                    <h5 class="text-white small mb-0">Marcus Vance</h5>
+                                    <span class="text-muted small">CISO at FinanceFlow</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="premium-card">
+                            <div class="mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                            <p class="card-text text-muted italic mb-4">"The visual spoofing detection module is magic. It caught a spoofed landing page targeting our employees within seconds."</p>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="user-avatar-circle" style="width: 40px; height: 40px; font-size: 0.9rem; background-color: var(--primary-glow); border: 1px solid var(--border-hover); display: flex; align-items: center; justify-content: center; font-family: var(--font-cyber); font-weight: bold; color: var(--primary); border-radius: 50%;">ER</div>
+                                <div>
+                                    <h5 class="text-white small mb-0">Elena Rostova</h5>
+                                    <span class="text-muted small">Senior Security Analyst</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-12 col-12">
+                        <div class="premium-card">
+                            <div class="mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                            <p class="card-text text-muted italic mb-4">"Open-source, free, and incredibly powerful. The REST API fits perfectly into our existing SOC pipelines."</p>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="user-avatar-circle" style="width: 40px; height: 40px; font-size: 0.9rem; background-color: var(--primary-glow); border: 1px solid var(--border-hover); display: flex; align-items: center; justify-content: center; font-family: var(--font-cyber); font-weight: bold; color: var(--primary); border-radius: 50%;">DK</div>
+                                <div>
+                                    <h5 class="text-white small mb-0">David K.</h5>
+                                    <span class="text-muted small">Director of IT</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SECTION 11: FAQ ACCORDION SECTION
+             ========================================== -->
+        <section id="faqs" class="faq-section reveal-on-scroll">
             <div class="container">
                 <div class="row g-5">
                     <div class="col-lg-4">
@@ -419,7 +533,7 @@
                         <p class="text-muted">General guidelines outlining threat modeling processes, detector accuracy, and organizational setups.</p>
                     </div>
                     <div class="col-lg-8">
-                        <div class="accordion accordion-flush" id="faqAccordion">
+                        <div class="accordion accordion-flush faq-accordion" id="faqAccordion">
                             <!-- Q1 -->
                             <div class="accordion-item">
                                 <h3 class="accordion-header">
@@ -492,16 +606,88 @@
         </section>
 
         <!-- ==========================================
-             SECTION 13: CALL TO ACTION
+             SECTION 12: CALL TO ACTION SECTION
              ========================================== -->
-        <section class="cta-section">
+        <section class="cta-section reveal-on-scroll">
             <div class="container">
                 <div class="cta-box">
                     <h2 class="cta-title">Start Protecting Your Network</h2>
                     <p class="cta-desc text-muted">Establish your analyst credentials, run test diagnostics, and monitor real-time threat intelligence feeds today.</p>
                     <div class="d-flex justify-content-center flex-wrap gap-3">
                         <a href="/register" class="btn-premium-primary btn-lg px-4 py-3">Get Started</a>
-                        <a href="#live-demo" class="btn-premium-outline btn-lg px-4 py-3">Scan Link</a>
+                        <a href="#live-demo" class="btn-premium-outline btn-lg px-4 py-3">Try Live Demo</a>
+                    </div>
+                </div>
+            </div>
+        <!-- ==========================================
+             SECTION 13: CONTACT US SECTION
+             ========================================== -->
+        <section id="contact" class="contact-section reveal-on-scroll py-5">
+            <div class="container">
+                <div class="row g-5 align-items-center">
+                    <!-- Left info panel -->
+                    <div class="col-lg-5 text-start">
+                        <span class="section-tag">Get in Touch</span>
+                        <h2 class="section-title text-start">Connect with our Security Team</h2>
+                        <p class="text-muted mb-4">
+                            Have questions about deployment, custom ML heuristics training, or need threat intelligence API support? Drop us a line and our SOC analysts will respond within 24 hours.
+                        </p>
+                        
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="card-icon m-0" style="width: 48px; height: 48px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;"><i class="fas fa-envelope-open-text"></i></div>
+                            <div>
+                                <h6 class="text-white mb-0">Direct Mail</h6>
+                                <a href="mailto:jesintechnologies@gmail.com" class="text-muted small text-decoration-none">jesintechnologies@gmail.com</a>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="card-icon m-0" style="width: 48px; height: 48px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; color: #0a66c2;"><i class="fab fa-linkedin-in"></i></div>
+                            <div>
+                                <h6 class="text-white mb-0">LinkedIn Profile</h6>
+                                <a href="https://www.linkedin.com/in/jesin-milesh-m-7981bb347/" target="_blank" class="text-muted small text-decoration-none">linkedin.com/in/jesin-milesh-m-7981bb347</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right form panel -->
+                    <div class="col-lg-7">
+                        <div class="premium-card">
+                            <form id="contactForm" novalidate>
+                                <div class="row g-3">
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group text-start">
+                                            <label for="contactName" class="form-label text-muted small">Full Name</label>
+                                            <input type="text" id="contactName" class="form-control bg-dark bg-opacity-30 border border-secondary border-opacity-20 text-white rounded p-2" placeholder="Jane Doe" required style="outline: none; box-shadow: none;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group text-start">
+                                            <label for="contactEmail" class="form-label text-muted small">Email Address</label>
+                                            <input type="email" id="contactEmail" class="form-control bg-dark bg-opacity-30 border border-secondary border-opacity-20 text-white rounded p-2" placeholder="jane@example.com" required style="outline: none; box-shadow: none;">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-group text-start">
+                                            <label for="contactSubject" class="form-label text-muted small">Subject</label>
+                                            <input type="text" id="contactSubject" class="form-control bg-dark bg-opacity-30 border border-secondary border-opacity-20 text-white rounded p-2" placeholder="API Integration Request" style="outline: none; box-shadow: none;">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-group text-start">
+                                            <label for="contactMessage" class="form-label text-muted small">Message Body</label>
+                                            <textarea id="contactMessage" rows="4" class="form-control bg-dark bg-opacity-30 border border-secondary border-opacity-20 text-white rounded p-2" placeholder="Explain your request in detail..." required style="outline: none; box-shadow: none; resize: none;"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 text-start mt-4">
+                                        <button type="submit" id="contactSubmitBtn" class="btn-premium-primary w-100 justify-content-center py-2">
+                                            <span>Send Incident Ticket</span>
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                            <div id="contactResponse" class="mt-3 text-start small d-none"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -516,20 +702,20 @@
         <div class="container">
             <div class="row g-5">
                 <!-- Branding Col -->
-                <div class="col-lg-4">
+                <div class="col-lg-4 col-md-12">
                     <div class="d-flex align-items-center mb-3">
                         <img src="/static/images/logo.svg" alt="AI Shield Logo" style="width: 32px; height: 32px; margin-right: 12px;">
                         <span class="brand-name">AI SHIELD</span>
                     </div>
                     <p class="text-muted small mb-4">Premium enterprise-grade cybersecurity platform detecting phishing networks and visual brand spoofs in real time.</p>
                     <div class="d-flex gap-3">
-                        <a href="https://github.com/jesinmilesh" target="_blank" class="footer-social-link" aria-label="GitHub profile"><i class="fab fa-github"></i></a>
+                        <a href="https://www.linkedin.com/in/jesin-milesh-m-7981bb347/" target="_blank" class="footer-social-link" aria-label="LinkedIn profile"><i class="fab fa-linkedin-in"></i></a>
                         <a href="mailto:jesintechnologies@gmail.com" class="footer-social-link" aria-label="Send email"><i class="fas fa-envelope"></i></a>
                     </div>
                 </div>
                 
                 <!-- Quick links -->
-                <div class="col-md-3 col-6 offset-lg-1">
+                <div class="col-lg-3 col-md-6 col-6">
                     <h5 class="text-white small mb-3" style="font-family: var(--font-cyber); letter-spacing: 1.5px;">PLATFORM</h5>
                     <ul class="list-unstyled">
                         <li class="mb-2"><a href="#features" class="footer-link">Features</a></li>
@@ -539,29 +725,46 @@
                 </div>
                 
                 <!-- Legal -->
-                <div class="col-md-3 col-6">
+                <div class="col-lg-3 col-md-6 col-6">
                     <h5 class="text-white small mb-3" style="font-family: var(--font-cyber); letter-spacing: 1.5px;">RESOURCES</h5>
                     <ul class="list-unstyled">
                         <li class="mb-2"><a href="/login" class="footer-link">Analyst Login</a></li>
                         <li class="mb-2"><a href="/register" class="footer-link">Register Node</a></li>
-                        <li class="mb-2"><a href="https://github.com/jesinmilesh/phishing_detector" class="footer-link" target="_blank">Documentation</a></li>
-                        <li class="mb-2"><a href="https://github.com/jesinmilesh/phishing_detector" class="footer-link" target="_blank">Privacy &amp; Terms</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">Documentation</a></li>
+                        <li class="mb-2"><a href="#" class="footer-link">Privacy &amp; Terms</a></li>
                     </ul>
                 </div>
                 
                 <!-- Tagline instead of newsletter -->
                 <div class="col-lg-12">
                     <div class="border-top border-secondary border-opacity-10 pt-5 mt-4 text-center">
-                        <p class="text-muted small mb-0">Built with ❤️ for cybersecurity</p>
+                        <p class="text-muted small text-center mt-4">
+                            Built with cybersecurity community. Open-source & free forever.
+                        </p>
                     </div>
                 </div>
             </div>
             
             <div class="text-center text-muted small mt-5 pt-4 border-top border-secondary border-opacity-5">
                 <p class="mb-0">&copy; 2026 TR-PHISH Security Operations Center. Real-Time AI Phishing Detection System. All rights reserved.</p>
+                <div class="mt-3 d-flex justify-content-center align-items-center gap-2">
+                    <span class="badge bg-dark bg-opacity-40 text-muted border border-secondary border-opacity-10 px-3 py-2 rounded-pill" style="font-family: var(--font-cyber); font-size: 0.8rem;">
+                        <span class="live-dot" style="background-color: #3b82f6; width: 6px; height: 6px; margin-right: 8px;"></span>
+                        REAL-TIME VISITORS: <span id="visitCount" class="text-white fw-bold ms-1">0</span>
+                    </span>
+                </div>
             </div>
         </div>
     </footer>
+
+    <!-- Scroll-to-top Button -->
+    <button id="scrollTopBtn" aria-label="Scroll to top"
+      style="display:none; position:fixed; bottom:2rem; right:2rem; z-index:999;
+      width:42px; height:42px; border-radius:50%; border:1px solid rgba(59,130,246,0.3);
+      background:rgba(15,23,42,0.9); color:#60a5fa; cursor:pointer;
+      backdrop-filter:blur(8px); transition:all 0.3s ease;">
+      <i class="fas fa-chevron-up"></i>
+    </button>
 
     <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

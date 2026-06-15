@@ -47,13 +47,13 @@
                         <a class="soc-nav-link active" href="/scanner"><i class="fas fa-shield-halved"></i> Threat Analysis</a>
                     </li>
                     <li class="nav-item">
-                        <a class="soc-nav-link" href="/dashboard"><i class="fas fa-rss"></i> Threat Intelligence</a>
+                        <a class="soc-nav-link" href="/analytics"><i class="fas fa-chart-pie"></i> Analytics</a>
                     </li>
                     <li class="nav-item">
                         <a class="soc-nav-link" href="/history"><i class="fas fa-file-invoice"></i> Reports</a>
                     </li>
                     <li class="nav-item">
-                        <a class="soc-nav-link" href="/history"><i class="fas fa-box-archive"></i> History</a>
+                        <a class="soc-nav-link" href="/scan_history"><i class="fas fa-box-archive"></i> HistoryLog</a>
                     </li>
                 </ul>
                 
@@ -294,21 +294,6 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link scan-tab-btn" id="email-scan-tab" data-bs-toggle="tab" data-bs-target="#email-scan" type="button" role="tab" aria-controls="email-scan" aria-selected="false">
-                        <i class="fas fa-envelope-open-text"></i> Email Scanner
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link scan-tab-btn" id="qr-scan-tab" data-bs-toggle="tab" data-bs-target="#qr-scan" type="button" role="tab" aria-controls="qr-scan" aria-selected="false">
-                        <i class="fas fa-qrcode"></i> QR Scanner
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link scan-tab-btn" id="screenshot-tab" data-bs-toggle="tab" data-bs-target="#screenshot" type="button" role="tab" aria-controls="screenshot" aria-selected="false">
-                        <i class="fas fa-desktop"></i> Screenshot Analysis
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
                     <button class="nav-link scan-tab-btn" id="domain-intel-tab" data-bs-toggle="tab" data-bs-target="#domain-intel" type="button" role="tab" aria-controls="domain-intel" aria-selected="false">
                         <i class="fas fa-shield-halved"></i> Domain Intelligence
                     </button>
@@ -349,102 +334,7 @@
                     <div id="url-result" class="mt-4 d-none"></div>
                 </div>
 
-                <!-- 2. Email Scanner Sheet -->
-                <div class="tab-pane fade" id="email-scan" role="tabpanel" aria-labelledby="email-scan-tab">
-                    <h3 class="tab-pane-title"><i class="fas fa-envelope-open-text"></i> Email Header & Spam Entropy Check</h3>
-                    <p class="tab-pane-desc">Audit raw email text templates or drop direct .eml file streams to identify spoofs and verify DKIM records.</p>
-                    
-                    <form id="emailScanForm" enctype="multipart/form-data" aria-label="Email Scan Form">
-                        <div class="row g-3">
-                            <div class="col-md-7">
-                                <label for="emailTextInput" class="form-label text-muted small fw-semibold">PASTE BODY CONTENT</label>
-                                <textarea id="emailTextInput" class="form-control bg-dark border-secondary border-opacity-20 text-white rounded-3 small p-3" rows="6" placeholder="Paste suspicious email headers and message body here..."></textarea>
-                            </div>
-                            <div class="col-md-5">
-                                <label class="form-label text-muted small fw-semibold">OR DROP RAW EML FILE</label>
-                                <div class="file-drop-zone" onclick="document.getElementById('emlFileInput').click()">
-                                    <i class="fas fa-file-arrow-up text-muted fs-3 mb-2"></i>
-                                    <span class="d-block small text-white">Click or Drag EML File</span>
-                                    <span class="text-muted small" style="font-size:0.7rem">Valid formats: .eml</span>
-                                    <input type="file" id="emlFileInput" class="d-none" accept=".eml">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-3 text-end">
-                            <button type="submit" class="btn-search-soc"><i class="fas fa-envelope-open-text"></i> ANALYZE EMAIL CORPUS</button>
-                        </div>
-                    </form>
-
-                    <!-- Loader -->
-                    <div id="email-loading" class="scanning-container mt-4 d-none text-center p-4 rounded bg-black bg-opacity-20 border border-info border-opacity-10">
-                        <div class="scan-line"></div>
-                        <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
-                        <h4 class="brand-font text-info fs-6">EVALUATING SENDER AUTHS & WORD FREQUENCY...</h4>
-                    </div>
-
-                    <!-- Results Sheet -->
-                    <div id="email-result" class="mt-4 d-none"></div>
-                </div>
-
-                <!-- 3. QR Code Scanner Sheet -->
-                <div class="tab-pane fade" id="qr-scan" role="tabpanel" aria-labelledby="qr-scan-tab">
-                    <h3 class="tab-pane-title"><i class="fas fa-qrcode"></i> QR Code Matrix Decoder</h3>
-                    <p class="tab-pane-desc">Upload a high-resolution QR image payload to decode embedded link redirects and verify target safety levels.</p>
-                    
-                    <form id="qrScanForm" enctype="multipart/form-data" aria-label="QR Scan Form">
-                        <div class="file-drop-zone mx-auto" style="max-width: 500px;" onclick="document.getElementById('qrFileInput').click()">
-                            <i class="fas fa-qrcode text-muted fs-2 mb-2"></i>
-                            <span class="d-block small text-white">Select QR Code Image Payload</span>
-                            <span class="text-muted small" style="font-size:0.7rem">PNG, JPG, JPEG, GIF formats supported</span>
-                            <input type="file" id="qrFileInput" class="d-none" accept="image/*" required>
-                        </div>
-                        <div class="mt-3 text-center">
-                            <button type="submit" class="btn-search-soc"><i class="fas fa-qrcode"></i> DECODE & AUDIT LINK</button>
-                        </div>
-                    </form>
-
-                    <!-- Loader -->
-                    <div id="qr-loading" class="scanning-container mt-4 d-none text-center p-4 rounded bg-black bg-opacity-20 border border-info border-opacity-10">
-                        <div class="scan-line"></div>
-                        <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
-                        <h4 class="brand-font text-info fs-6">EXTRACTING URL MATRIX DATA...</h4>
-                    </div>
-
-                    <!-- Results Sheet -->
-                    <div id="qr-result" class="mt-4 d-none"></div>
-                </div>
-
-                <!-- 4. Screenshot Sandbox Sheet -->
-                <div class="tab-pane fade" id="screenshot" role="tabpanel" aria-labelledby="screenshot-tab">
-                    <h3 class="tab-pane-title"><i class="fas fa-desktop"></i> Visual Impersonation & Spoofing Sandbox</h3>
-                    <p class="tab-pane-desc">Launch a sandbox environment to take a screenshot and analyze visual similarity to corporate banking portals.</p>
-                    
-                    <form id="screenshotForm" class="search-wrapper-soc" aria-label="Screenshot Form">
-                        <i class="fas fa-desktop main-icon"></i>
-                        <input type="text" id="screenshotUrlInput" placeholder="Enter target site URL (e.g. http://secure-login-chase-update.com)" required>
-                        <button type="submit" class="btn-search-soc">DETECT VISUAL SPOOF</button>
-                    </form>
-                    
-                    <!-- Suggestions Box -->
-                    <div class="suggestions-box">
-                        <span class="small text-muted font-monospace me-1">Targets:</span>
-                        <button class="suggestion-chip" type="button" data-fill="http://paypal-verification.com">paypal-verification.com</button>
-                        <button class="suggestion-chip" type="button" data-fill="https://github.com">github.com</button>
-                    </div>
-
-                    <!-- Loader -->
-                    <div id="ss-loading" class="scanning-container mt-4 d-none text-center p-4 rounded bg-black bg-opacity-20 border border-info border-opacity-10">
-                        <div class="scan-line"></div>
-                        <i class="fas fa-spinner fa-spin fa-2x text-info mb-3"></i>
-                        <h4 class="brand-font text-info fs-6">CAPTURING SURFACE RENDERING IMAGE...</h4>
-                        <p class="text-secondary small mb-0">Running computer vision comparison algorithms</p>
-                    </div>
-
-                    <!-- Results Sheet -->
-                    <div id="ss-result" class="mt-4 d-none"></div>
-                </div>
-
-                <!-- 5. Domain Intelligence Sheet (New 5th Tab) -->
+                <!-- 2. Domain Intelligence Sheet -->
                 <div class="tab-pane fade" id="domain-intel" role="tabpanel" aria-labelledby="domain-intel-tab">
                     <h3 class="tab-pane-title"><i class="fas fa-shield-halved"></i> Domain Reputation & Threat Indicators</h3>
                     <p class="tab-pane-desc">Check domain name system records, registrar details, authority certificates, and blacklist reputation indexes.</p>

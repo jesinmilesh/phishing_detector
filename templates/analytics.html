@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>AI Shield SOC - Advanced Platform Analytics</title>
+    <link rel="shortcut icon" href="/static/icons/favicon.ico" type="image/x-icon">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Theme CSS -->
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/static/css/dashboard.css" rel="stylesheet">
+    <link href="/static/css/analytics.css" rel="stylesheet">
+</head>
+<body class="soc-theme">
+
+    <div class="soc-wrapper">
+        <!-- Sidebar overlay for mobile drawer -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- LEFT SIDEBAR -->
+        <aside class="soc-sidebar" id="socSidebar">
+            <div class="sidebar-header">
+                <a href="/scanner" class="sidebar-brand">
+                    <img src="/static/images/logo.svg" alt="AI Shield Logo">
+                    <span>AI SHIELD</span>
+                </a>
+                <button class="sidebar-toggle-inner" id="sidebarToggleInner" aria-label="Collapse Sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-menu">
+                <!-- Core Command Center -->
+                <div class="menu-group">
+                    <div class="menu-group-title">Command Center</div>
+                    <a href="/dashboard" class="sidebar-nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>SOC Dashboard</span>
+                    </a>
+                    <a href="/scanner" class="sidebar-nav-link">
+                        <i class="fas fa-shield-halved"></i>
+                        <span>Threat Analysis</span>
+                    </a>
+                    <a href="/analytics" class="sidebar-nav-link active">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Platform Analytics</span>
+                    </a>
+                </div>
+
+                <!-- Threat Intelligence -->
+                <div class="menu-group">
+                    <div class="menu-group-title">Intelligence</div>
+                    <a href="/scan_history" class="sidebar-nav-link">
+                        <i class="fas fa-history"></i>
+                        <span>Scan History</span>
+                    </a>
+                    <a href="/history" class="sidebar-nav-link">
+                        <i class="fas fa-box-archive"></i>
+                        <span>Reports Center</span>
+                    </a>
+                </div>
+
+                <!-- Profile -->
+                <div class="menu-group">
+                    <div class="menu-group-title">Configuration</div>
+                    <a href="/profile" class="sidebar-nav-link">
+                        <i class="fas fa-user-gear"></i>
+                        <span>Analyst Profile</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Profile Footer -->
+            <div class="sidebar-footer-profile">
+                <div class="analyst-avatar-container">
+                    <img src="{{ user.avatar_path or '/static/images/default_avatar.png' }}" alt="Avatar" class="avatar-img">
+                </div>
+                <div class="analyst-meta">
+                    <div class="analyst-name">{{ user.username }}</div>
+                    <div class="analyst-role">SOC analyst</div>
+                </div>
+                <a href="/logout" class="logout-btn-link" title="Logout session">
+                    <i class="fas fa-power-off"></i>
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN LAYOUT SPACE -->
+        <main class="soc-main-panel">
+            <!-- HEADER -->
+            <header class="soc-top-bar">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="sidebar-toggle-mobile" id="sidebarToggleMobile" aria-label="Toggle Sidebar Menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div>
+                        <h1 class="soc-page-title mb-1">PLATFORM ANALYTICS</h1>
+                        <p class="soc-page-subtitle mb-0">Unified security telemetry, machine learning precision diagnostics and threat timelines.</p>
+                    </div>
+                </div>
+                
+                <div class="soc-top-bar-actions">
+                    <div class="analyst-badge">
+                        <i class="fas fa-shield-halved text-info"></i>
+                        <span>SEC-OPS ACTIVE</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- ANALYTICS METRIC CARDS -->
+            <div class="metrics-grid mb-4">
+                <!-- Total URLs -->
+                <div class="metric-card glass-metric">
+                    <div class="metric-card-header">
+                        <span class="metric-title">TOTAL ANALYZED</span>
+                        <div class="metric-icon-box blue"><i class="fas fa-globe"></i></div>
+                    </div>
+                    <div class="metric-value">{{ data.total_scans }}</div>
+                    <div class="metric-footer text-muted">Scan requests received</div>
+                </div>
+
+                <!-- Phishing -->
+                <div class="metric-card glass-metric">
+                    <div class="metric-card-header">
+                        <span class="metric-title">PHISHING BLOCKLISTED</span>
+                        <div class="metric-icon-box red"><i class="fas fa-bug"></i></div>
+                    </div>
+                    <div class="metric-value text-danger">{{ data.phishing_count }}</div>
+                    <div class="metric-footer text-danger-opacity">Verified phishing signatures</div>
+                </div>
+
+                <!-- Suspicious -->
+                <div class="metric-card glass-metric">
+                    <div class="metric-card-header">
+                        <span class="metric-title">SUSPICIOUS ANOMALIES</span>
+                        <div class="metric-icon-box yellow"><i class="fas fa-triangle-exclamation"></i></div>
+                    </div>
+                    <div class="metric-value text-warning">{{ data.suspicious_count }}</div>
+                    <div class="metric-footer text-warning-opacity">Elevated risk scores</div>
+                </div>
+
+                <!-- Safe -->
+                <div class="metric-card glass-metric">
+                    <div class="metric-card-header">
+                        <span class="metric-title">VERIFIED LEGITIMATE</span>
+                        <div class="metric-icon-box green"><i class="fas fa-circle-check"></i></div>
+                    </div>
+                    <div class="metric-value text-success">{{ data.legitimate_count }}</div>
+                    <div class="metric-footer text-success-opacity">Clean lexical and SSL markers</div>
+                </div>
+            </div>
+
+            <div class="metrics-grid mb-4">
+                <!-- Avg Risk Score -->
+                <div class="metric-card glass-metric">
+                    <div class="metric-card-header">
+                        <span class="metric-title">AVERAGE RISK PROFILE</span>
+                        <div class="metric-icon-box purple"><i class="fas fa-gauge"></i></div>
+                    </div>
+                    <div class="metric-value">{{ data.avg_risk_score }}%</div>
+                    <div class="metric-footer text-muted">Platform-wide threat rating</div>
+                </div>
+
+                <!-- Accuracy -->
+                <div class="metric-card glass-metric">
+                    <div class="metric-card-header">
+                        <span class="metric-title">CLASSIFIER ACCURACY</span>
+                        <div class="metric-icon-box teal"><i class="fas fa-crosshairs"></i></div>
+                    </div>
+                    <div class="metric-value text-info">{{ data.detection_accuracy }}%</div>
+                    <div class="metric-footer text-muted">Model confidence rating</div>
+                </div>
+
+                <!-- Threat Intel Hits -->
+                <div class="metric-card glass-metric">
+                    <div class="metric-card-header">
+                        <span class="metric-title">THREAT INTEL ALERTS</span>
+                        <div class="metric-icon-box coral"><i class="fas fa-bolt"></i></div>
+                    </div>
+                    <div class="metric-value text-danger">{{ data.threat_intel_hits }}</div>
+                    <div class="metric-footer text-muted">Blacklist feed correlation hits</div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS CHARTS PANEL -->
+            <div class="row g-4 mb-4">
+                <!-- Chart 1: Threat trends -->
+                <div class="col-lg-8 col-md-12">
+                    <div class="soc-card-premium">
+                        <div class="soc-card-header">
+                            <h2 class="soc-card-title"><i class="fas fa-chart-area"></i> Threat Detection Trends</h2>
+                            <span class="text-muted small">Daily distribution</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="threatTrendsChart" data-trends="{{ data.daily_trends|tojson }}"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chart 2: Risk distribution -->
+                <div class="col-lg-4 col-md-12">
+                    <div class="soc-card-premium">
+                        <div class="soc-card-header">
+                            <h2 class="soc-card-title"><i class="fas fa-chart-pie"></i> Risk Distribution</h2>
+                            <span class="text-muted small">By category</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="riskDistributionChart" 
+                                    data-phishing="{{ data.phishing_count }}"
+                                    data-suspicious="{{ data.suspicious_count }}"
+                                    data-legitimate="{{ data.legitimate_count }}"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <!-- Chart 3: Scan Volume -->
+                <div class="col-lg-6 col-md-12">
+                    <div class="soc-card-premium">
+                        <div class="soc-card-header">
+                            <h2 class="soc-card-title"><i class="fas fa-chart-bar"></i> Scan Activity Volume</h2>
+                            <span class="text-muted small">7-day timeline logs</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="scanVolumeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Accuracy Gauge -->
+                <div class="col-lg-6 col-md-12">
+                    <div class="soc-card-premium">
+                        <div class="soc-card-header">
+                            <h2 class="soc-card-title"><i class="fas fa-gauge-high"></i> Model Diagnostics & Performance</h2>
+                            <span class="text-muted small">Verification parameters</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="modelDiagnosticsChart" data-accuracy="{{ data.detection_accuracy }}"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TIMELINE LIST -->
+            <div class="soc-card-premium">
+                <div class="soc-card-header">
+                    <h2 class="soc-card-title"><i class="fas fa-clock"></i> Threat Activity Timeline</h2>
+                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-30 small">LIVE RESOLVED EVENTS</span>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Scan Target URL</th>
+                                <th>Verdict</th>
+                                <th>Risk Rating</th>
+                                <th>Operator Node</th>
+                                <th>Timestamp</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in data.timeline %}
+                            <tr>
+                                <td><code class="text-info text-break font-monospace small">{{ log.url }}</code></td>
+                                <td>
+                                    {% if log.prediction == 'Phishing' %}
+                                        <span class="badge bg-danger text-white border border-danger">PHISHING</span>
+                                    {% elif log.prediction == 'Suspicious' %}
+                                        <span class="badge bg-warning text-dark border border-warning">SUSPICIOUS</span>
+                                    {% else %}
+                                        <span class="badge bg-success text-white border border-success">LEGITIMATE</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress w-100 bg-secondary bg-opacity-25" style="height: 6px;">
+                                            <div class="progress-bar {% if log.prediction == 'Phishing' %}bg-danger{% elif log.prediction == 'Suspicious' %}bg-warning{% else %}bg-success{% endif %}" 
+                                                 role="progressbar" style="width: {{ log.risk_score }}%"></div>
+                                        </div>
+                                        <span class="small font-monospace fw-bold">{{ log.risk_score }}%</span>
+                                    </div>
+                                </td>
+                                <td><span class="text-white small"><i class="fas fa-terminal text-muted me-1"></i>{{ log.username or 'API Node' }}</span></td>
+                                <td><span class="text-muted small">{{ log.scan_time }}</span></td>
+                                <td class="text-end">
+                                    <a href="/report_detail/{{ log.id }}" class="btn btn-outline-info btn-xs py-1 px-2"><i class="fas fa-magnifying-glass-chart me-1"></i> Details</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No security telemetry records logged yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ChartJS and Bootstrap scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/analytics.js"></script>
+</body>
+</html>
