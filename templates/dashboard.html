@@ -23,6 +23,9 @@
 <body class="soc-theme">
 
     <div class="soc-wrapper">
+        <!-- Sidebar overlay for mobile drawer backdrop -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
         <!-- LEFT SIDEBAR -->
         <aside class="soc-sidebar" id="socSidebar">
             <div class="sidebar-header">
@@ -47,10 +50,6 @@
                         <i class="fas fa-shield-halved"></i>
                         <span>Threat Analysis</span>
                     </a>
-                    <a href="/scanner" class="sidebar-nav-link">
-                        <i class="fas fa-magnifying-glass"></i>
-                        <span>URL Scanner</span>
-                    </a>
                 </div>
 
                 <!-- Threat Intelligence -->
@@ -62,11 +61,7 @@
                     </a>
                     <a href="/history" class="sidebar-nav-link">
                         <i class="fas fa-box-archive"></i>
-                        <span>Scans Archive</span>
-                    </a>
-                    <a href="/history" class="sidebar-nav-link">
-                        <i class="fas fa-file-invoice"></i>
-                        <span>Reports Registry</span>
+                        <span>Scan Archive</span>
                     </a>
                 </div>
 
@@ -76,10 +71,6 @@
                     <a href="/profile" class="sidebar-nav-link">
                         <i class="fas fa-user-gear"></i>
                         <span>Analyst Profile</span>
-                    </a>
-                    <a href="/profile" class="sidebar-nav-link">
-                        <i class="fas fa-sliders"></i>
-                        <span>SOC Settings</span>
                     </a>
                 </div>
             </div>
@@ -104,10 +95,6 @@
                     <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle Sidebar Menu">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <!-- Mobile Hamburger -->
-                    <button class="btn d-md-none text-white p-0 fs-4" id="mobileSidebarToggle" aria-label="Mobile Navigation Toggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
                     
                     <!-- Search Bar -->
                     <div class="topnav-search">
@@ -120,7 +107,7 @@
                     <!-- Live Time clock -->
                     <div class="system-clock" id="socClockContainer">
                         <i class="fas fa-clock text-info"></i>
-                        <span id="socClock">2026-06-14 00:00:00 UTC</span>
+                        <span id="socClock">Loading...</span>
                     </div>
 
                     <!-- Theme Toggle -->
@@ -462,7 +449,7 @@
                                         </div>
                                     </div>
                                     {% endfor %}
-                                {% else %}
+                                  {% else %}
                                     <div class="text-center text-muted py-5">
                                         <i class="fas fa-rss-square fa-2x mb-3 text-secondary-subtle"></i>
                                         <p class="small">No indicators received from OpenPhish network nodes.</p>

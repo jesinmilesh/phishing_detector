@@ -756,25 +756,7 @@ h1, h2, h3, h4, h5, h6, .brand-title {
     }
 
     .auth-visual-pane {
-        flex: none;
-        width: 100%;
-        padding: 3rem 2rem 1.5rem 2rem;
-        border-right: none;
-        border-bottom: 1px solid var(--card-border);
-    }
-    
-    .illustration-wrapper {
-        max-width: 200px;
-        margin-bottom: 1.5rem;
-    }
-    
-    .visual-marketing-title {
-        font-size: 1.35rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .visual-marketing-desc {
-        font-size: 0.875rem;
+        display: none !important;
     }
 
     .auth-form-pane {

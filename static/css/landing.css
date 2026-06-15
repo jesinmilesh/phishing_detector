@@ -842,7 +842,11 @@ p {
 /* Responsive adjustments */
 @media (max-width: 991.98px) {
     .hero-title {
-        font-size: 2.75rem;
+        font-size: 2.5rem;
+    }
+    .hero-float-img {
+        max-width: 380px;
+        margin-top: 2rem;
     }
     .timeline-line {
         left: 30px;
@@ -866,9 +870,25 @@ p {
     }
 }
 
+@media (max-width: 768px) {
+    .counter-val {
+        font-size: 1.85rem;
+    }
+    .counter-label {
+        font-size: 0.65rem;
+    }
+}
+
 @media (max-width: 575.98px) {
     .hero-title {
-        font-size: 2.25rem;
+        font-size: 1.85rem;
+        line-height: 1.25;
+    }
+    .hero-float-img {
+        max-width: 260px;
+    }
+    .counter-val {
+        font-size: 1.5rem;
     }
     .cta-title {
         font-size: 2rem;

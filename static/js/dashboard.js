@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('socSidebar');
     const sidebarToggleBtn = document.getElementById('sidebarToggle');
     const sidebarToggleInner = document.getElementById('sidebarToggleInner');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
     const mainContent = document.querySelector('.soc-main-content');
     
     // Restore sidebar state from localStorage
@@ -32,10 +33,19 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebar.classList.add('collapsed');
     }
 
-    function toggleSidebar() {
+    function toggleSidebar(e) {
+        if (e) e.stopPropagation();
         if (!sidebar) return;
-        sidebar.classList.toggle('collapsed');
-        localStorage.setItem('soc_sidebar_collapsed', sidebar.classList.contains('collapsed'));
+        
+        if (window.innerWidth <= 992) {
+            sidebar.classList.toggle('mobile-open');
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.toggle('active');
+            }
+        } else {
+            sidebar.classList.toggle('collapsed');
+            localStorage.setItem('soc_sidebar_collapsed', sidebar.classList.contains('collapsed'));
+        }
         
         // Trigger resize event to force Chart.js charts to redimension smoothly
         setTimeout(() => {
@@ -50,25 +60,14 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarToggleInner.addEventListener('click', toggleSidebar);
     }
 
-    // Mobile Hamburger Support
-    const mobileToggle = document.getElementById('mobileSidebarToggle');
-    if (mobileToggle) {
-        mobileToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
             if (sidebar) {
-                sidebar.classList.toggle('show-mobile');
+                sidebar.classList.remove('mobile-open');
             }
+            sidebarOverlay.classList.remove('active');
         });
     }
-
-    // Close mobile sidebar when clicking outside
-    document.addEventListener('click', (e) => {
-        if (sidebar && sidebar.classList.contains('show-mobile')) {
-            if (!sidebar.contains(e.target) && (!mobileToggle || !mobileToggle.contains(e.target))) {
-                sidebar.classList.remove('show-mobile');
-            }
-        }
-    });
 
     // ----------------------------------------------------
     // 3. SYSTEM CLOCK LOGIC

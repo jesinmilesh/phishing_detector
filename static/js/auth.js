@@ -59,7 +59,7 @@ function initPasswordToggles() {
  * Setup global loading overlay triggers
  */
 function showLoading(form) {
-    const overlay = form.querySelector('.loading-overlay');
+    const overlay = form.querySelector('.loading-overlay') || form.closest('.auth-glass-card')?.querySelector('.loading-overlay');
     if (overlay) {
         overlay.style.display = 'flex';
         overlay.setAttribute('aria-hidden', 'false');
@@ -67,7 +67,6 @@ function showLoading(form) {
     const submitBtn = form.querySelector('button[type="submit"]');
     if (submitBtn) {
         submitBtn.disabled = true;
-        // Keep original content if stored, or save it
         if (!submitBtn.dataset.originalHtml) {
             submitBtn.dataset.originalHtml = submitBtn.innerHTML;
         }
@@ -76,7 +75,7 @@ function showLoading(form) {
 }
 
 function hideLoading(form) {
-    const overlay = form.querySelector('.loading-overlay');
+    const overlay = form.querySelector('.loading-overlay') || form.closest('.auth-glass-card')?.querySelector('.loading-overlay');
     if (overlay) {
         overlay.style.display = 'none';
         overlay.setAttribute('aria-hidden', 'true');
