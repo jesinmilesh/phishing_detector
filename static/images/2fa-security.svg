@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%" fill="none">
+    <defs>
+        <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#3B82F6" />
+            <stop offset="100%" stop-color="#1D4ED8" />
+        </linearGradient>
+        <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#22D3EE" />
+            <stop offset="100%" stop-color="#0891B2" />
+        </linearGradient>
+        <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.12" />
+            <stop offset="100%" stop-color="#0F172A" stop-opacity="0" />
+        </radialGradient>
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+    </defs>
+
+    <style>
+        .float-slow {
+            animation: float 6s ease-in-out infinite;
+        }
+        .pulse-slow {
+            animation: pulse 3s ease-in-out infinite;
+        }
+        .rotate-cw {
+            transform-origin: 400px 400px;
+            animation: rot-cw 25s linear infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+        }
+        @keyframes rot-cw {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
+    <!-- Grid lines -->
+    <g opacity="0.08">
+        <path d="M 200 0 L 200 800 M 400 0 L 400 800 M 600 0 L 600 800" fill="none" stroke="#60A5FA" stroke-width="0.5" />
+        <path d="M 0 200 L 800 200 M 0 400 L 800 400 M 0 600 L 800 600" fill="none" stroke="#60A5FA" stroke-width="0.5" />
+    </g>
+
+    <circle class="pulse-slow" cx="400" cy="400" r="300" fill="url(#centerGlow)" />
+
+    <!-- Tech rotation ring -->
+    <g class="rotate-cw" opacity="0.4">
+        <circle cx="400" cy="400" r="250" stroke="url(#primaryGrad)" stroke-width="1.5" stroke-dasharray="30 40" />
+        <circle cx="400" cy="400" r="190" stroke="url(#cyanGrad)" stroke-width="1.5" stroke-dasharray="100 120" />
+    </g>
+
+    <!-- Authenticator / Clock verification node -->
+    <g class="float-slow">
+        <!-- Main Circular base node -->
+        <circle cx="400" cy="400" r="105" fill="#1E293B" stroke="url(#primaryGrad)" stroke-width="2.5" filter="url(#glow)" />
+        <circle cx="400" cy="400" r="90" fill="none" stroke="url(#cyanGrad)" stroke-width="1" stroke-dasharray="6 8" />
+
+        <!-- Verification code mock display inside node -->
+        <!-- We use beautiful vector typography representation -->
+        <text x="400" y="390" text-anchor="middle" font-family="'Poppins', sans-serif" font-size="28" font-weight="700" fill="#22D3EE" letter-spacing="4" filter="url(#glow)">0 7 2</text>
+        <text x="400" y="425" text-anchor="middle" font-family="'Poppins', sans-serif" font-size="28" font-weight="700" fill="#22D3EE" letter-spacing="4" filter="url(#glow)">9 4 5</text>
+        
+        <!-- Interactive Timer Arc around base node -->
+        <path d="M 400,285 A 115,115 0 1,1 320,320" fill="none" stroke="url(#cyanGrad)" stroke-width="4.5" stroke-linecap="round" filter="url(#glow)" />
+        <circle cx="320" cy="320" r="5" fill="#F8FAFC" />
+    </g>
+</svg>

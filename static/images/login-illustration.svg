@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%" fill="none">
+    <defs>
+        <!-- Gradients -->
+        <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#60A5FA" />
+            <stop offset="100%" stop-color="#2563EB" />
+        </linearGradient>
+        <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#22D3EE" />
+            <stop offset="100%" stop-color="#0891B2" />
+        </linearGradient>
+        <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.1" />
+            <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.01" />
+        </linearGradient>
+        <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.18" />
+            <stop offset="100%" stop-color="#0F172A" stop-opacity="0" />
+        </radialGradient>
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+    </defs>
+
+    <style>
+        .float-slow {
+            animation: float 6s ease-in-out infinite;
+        }
+        .pulse-slow {
+            animation: pulse 4s ease-in-out infinite;
+        }
+        .rotate-cw {
+            transform-origin: 400px 400px;
+            animation: rot-cw 40s linear infinite;
+        }
+        .rotate-ccw {
+            transform-origin: 400px 400px;
+            animation: rot-ccw 30s linear infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.98); transform-origin: 400px 400px; }
+            50% { opacity: 0.6; transform: scale(1.02); transform-origin: 400px 400px; }
+        }
+        @keyframes rot-cw {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes rot-ccw {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+        }
+    </style>
+
+    <!-- Grid and Dots (Subtle security pattern) -->
+    <g opacity="0.1">
+        <path d="M 100 0 L 100 800 M 200 0 L 200 800 M 300 0 L 300 800 M 400 0 L 400 800 M 500 0 L 500 800 M 600 0 L 600 800 M 700 0 L 700 800" fill="none" stroke="#60A5FA" stroke-width="0.5" />
+        <path d="M 0 100 L 800 100 M 0 200 L 800 200 M 0 300 L 800 300 M 0 400 L 800 400 M 0 500 L 800 500 M 0 600 L 800 600 M 0 700 L 800 700" fill="none" stroke="#60A5FA" stroke-width="0.5" />
+    </g>
+
+    <circle class="pulse-slow" cx="400" cy="400" r="300" fill="url(#centerGlow)" />
+
+    <!-- Tech Rings (Cloudflare / Stripe style) -->
+    <g class="rotate-cw" opacity="0.4">
+        <circle cx="400" cy="400" r="280" stroke="url(#primaryGrad)" stroke-width="1.5" stroke-dasharray="10 20" />
+        <circle cx="400" cy="400" r="220" stroke="url(#cyanGrad)" stroke-width="1" stroke-dasharray="80 120" />
+    </g>
+    <g class="rotate-ccw" opacity="0.3">
+        <circle cx="400" cy="400" r="250" stroke="url(#primaryGrad)" stroke-width="1" stroke-dasharray="40 60" />
+        <circle cx="400" cy="400" r="190" stroke="url(#cyanGrad)" stroke-width="1.5" stroke-dasharray="5 15" />
+    </g>
+
+    <!-- Visual Shield Graphic (floating) -->
+    <g class="float-slow">
+        <!-- Outer Shield Path -->
+        <path d="M 400,200 L 540,250 V 440 C 540,540 400,620 400,620 C 400,620 260,540 260,440 V 250 Z" 
+              fill="url(#shieldGrad)" stroke="url(#primaryGrad)" stroke-width="2.5" filter="url(#glow)" />
+        
+        <!-- Inner Accent Shield -->
+        <path d="M 400,225 L 515,267 V 430 C 515,515 400,582 400,582 C 400,582 285,515 285,430 V 267 Z" 
+              fill="none" stroke="url(#cyanGrad)" stroke-width="1.5" stroke-opacity="0.6" stroke-dasharray="8 4" />
+
+        <!-- Biometric lock core -->
+        <circle cx="400" cy="410" r="55" fill="#1E293B" fill-opacity="0.85" stroke="url(#primaryGrad)" stroke-width="1.5" />
+        <circle cx="400" cy="410" r="45" fill="none" stroke="url(#cyanGrad)" stroke-width="1" stroke-dasharray="6 8" />
+
+        <!-- Lock icon vector -->
+        <path d="M 382,400 V 385 C 382,375 390,367 400,367 C 410,367 418,375 418,385 V 400" 
+              fill="none" stroke="url(#cyanGrad)" stroke-width="4.5" stroke-linecap="round" />
+        <rect x="370" y="398" width="60" height="42" rx="6" fill="url(#primaryGrad)" filter="url(#glow)" />
+        <!-- Keyhole node -->
+        <circle cx="400" cy="416" r="4" fill="#1E293B" />
+        <path d="M 400,420 V 430" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round" />
+    </g>
+
+    <!-- Cybersecurity Grid connection dots -->
+    <g opacity="0.6">
+        <circle cx="100" cy="200" r="3" fill="#60A5FA" />
+        <circle cx="700" cy="200" r="3" fill="#34D399" />
+        <circle cx="150" cy="600" r="4" fill="#3B82F6" />
+        <circle cx="680" cy="580" r="3.5" fill="#60A5FA" />
+        
+        <!-- Connection lines -->
+        <line x1="100" y1="200" x2="260" y2="350" stroke="#60A5FA" stroke-width="0.5" stroke-dasharray="4 4" />
+        <line x1="700" y1="200" x2="540" y2="350" stroke="#34D399" stroke-width="0.5" stroke-dasharray="4 4" />
+    </g>
+</svg>

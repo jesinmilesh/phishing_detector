@@ -75,6 +75,12 @@
                         <i class="fas fa-user-gear"></i>
                         <span>Analyst Profile</span>
                     </a>
+                    {% if session.get('user', {}).get('role') == 'admin' %}
+                    <a href="/admin/ml" class="sidebar-nav-link">
+                        <i class="fas fa-microchip"></i>
+                        <span>ML Ops Console</span>
+                    </a>
+                    {% endif %}
                 </div>
             </div>
 
@@ -286,7 +292,7 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="progress w-100 bg-secondary bg-opacity-25" style="height: 6px;">
                                             <div class="progress-bar {% if log.prediction == 'Phishing' %}bg-danger{% elif log.prediction == 'Suspicious' %}bg-warning{% else %}bg-success{% endif %}" 
-                                                 role="progressbar" style="width: {{ log.risk_score }}%"></div>
+                                                 role="progressbar" {{ 'style="width: ' ~ log.risk_score ~ '%;"' | safe }}></div>
                                         </div>
                                         <span class="small font-monospace fw-bold">{{ log.risk_score }}%</span>
                                     </div>

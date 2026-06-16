@@ -44,6 +44,11 @@
                     <li class="nav-item">
                         <a class="nav-link active" href="/profile"><i class="fas fa-user-gear"></i> MY PROFILE</a>
                     </li>
+                    {% if session.get('user', {}).get('role') == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/ml"><i class="fas fa-microchip text-info"></i> ML OPS</a>
+                    </li>
+                    {% endif %}
                 </ul>
                 <div class="d-flex align-items-center">
                     <!-- Notifications Dropdown -->

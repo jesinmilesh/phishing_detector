@@ -8,9 +8,9 @@ from app.utils.helpers import login_required
 from app.services.threat_feed import fetch_threat_feed
 from app.services.scanner_service import run_url_analysis
 
-from backend.analytics_service import AnalyticsService
-from backend.history_service import HistoryService
-from backend.recommendation_engine import RecommendationEngine
+from app.services.analytics_service import AnalyticsService
+from app.services.history_service import HistoryService
+from app.services.recommendation_engine import RecommendationEngine
 
 analytics_service = AnalyticsService()
 history_service = HistoryService()
@@ -277,7 +277,7 @@ def api_generate_report():
             return jsonify({'success': False, 'error': 'No scan history exists to build a report.'}), 400
             
         scan_record = latest_scans[0]
-        from backend.report_generator import generate_pdf_report as backend_gen_pdf
+        from app.services.report_generator import generate_pdf_report as backend_gen_pdf
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"report_batch_{scan_record['id']}_{timestamp}.pdf"

@@ -12,24 +12,61 @@ import pandas as pd
 
 class PhishingPredictor:
     def __init__(self, model_path=None):
-        self.model_path = model_path or Config.MODEL_PATH
+        self.model_path = model_path
         self.model_data = None
         self.model = None
+        self.active_version = None
         self.load_model()
 
     def load_model(self):
         """Loads the trained ML model from file."""
-        if os.path.exists(self.model_path):
+        if self.model_path:
+            # Explicit path given (mostly for command line testing)
+            self._load_from_path(self.model_path)
+            return
+
+        # Query Database registry
+        try:
+            from database.db_manager import DatabaseManager
+            db = DatabaseManager()
+            active_model_record = db.get_active_model()
+            if active_model_record:
+                db_path = active_model_record['model_path']
+                if os.path.exists(db_path):
+                    self._load_from_path(db_path)
+                    self.active_version = active_model_record['version']
+                    print(f"[+] Loaded active model version {self.active_version} from database registry.")
+                    return
+        except Exception as e:
+            print(f"[-] Error querying active model from database registry: {e}. Falling back to default.")
+
+        # Fallback to Config.MODEL_PATH
+        self._load_from_path(Config.MODEL_PATH)
+        self.active_version = None
+
+    def _load_from_path(self, path):
+        if os.path.exists(path):
             try:
-                self.model_data = joblib.load(self.model_path)
+                self.model_data = joblib.load(path)
                 self.model = self.model_data['model']
-                print(f"[+] Loaded ML model from {self.model_path}")
+                print(f"[+] Loaded ML model from {path}")
             except Exception as e:
-                print(f"[-] Error loading model from {self.model_path}: {e}")
+                print(f"[-] Error loading model from {path}: {e}")
                 self.model = None
         else:
-            print(f"[-] Model file not found at {self.model_path}. Please run train.py first.")
+            print(f"[-] Model file not found at {path}.")
             self.model = None
+
+    def check_and_reload(self):
+        """Reloads the model if a new version is set as active in the database registry."""
+        try:
+            from database.db_manager import DatabaseManager
+            db = DatabaseManager()
+            active_model_record = db.get_active_model()
+            if active_model_record and active_model_record['version'] != self.active_version:
+                self.load_model()
+        except Exception:
+            pass
 
     def predict(self, url: str, online: bool = False) -> dict:
         """
@@ -41,6 +78,9 @@ class PhishingPredictor:
           - risk_score: int (0 to 100)
           - features: dict (extracted features)
         """
+        # Auto-reload if active version changed in registry
+        self.check_and_reload()
+
         # 1. Extract Features
         features = extract_features(url, online=online)
         vector = get_vector(features)

@@ -1,16 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="100%" height="100%" fill="none">
   <defs>
-    <!-- Backgrounds -->
+    <!-- Backgrounds matching design system -->
     <linearGradient id="dbBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0a0f1d" />
-      <stop offset="100%" stop-color="#050811" />
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#090D16" />
     </linearGradient>
 
     <!-- Glowing Lines -->
     <linearGradient id="glowLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0" />
-      <stop offset="50%" stop-color="#0ea5e9" stop-opacity="1" />
-      <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0" />
+      <stop offset="50%" stop-color="#3B82F6" stop-opacity="1" />
+      <stop offset="100%" stop-color="#22C55E" stop-opacity="0" />
     </linearGradient>
 
     <filter id="cardGlow" x="-10%" y="-10%" width="120%" height="120%">
@@ -20,110 +20,110 @@
   </defs>
 
   <!-- Frame Background -->
-  <rect width="1000" height="600" rx="16" fill="url(#dbBg)" stroke="#1e293b" stroke-width="2" />
+  <rect width="1000" height="600" rx="16" fill="url(#dbBg)" stroke="rgba(255, 255, 255, 0.08)" stroke-width="2" />
   
   <!-- Sidebar Header -->
-  <rect x="2" y="2" width="220" height="596" fill="#03060c" rx="14" />
-  <line x1="220" y1="2" x2="220" y2="598" stroke="#1e293b" stroke-width="1" />
+  <rect x="2" y="2" width="220" height="596" fill="#090D16" rx="14" />
+  <line x1="220" y1="2" x2="220" y2="598" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1" />
 
   <!-- Logo and title -->
-  <path d="M 30,35 C 38,35 42,38 42,38 C 42,48 38,55 30,58 C 22,55 18,48 18,38 C 18,38 22,35 30,35 Z" fill="#0ea5e9" />
+  <path d="M 30,35 C 38,35 42,38 42,38 C 42,48 38,55 30,58 C 22,55 18,48 18,38 C 18,38 22,35 30,35 Z" fill="#3B82F6" />
   <circle cx="30" cy="46" r="3" fill="#fff" />
   <text x="55" y="47" fill="#fff" font-family="'Orbitron', sans-serif" font-weight="700" font-size="14" letter-spacing="1">AI SHIELD</text>
 
   <!-- Sidebar Nav items -->
-  <rect x="15" y="90" width="190" height="36" rx="6" fill="#0ea5e9" fill-opacity="0.15" />
-  <text x="45" y="113" fill="#0ea5e9" font-family="sans-serif" font-size="13" font-weight="600">SOC Dashboard</text>
-  <rect x="25" y="101" width="12" height="12" rx="2" fill="#0ea5e9" />
+  <rect x="15" y="90" width="190" height="36" rx="6" fill="#3B82F6" fill-opacity="0.15" />
+  <text x="45" y="113" fill="#3B82F6" font-family="sans-serif" font-size="13" font-weight="600">SOC Dashboard</text>
+  <rect x="25" y="101" width="12" height="12" rx="2" fill="#3B82F6" />
 
-  <text x="45" y="163" fill="#64748b" font-family="sans-serif" font-size="13">Threat Scanner</text>
-  <rect x="25" y="151" width="12" height="12" rx="2" fill="#64748b" />
+  <text x="45" y="163" fill="#94A3B8" font-family="sans-serif" font-size="13">Threat Scanner</text>
+  <rect x="25" y="151" width="12" height="12" rx="2" fill="#94A3B8" />
 
-  <text x="45" y="213" fill="#64748b" font-family="sans-serif" font-size="13">Scans Archive</text>
-  <rect x="25" y="201" width="12" height="12" rx="2" fill="#64748b" />
+  <text x="45" y="213" fill="#94A3B8" font-family="sans-serif" font-size="13">Scans Archive</text>
+  <rect x="25" y="201" width="12" height="12" rx="2" fill="#94A3B8" />
 
-  <text x="45" y="263" fill="#64748b" font-family="sans-serif" font-size="13">Analyst Profile</text>
-  <rect x="25" y="251" width="12" height="12" rx="2" fill="#64748b" />
+  <text x="45" y="263" fill="#94A3B8" font-family="sans-serif" font-size="13">Analyst Profile</text>
+  <rect x="25" y="251" width="12" height="12" rx="2" fill="#94A3B8" />
 
-  <text x="45" y="313" fill="#64748b" font-family="sans-serif" font-size="13">System Settings</text>
-  <rect x="25" y="301" width="12" height="12" rx="2" fill="#64748b" />
+  <text x="45" y="313" fill="#94A3B8" font-family="sans-serif" font-size="13">System Settings</text>
+  <rect x="25" y="301" width="12" height="12" rx="2" fill="#94A3B8" />
 
   <!-- Main Panel Header -->
   <text x="250" y="50" fill="#fff" font-family="sans-serif" font-weight="700" font-size="20">Security Operations Center</text>
-  <text x="250" y="70" fill="#64748b" font-family="sans-serif" font-size="12">Real-time heuristics &amp; AI-based system threat status</text>
+  <text x="250" y="70" fill="#94A3B8" font-family="sans-serif" font-size="12">Real-time heuristics &amp; AI-based system threat status</text>
   
   <!-- Status Badge -->
-  <rect x="850" y="32" width="120" height="28" rx="14" fill="#10b981" fill-opacity="0.15" stroke="#10b981" stroke-opacity="0.3" />
-  <circle cx="865" cy="46" r="4" fill="#10b981" />
-  <text x="877" y="50" fill="#10b981" font-family="sans-serif" font-weight="600" font-size="11">SYSTEM SECURE</text>
+  <rect x="850" y="32" width="120" height="28" rx="14" fill="#22C55E" fill-opacity="0.15" stroke="#22C55E" stroke-opacity="0.3" />
+  <circle cx="865" cy="46" r="4" fill="#22C55E" />
+  <text x="877" y="50" fill="#22C55E" font-family="sans-serif" font-weight="600" font-size="11">SYSTEM SECURE</text>
 
   <!-- KPI Cards (Row 1) -->
   <!-- Card 1 -->
-  <rect x="250" y="100" width="220" height="90" rx="10" fill="#0c1221" stroke="#1e293b" />
-  <text x="270" y="130" fill="#64748b" font-family="sans-serif" font-size="12" font-weight="500">TOTAL THREATS DETECTED</text>
+  <rect x="250" y="100" width="220" height="90" rx="10" fill="#1E293B" stroke="rgba(255, 255, 255, 0.08)" />
+  <text x="270" y="130" fill="#94A3B8" font-family="sans-serif" font-size="12" font-weight="500">TOTAL THREATS DETECTED</text>
   <text x="270" y="165" fill="#fff" font-family="'Orbitron', sans-serif" font-weight="700" font-size="22">84,924</text>
-  <path d="M 420,135 L 435,120 L 450,135" stroke="#ef4444" stroke-width="2" fill="none" />
+  <path d="M 420,135 L 435,120 L 450,135" stroke="#EF4444" stroke-width="2" fill="none" />
 
   <!-- Card 2 -->
-  <rect x="490" y="100" width="220" height="90" rx="10" fill="#0c1221" stroke="#1e293b" />
-  <text x="510" y="130" fill="#64748b" font-family="sans-serif" font-size="12" font-weight="500">TOTAL RESOLVED</text>
+  <rect x="490" y="100" width="220" height="90" rx="10" fill="#1E293B" stroke="rgba(255, 255, 255, 0.08)" />
+  <text x="510" y="130" fill="#94A3B8" font-family="sans-serif" font-size="12" font-weight="500">TOTAL RESOLVED</text>
   <text x="510" y="165" fill="#fff" font-family="'Orbitron', sans-serif" font-weight="700" font-size="22">84,912</text>
-  <path d="M 660,150 L 675,165 L 690,150" stroke="#10b981" stroke-width="2" fill="none" />
+  <path d="M 660,150 L 675,165 L 690,150" stroke="#22C55E" stroke-width="2" fill="none" />
 
   <!-- Card 3 -->
-  <rect x="730" y="100" width="240" height="90" rx="10" fill="#0c1221" stroke="#1e293b" />
-  <text x="750" y="130" fill="#64748b" font-family="sans-serif" font-size="12" font-weight="500">AI MODEL ACCURACY</text>
-  <text x="750" y="165" fill="#10b981" font-family="'Orbitron', sans-serif" font-weight="700" font-size="22">99.42%</text>
+  <rect x="730" y="100" width="240" height="90" rx="10" fill="#1E293B" stroke="rgba(255, 255, 255, 0.08)" />
+  <text x="750" y="130" fill="#94A3B8" font-family="sans-serif" font-size="12" font-weight="500">AI MODEL ACCURACY</text>
+  <text x="750" y="165" fill="#22C55E" font-family="'Orbitron', sans-serif" font-weight="700" font-size="22">99.42%</text>
 
   <!-- Large Graph Card (Row 2) -->
-  <rect x="250" y="210" width="460" height="220" rx="10" fill="#0c1221" stroke="#1e293b" />
+  <rect x="250" y="210" width="460" height="220" rx="10" fill="#1E293B" stroke="rgba(255, 255, 255, 0.08)" />
   <text x="270" y="240" fill="#fff" font-family="sans-serif" font-size="14" font-weight="600">Threat Volume Trend (24h)</text>
   
   <!-- Trend Graph Lines -->
-  <path d="M 280,380 Q 320,360 360,320 T 440,310 T 520,270 T 600,280 T 680,250" stroke="#0ea5e9" stroke-width="3" fill="none" filter="url(#cardGlow)" />
-  <path d="M 280,380 Q 320,360 360,320 T 440,310 T 520,270 T 600,280 T 680,250 L 680,390 L 280,390 Z" fill="#0ea5e9" fill-opacity="0.05" />
+  <path d="M 280,380 Q 320,360 360,320 T 440,310 T 520,270 T 600,280 T 680,250" stroke="#3B82F6" stroke-width="3" fill="none" filter="url(#cardGlow)" />
+  <path d="M 280,380 Q 320,360 360,320 T 440,310 T 520,270 T 600,280 T 680,250 L 680,390 L 280,390 Z" fill="#3B82F6" fill-opacity="0.05" />
 
-  <path d="M 280,380 Q 310,390 350,340 T 430,300 T 510,310 T 590,260 T 680,290" stroke="#10b981" stroke-width="2" stroke-dasharray="4 4" fill="none" opacity="0.6" />
+  <path d="M 280,380 Q 310,390 350,340 T 430,300 T 510,310 T 590,260 T 680,290" stroke="#22C55E" stroke-width="2" stroke-dasharray="4 4" fill="none" opacity="0.6" />
 
   <!-- Graph Grid Axes -->
-  <line x1="280" y1="390" x2="680" y2="390" stroke="#1e293b" stroke-width="1" />
-  <line x1="280" y1="260" x2="280" y2="390" stroke="#1e293b" stroke-width="1" />
+  <line x1="280" y1="390" x2="680" y2="390" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1" />
+  <line x1="280" y1="260" x2="280" y2="390" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1" />
 
   <!-- Right Log Panel -->
-  <rect x="730" y="210" width="240" height="365" rx="10" fill="#0c1221" stroke="#1e293b" />
+  <rect x="730" y="210" width="240" height="365" rx="10" fill="#1E293B" stroke="rgba(255, 255, 255, 0.08)" />
   <text x="750" y="245" fill="#fff" font-family="sans-serif" font-size="14" font-weight="600">Active Warning Feeds</text>
   
-  <rect x="745" y="270" width="210" height="42" rx="4" fill="#ef4444" fill-opacity="0.08" />
-  <circle cx="760" cy="291" r="4" fill="#ef4444" />
+  <rect x="745" y="270" width="210" height="42" rx="4" fill="#EF4444" fill-opacity="0.08" />
+  <circle cx="760" cy="291" r="4" fill="#EF4444" />
   <text x="775" y="288" fill="#fff" font-family="sans-serif" font-size="11" font-weight="600">Brand Impersonation</text>
-  <text x="775" y="302" fill="#64748b" font-family="sans-serif" font-size="10">paypal-login-card.com</text>
+  <text x="775" y="302" fill="#94A3B8" font-family="sans-serif" font-size="10">paypal-login-card.com</text>
 
-  <rect x="745" y="325" width="210" height="42" rx="4" fill="#ef4444" fill-opacity="0.08" />
-  <circle cx="760" cy="346" r="4" fill="#ef4444" />
+  <rect x="745" y="325" width="210" height="42" rx="4" fill="#EF4444" fill-opacity="0.08" />
+  <circle cx="760" cy="346" r="4" fill="#EF4444" />
   <text x="775" y="343" fill="#fff" font-family="sans-serif" font-size="11" font-weight="600">Credential Harvester</text>
-  <text x="775" y="357" fill="#64748b" font-family="sans-serif" font-size="10">netflix-update-signin.org</text>
+  <text x="775" y="357" fill="#94A3B8" font-family="sans-serif" font-size="10">netflix-update-signin.org</text>
 
-  <rect x="745" y="380" width="210" height="42" rx="4" fill="#f59e0b" fill-opacity="0.08" />
-  <circle cx="760" cy="401" r="4" fill="#f59e0b" />
+  <rect x="745" y="380" width="210" height="42" rx="4" fill="#F59E0B" fill-opacity="0.08" />
+  <circle cx="760" cy="401" r="4" fill="#F59E0B" />
   <text x="775" y="398" fill="#fff" font-family="sans-serif" font-size="11" font-weight="600">Suspicious SSL Registry</text>
-  <text x="775" y="412" fill="#64748b" font-family="sans-serif" font-size="10">secure-bank-login.com</text>
+  <text x="775" y="412" fill="#94A3B8" font-family="sans-serif" font-size="10">secure-bank-login.com</text>
 
   <!-- Lower Event Table (Row 3) -->
-  <rect x="250" y="450" width="460" height="125" rx="10" fill="#0c1221" stroke="#1e293b" />
+  <rect x="250" y="450" width="460" height="125" rx="10" fill="#1E293B" stroke="rgba(255, 255, 255, 0.08)" />
   <text x="270" y="475" fill="#fff" font-family="sans-serif" font-size="12" font-weight="600">Live Analyzer Stream</text>
   
-  <line x1="270" y1="488" x2="690" y2="488" stroke="#1e293b" stroke-width="1" />
+  <line x1="270" y1="488" x2="690" y2="488" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1" />
   
-  <text x="270" y="508" fill="#64748b" font-family="sans-serif" font-size="11">paypal-update-signin.com</text>
-  <text x="500" y="508" fill="#ef4444" font-family="sans-serif" font-weight="600" font-size="11">Phishing</text>
-  <text x="630" y="508" fill="#64748b" font-family="sans-serif" font-size="11">96% Conf.</text>
+  <text x="270" y="508" fill="#94A3B8" font-family="sans-serif" font-size="11">paypal-update-signin.com</text>
+  <text x="500" y="508" fill="#EF4444" font-family="sans-serif" font-weight="600" font-size="11">Phishing</text>
+  <text x="630" y="508" fill="#94A3B8" font-family="sans-serif" font-size="11">96% Conf.</text>
 
-  <text x="270" y="533" fill="#64748b" font-family="sans-serif" font-size="11">google.com/search</text>
-  <text x="500" y="533" fill="#10b981" font-family="sans-serif" font-weight="600" font-size="11">Legitimate</text>
-  <text x="630" y="533" fill="#64748b" font-family="sans-serif" font-size="11">99% Conf.</text>
+  <text x="270" y="533" fill="#94A3B8" font-family="sans-serif" font-size="11">google.com/search</text>
+  <text x="500" y="533" fill="#22C55E" font-family="sans-serif" font-weight="600" font-size="11">Legitimate</text>
+  <text x="630" y="533" fill="#94A3B8" font-family="sans-serif" font-size="11">99% Conf.</text>
 
-  <text x="270" y="558" fill="#64748b" font-family="sans-serif" font-size="11">chase-bank-verify-billing.net</text>
-  <text x="500" y="558" fill="#ef4444" font-family="sans-serif" font-weight="600" font-size="11">Phishing</text>
-  <text x="630" y="558" fill="#64748b" font-family="sans-serif" font-size="11">94% Conf.</text>
+  <text x="270" y="558" fill="#94A3B8" font-family="sans-serif" font-size="11">chase-bank-verify-billing.net</text>
+  <text x="500" y="558" fill="#EF4444" font-family="sans-serif" font-weight="600" font-size="11">Phishing</text>
+  <text x="630" y="558" fill="#94A3B8" font-family="sans-serif" font-size="11">94% Conf.</text>
 
 </svg>

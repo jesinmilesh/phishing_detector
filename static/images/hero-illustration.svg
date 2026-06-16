@@ -2,21 +2,21 @@
   <defs>
     <!-- Background Glow Gradients -->
     <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.15" />
-      <stop offset="100%" stop-color="#0b0f19" stop-opacity="0" />
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0" />
     </radialGradient>
     
     <!-- Shield Gradients -->
     <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0ea5e9" />
-      <stop offset="40%" stop-color="#3b82f6" />
-      <stop offset="100%" stop-color="#10b981" />
+      <stop offset="0%" stop-color="#60A5FA" />
+      <stop offset="40%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#22C55E" />
     </linearGradient>
     
     <linearGradient id="shieldBorder" x1="100%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#10b981" stop-opacity="0.8" />
-      <stop offset="50%" stop-color="#0ea5e9" stop-opacity="0.3" />
-      <stop offset="100%" stop-color="#ef4444" stop-opacity="0.8" />
+      <stop offset="0%" stop-color="#22C55E" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#3B82F6" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#EF4444" stop-opacity="0.8" />
     </linearGradient>
 
     <!-- Node Glow -->
@@ -24,67 +24,114 @@
       <feGaussianBlur stdDeviation="8" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
+    <filter id="glowSubtle" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
   </defs>
 
-  <!-- Glowing Background -->
-  <circle cx="400" cy="400" r="350" fill="url(#bgGlow)" />
+  <style>
+    .rotate-clockwise {
+      transform-origin: 400px 400px;
+      animation: rot-cw 40s linear infinite;
+    }
+    .rotate-counter {
+      transform-origin: 400px 400px;
+      animation: rot-ccw 30s linear infinite;
+    }
+    .pulse-slow {
+      animation: pulse 4s ease-in-out infinite;
+    }
+    .float-slow {
+      animation: float 6s ease-in-out infinite;
+    }
+    .laser-sweep {
+      transform-origin: 400px 400px;
+      animation: sweep 8s ease-in-out infinite alternate;
+    }
 
-  <!-- Grid Pattern -->
+    @keyframes rot-cw {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes rot-ccw {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.25; transform: scale(0.98); transform-origin: 400px 400px; }
+      50% { opacity: 0.6; transform: scale(1.02); transform-origin: 400px 400px; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+    }
+    @keyframes sweep {
+      0% { transform: rotate(-30deg); }
+      100% { transform: rotate(30deg); }
+    }
+  </style>
+
+  <!-- Glowing Background (No solid colors) -->
+  <circle class="pulse-slow" cx="400" cy="400" r="350" fill="url(#bgGlow)" />
+
+  <!-- Cyber Grid / Radar Screen Lines -->
   <g opacity="0.15">
-    <path d="M 100,400 L 700,400 M 400,100 L 400,700" stroke="#0ea5e9" stroke-width="1" />
-    <circle cx="400" cy="400" r="100" stroke="#0ea5e9" stroke-width="1" stroke-dasharray="5 5" />
-    <circle cx="400" cy="400" r="200" stroke="#0ea5e9" stroke-width="1" />
-    <circle cx="400" cy="400" r="300" stroke="#0ea5e9" stroke-width="1" stroke-dasharray="10 10" />
+    <path d="M 100,400 L 700,400 M 400,100 L 400,700" stroke="#3B82F6" stroke-width="1" />
+    <circle cx="400" cy="400" r="100" stroke="#3B82F6" stroke-width="1" stroke-dasharray="5 5" />
+    <circle cx="400" cy="400" r="200" stroke="#3B82F6" stroke-width="1" />
+    <circle cx="400" cy="400" r="300" stroke="#3B82F6" stroke-width="1" stroke-dasharray="10 10" />
   </g>
 
   <!-- Hexagonal Data Loop -->
   <polygon points="400,150 616,275 616,525 400,650 184,525 184,275" fill="none" stroke="url(#shieldBorder)" stroke-width="2" stroke-dasharray="15 10" opacity="0.6" />
 
   <!-- Connected Database Nodes -->
-  <g filter="url(#glow)">
-    <line x1="400" y1="400" x2="400" y2="150" stroke="#0ea5e9" stroke-width="2" />
-    <line x1="400" y1="400" x2="616" y2="275" stroke="#0ea5e9" stroke-width="2" />
-    <line x1="400" y1="400" x2="616" y2="525" stroke="#0ea5e9" stroke-width="2" opacity="0.4" />
-    <line x1="400" y1="400" x2="400" y2="650" stroke="#0ea5e9" stroke-width="2" />
-    <line x1="400" y1="400" x2="184" y2="525" stroke="#0ea5e9" stroke-width="2" />
-    <line x1="400" y1="400" x2="184" y2="275" stroke="#0ea5e9" stroke-width="2" opacity="0.4" />
+  <g stroke="#3B82F6" stroke-width="2" opacity="0.5" filter="url(#glow)">
+    <line x1="400" y1="400" x2="400" y2="150" />
+    <line x1="400" y1="400" x2="616" y2="275" />
+    <line x1="400" y1="400" x2="616" y2="525" opacity="0.4" />
+    <line x1="400" y1="400" x2="400" y2="650" />
+    <line x1="400" y1="400" x2="184" y2="525" />
+    <line x1="400" y1="400" x2="184" y2="275" opacity="0.4" />
   </g>
 
   <!-- Node Circles with details -->
-  <circle cx="400" cy="150" r="12" fill="#0ea5e9" filter="url(#glow)" />
+  <circle cx="400" cy="150" r="12" fill="#3B82F6" filter="url(#glow)" />
   <circle cx="400" cy="150" r="4" fill="#fff" />
   
-  <circle cx="616" cy="275" r="12" fill="#10b981" filter="url(#glow)" />
+  <circle cx="616" cy="275" r="12" fill="#22C55E" filter="url(#glow)" />
   <circle cx="616" cy="275" r="4" fill="#fff" />
 
-  <circle cx="400" cy="650" r="12" fill="#ef4444" filter="url(#glow)" />
+  <circle cx="400" cy="650" r="12" fill="#EF4444" filter="url(#glow)" />
   <circle cx="400" cy="650" r="4" fill="#fff" />
 
-  <circle cx="184" cy="525" r="12" fill="#0ea5e9" filter="url(#glow)" />
+  <circle cx="184" cy="525" r="12" fill="#3B82F6" filter="url(#glow)" />
   <circle cx="184" cy="525" r="4" fill="#fff" />
 
   <!-- Centerpiece: Shield Security Node -->
-  <g transform="translate(0, 0)">
+  <g class="float-slow" transform="translate(0, 0)">
     <!-- Outer Glowing Shield -->
     <path d="M 400,260 C 470,260 510,285 510,285 C 510,410 470,490 400,530 C 330,490 290,410 290,285 C 290,285 330,260 400,260 Z" 
           fill="url(#shieldGrad)" opacity="0.85" filter="url(#glow)" />
           
-    <path d="M 400,270 C 460,270 495,292 495,292 C 495,400 460,475 400,512 C 340,475 305,400 305,292 C 305,292 340,270 400,270 Z" 
-          fill="#060913" />
+    <path d="M 400,272 C 455,272 490,292 490,292 C 490,390 455,465 400,502 C 345,465 310,390 310,292 C 310,292 345,272 400,272 Z" 
+          fill="#0F172A" fill-opacity="0.95" stroke="url(#shieldBorder)" stroke-width="1" />
           
     <!-- Core Lock Icon -->
     <path d="M 400,340 C 383,340 370,353 370,370 L 370,390 C 364,390 360,394 360,400 L 360,440 C 360,446 364,450 370,450 L 430,450 C 436,450 440,446 440,440 L 440,400 C 440,394 436,390 430,390 L 430,370 C 430,353 417,340 400,340 Z M 400,355 C 408,355 415,362 415,370 L 415,390 L 385,390 L 385,370 C 385,362 392,355 400,355 Z" 
-          fill="#10b981" filter="url(#glow)" />
+          fill="#22C55E" filter="url(#glow)" />
   </g>
 
   <!-- Orbital Data Rings -->
-  <path d="M 280,450 A 150,80 30 1 0 520,350" stroke="#10b981" stroke-width="2" stroke-dasharray="8 4" opacity="0.5" />
-  <path d="M 260,350 A 180,90 -30 1 0 540,450" stroke="#0ea5e9" stroke-width="2" stroke-dasharray="12 6" opacity="0.6" />
+  <path d="M 280,450 A 150,80 30 1 0 520,350" stroke="#22C55E" stroke-width="2" stroke-dasharray="8 4" opacity="0.5" />
+  <path d="M 260,350 A 180,90 -30 1 0 540,450" stroke="#3B82F6" stroke-width="2" stroke-dasharray="12 6" opacity="0.6" />
 
   <!-- Binary Matrix overlay details -->
-  <text x="220" y="240" fill="#0ea5e9" font-family="monospace" font-size="12" opacity="0.4">01101001 01101110</text>
-  <text x="520" y="220" fill="#10b981" font-family="monospace" font-size="12" opacity="0.4">11010011 00101100</text>
-  <text x="180" y="600" fill="#ef4444" font-family="monospace" font-size="12" opacity="0.3">ALERT: PHISH_DETECTED</text>
-  <text x="500" y="620" fill="#0ea5e9" font-family="monospace" font-size="12" opacity="0.4">SYS_ACTIVE: 100%</text>
-
+  <g font-family="monospace" font-size="12" opacity="0.45" font-weight="600">
+    <text x="210" y="230" fill="#3B82F6">01101001 01101110</text>
+    <text x="520" y="210" fill="#22C55E">11010011 00101100</text>
+    <text x="180" y="600" fill="#EF4444" filter="url(#glowSubtle)">ALERT: PHISH_DETECTED</text>
+    <text x="500" y="620" fill="#3B82F6">SYS_ACTIVE: 100%</text>
+  </g>
 </svg>

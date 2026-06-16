@@ -55,6 +55,11 @@
                     <li class="nav-item">
                         <a class="soc-nav-link" href="/scan_history"><i class="fas fa-box-archive"></i> HistoryLog</a>
                     </li>
+                    {% if session.get('user', {}).get('role') == 'admin' %}
+                    <li class="nav-item">
+                        <a class="soc-nav-link" href="/admin/ml"><i class="fas fa-microchip text-info"></i> ML Ops</a>
+                    </li>
+                    {% endif %}
                 </ul>
                 
                 <!-- Right Controls -->

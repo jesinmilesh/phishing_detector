@@ -1,3 +1,4 @@
+# app/services/report_generator.py
 import os
 from datetime import datetime
 from reportlab.lib import colors
@@ -6,6 +7,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from app.config import Config
+from app.services.recommendation_engine import RecommendationEngine
 
 def format_url_for_table(url: str, max_len: int = 50) -> str:
     """Inserts zero-width spaces or line breaks to allow long URLs to wrap in PDF tables."""
@@ -16,7 +18,7 @@ def format_url_for_table(url: str, max_len: int = 50) -> str:
 
 def generate_pdf_report(scan_data: dict, filename: str = None) -> str:
     """
-    Generates a beautifully formatted PDF report for a phishing scan.
+    Generates a beautifully formatted, highly detailed PDF report for a phishing scan.
     
     Parameters:
       - scan_data: Dictionary containing URL, prediction, risk_score, scan_time, details
@@ -46,6 +48,7 @@ def generate_pdf_report(scan_data: dict, filename: str = None) -> str:
     PRIMARY = colors.HexColor("#0f172a")      # Slate 900
     SECONDARY = colors.HexColor("#1e293b")    # Slate 800
     ACCENT_BLUE = colors.HexColor("#0ea5e9")  # Sky 500
+    BORDER_COLOR = colors.HexColor("#cbd5e1")
     
     # Severity colors
     COLOR_PHISHING = colors.HexColor("#ef4444")   # Red 500
@@ -57,7 +60,7 @@ def generate_pdf_report(scan_data: dict, filename: str = None) -> str:
         'ReportTitle',
         parent=styles['Heading1'],
         fontName='Helvetica-Bold',
-        fontSize=20,
+        fontSize=18,
         textColor=colors.white,
         spaceAfter=15,
         alignment=1 # Centered
@@ -67,9 +70,9 @@ def generate_pdf_report(scan_data: dict, filename: str = None) -> str:
         'SectionHeader',
         parent=styles['Heading2'],
         fontName='Helvetica-Bold',
-        fontSize=13,
+        fontSize=12,
         textColor=PRIMARY,
-        spaceBefore=12,
+        spaceBefore=14,
         spaceAfter=8,
         borderPadding=2
     )
@@ -108,19 +111,25 @@ def generate_pdf_report(scan_data: dict, filename: str = None) -> str:
     
     # --- HEADER BANNER ---
     pred = scan_data.get('prediction', 'Unknown')
+    risk_score = scan_data.get('risk_score', 0)
+    confidence = scan_data.get('confidence', 1.0)
+    
+    # Fetch Recommendations & Severity Meta
+    rec_data = RecommendationEngine.get_recommendations(pred, risk_score, confidence)
+    
     if pred == 'Phishing':
         banner_color = COLOR_PHISHING
-        banner_txt = "CRITICAL THREAT DETECTED: PHISHING SITE"
+        banner_txt = f"CRITICAL THREAT DETECTED: {rec_data['threat_category'].upper()}"
     elif pred == 'Suspicious':
         banner_color = COLOR_SUSPICIOUS
-        banner_txt = "WARNING: SUSPICIOUS ACTIVITY DETECTED"
+        banner_txt = f"WARNING: {rec_data['threat_category'].upper()}"
     else:
         banner_color = COLOR_LEGITIMATE
-        banner_txt = "VERIFIED CLEAN: LEGITIMATE DOMAIN"
+        banner_txt = f"VERIFIED CLEAN: {rec_data['threat_category'].upper()}"
         
     header_data = [
-        [Paragraph(f"<b>AI PHISHING DETECTION SYSTEM</b>", title_style)],
-        [Paragraph(f"<b>{banner_txt}</b>", ParagraphStyle('BannerText', parent=title_style, fontSize=12, spaceAfter=0))]
+        [Paragraph(f"<b>AI SHIELD - THREAT INTELLIGENCE SYSTEM</b>", title_style)],
+        [Paragraph(f"<b>{banner_txt}</b>", ParagraphStyle('BannerText', parent=title_style, fontSize=11, spaceAfter=0))]
     ]
     
     header_table = Table(header_data, colWidths=[7.2*inch])
@@ -137,9 +146,14 @@ def generate_pdf_report(scan_data: dict, filename: str = None) -> str:
     
     # --- OVERVIEW TABLE ---
     details = scan_data.get('details', {})
-    risk_score = scan_data.get('risk_score', 0)
+    report_id = f"REP-{scan_data.get('id', 1):05d}"
+    analyst = scan_data.get('username', 'SOC Analyst Node')
     
     overview_data = [
+        [
+            Paragraph("<b>Report ID / Analyst:</b>", body_bold),
+            Paragraph(f"{report_id} / {analyst}", body_style)
+        ],
         [
             Paragraph("<b>Target URL:</b>", body_bold),
             Paragraph(format_url_for_table(scan_data.get('url', '')), url_style)
@@ -150,18 +164,18 @@ def generate_pdf_report(scan_data: dict, filename: str = None) -> str:
         ],
         [
             Paragraph("<b>AI Risk Score:</b>", body_bold),
-            Paragraph(f"<font color='{banner_color.hexval()}'><b>{risk_score}%</b></font> (Model Confidence: {scan_data.get('confidence', 0.0)*100:.2f}%)", body_bold)
+            Paragraph(f"<font color='{banner_color.hexval()}'><b>{risk_score}%</b></font> (Model Confidence: {rec_data['confidence_score']}%)", body_bold)
         ],
         [
-            Paragraph("<b>Verdict:</b>", body_bold),
-            Paragraph(f"<font color='{banner_color.hexval()}'><b>{pred.upper()}</b></font>", body_bold)
+            Paragraph("<b>Threat Classification:</b>", body_bold),
+            Paragraph(f"<font color='{banner_color.hexval()}'><b>{pred.upper()}</b></font> ({rec_data['threat_level']} Severity)", body_bold)
         ]
     ]
     
     overview_table = Table(overview_data, colWidths=[1.8*inch, 5.4*inch])
     overview_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (0,-1), colors.HexColor("#f1f5f9")),
-        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#cbd5e1")),
+        ('BACKGROUND', (0,0), (0,-1), colors.HexColor("#f8fafc")),
+        ('GRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('PADDING', (0,0), (-1,-1), 6),
     ]))
@@ -170,13 +184,36 @@ def generate_pdf_report(scan_data: dict, filename: str = None) -> str:
     story.append(overview_table)
     story.append(Spacer(1, 12))
     
+    # --- REMEDIATION & SECURITY RECOMMENDATIONS ---
+    story.append(Paragraph("Remediation & Actionable Recommendations", h1_style))
+    
+    rec_list_paragraphs = []
+    for r in rec_data['recommendations']:
+        rec_list_paragraphs.append(Paragraph(f"• {r}", body_style))
+        
+    rec_table_data = [[
+        Paragraph(f"<b>Verdict Summary:</b><br/>{rec_data['summary']}", body_bold)
+    ]]
+    for p in rec_list_paragraphs:
+        rec_table_data.append([p])
+        
+    rec_table = Table(rec_table_data, colWidths=[7.2*inch])
+    rec_table.setStyle(TableStyle([
+        ('GRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#f1f5f9")),
+        ('PADDING', (0,0), (-1,-1), 5),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+    story.append(rec_table)
+    story.append(Spacer(1, 12))
+    
     # --- MACHINE LEARNING FEATURE METRICS ---
     features = details.get('features', {})
     if features:
         story.append(Paragraph("URL Structural & Heuristic Indicators", h1_style))
         
         feature_rows = [
-            [Paragraph("<b>Feature Identifier</b>", body_bold), Paragraph("<b>Analyzed Value</b>", body_bold), Paragraph("<b>Risk Factor</b>", body_bold)]
+            [Paragraph("<b>Feature Identifier</b>", body_bold), Paragraph("<b>Analyzed Value</b>", body_bold), Paragraph("<b>Risk Factor Description</b>", body_bold)]
         ]
         
         feature_mapping = {
@@ -216,7 +253,7 @@ def generate_pdf_report(scan_data: dict, filename: str = None) -> str:
                 
         feature_table = Table(feature_rows, colWidths=[2.2*inch, 1.8*inch, 3.2*inch])
         feature_table.setStyle(TableStyle([
-            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#cbd5e1")),
+            ('GRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
             ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#f1f5f9")),
             ('PADDING', (0,0), (-1,-1), 4),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
@@ -247,7 +284,7 @@ def generate_pdf_report(scan_data: dict, filename: str = None) -> str:
         
         intel_table = Table(intel_data, colWidths=[2.0*inch, 5.2*inch])
         intel_table.setStyle(TableStyle([
-            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#cbd5e1")),
+            ('GRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
             ('BACKGROUND', (0,0), (0,-1), colors.HexColor("#f8fafc")),
             ('PADDING', (0,0), (-1,-1), 5),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
@@ -273,7 +310,7 @@ def generate_pdf_report(scan_data: dict, filename: str = None) -> str:
             
             dns_table = Table(dns_data, colWidths=[1.5*inch, 5.7*inch])
             dns_table.setStyle(TableStyle([
-                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#cbd5e1")),
+                ('GRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
                 ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#f1f5f9")),
                 ('PADDING', (0,0), (-1,-1), 4),
                 ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
@@ -289,7 +326,7 @@ def generate_pdf_report(scan_data: dict, filename: str = None) -> str:
     ]]
     disc_table = Table(disc_data, colWidths=[7.2*inch])
     disc_table.setStyle(TableStyle([
-        ('LINEABOVE', (0,0), (-1,-1), 1, colors.HexColor("#e2e8f0")),
+        ('LINEABOVE', (0,0), (-1,-1), 0.5, BORDER_COLOR),
         ('TOPPADDING', (0,0), (-1,-1), 8),
     ]))
     story.append(disc_table)

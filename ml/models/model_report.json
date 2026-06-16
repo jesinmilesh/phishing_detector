@@ -16,7 +16,7 @@
                 200
             ]
         ],
-        "latency_ms": 0.003830194473266602
+        "latency_ms": 0.019782185554504395
     },
     "comparison": [
         {
@@ -26,8 +26,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.003830194473266602,
-            "Train_Time_s": 0.13949108123779297
+            "Latency_ms": 0.019782185554504395,
+            "Train_Time_s": 0.1328716278076172
         },
         {
             "Model": "Decision Tree",
@@ -36,8 +36,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.0,
-            "Train_Time_s": 0.0028727054595947266
+            "Latency_ms": 0.005369782447814941,
+            "Train_Time_s": 0.0067560672760009766
         },
         {
             "Model": "Gradient Boosting",
@@ -46,8 +46,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.010588765144348145,
-            "Train_Time_s": 0.4002041816711426
+            "Latency_ms": 0.038553476333618164,
+            "Train_Time_s": 0.25345420837402344
         },
         {
             "Model": "Logistic Regression",
@@ -56,8 +56,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.0028818845748901367,
-            "Train_Time_s": 0.025335073471069336
+            "Latency_ms": 0.0,
+            "Train_Time_s": 0.018845319747924805
         },
         {
             "Model": "XGBoost",
@@ -66,8 +66,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 0.9999999999999999,
-            "Latency_ms": 0.023761987686157227,
-            "Train_Time_s": 0.13025736808776855
+            "Latency_ms": 0.011445283889770508,
+            "Train_Time_s": 0.11860895156860352
         },
         {
             "Model": "LightGBM",
@@ -76,8 +76,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.0065070390701293945,
-            "Train_Time_s": 0.4906127452850342
+            "Latency_ms": 0.0062716007232666016,
+            "Train_Time_s": 0.1501908302307129
         }
     ]
 }

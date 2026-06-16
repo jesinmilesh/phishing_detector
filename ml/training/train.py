@@ -227,18 +227,52 @@ def train_and_evaluate_models():
     
     print(f"\n[+] Automatically selected best model: {best_model_name} (F1 Score: {best_f1:.4f})")
     
-    print(f"[*] Saving best model data to {Config.MODEL_PATH}...")
-    joblib.dump({
+    # Generate timestamped filename for versioning
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    versioned_filename = f"phishing_model_{timestamp}.pkl"
+    model_dir = os.path.dirname(Config.MODEL_PATH)
+    versioned_path = os.path.join(model_dir, versioned_filename)
+    
+    print(f"[*] Saving model version data to {versioned_path}...")
+    model_payload = {
         'model': best_model_obj,
         'model_name': best_model_name,
         'feature_names': get_feature_names(),
         'metrics': best_metrics,
         'all_comparison_results': comparison_results
-    }, Config.MODEL_PATH)
-    print("[+] Model saved successfully!")
+    }
     
-    model_report_dir = os.path.dirname(Config.MODEL_PATH)
-    with open(os.path.join(model_report_dir, 'model_report.json'), 'w') as f:
+    # Save versioned copy
+    joblib.dump(model_payload, versioned_path)
+    
+    # Save standard/fallback active model path copy
+    joblib.dump(model_payload, Config.MODEL_PATH)
+    print("[+] Models saved successfully!")
+    
+    # Register in DB Registry and set as active
+    try:
+        from database.db_manager import DatabaseManager
+        db = DatabaseManager()
+        version_id = db.register_model(
+            model_path=versioned_path,
+            accuracy=best_metrics['accuracy'],
+            precision=best_metrics['precision'],
+            recall=best_metrics['recall'],
+            f1_score=best_metrics['f1_score'],
+            roc_auc=best_metrics['roc_auc'],
+            dataset_version=timestamp,
+            is_active=1,
+            metrics_dict={
+                "best_model_name": best_model_name,
+                "best_metrics": best_metrics,
+                "comparison": comparison_results
+            }
+        )
+        print(f"[+] Model registered in DB as version {version_id}")
+    except Exception as e:
+        print(f"[-] Failed to register model in database registry: {e}")
+
+    with open(os.path.join(model_dir, 'model_report.json'), 'w') as f:
         import json
         json.dump({
             "best_model_name": best_model_name,

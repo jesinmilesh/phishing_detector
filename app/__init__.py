@@ -106,4 +106,4 @@ def add_security_headers(response):
     return response
 
 # Import routes to register them
-from app.routes import auth, profile, scanner, main
+from app.routes import auth, profile, scanner, main, admin

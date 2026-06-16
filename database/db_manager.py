@@ -269,6 +269,23 @@ class DatabaseManager:
             )
         ''')
 
+        # Create Model Registry table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS model_registry (
+                version INTEGER PRIMARY KEY AUTOINCREMENT,
+                model_path TEXT NOT NULL,
+                accuracy REAL,
+                precision REAL,
+                recall REAL,
+                f1_score REAL,
+                roc_auc REAL,
+                training_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                dataset_version TEXT,
+                is_active INTEGER DEFAULT 0,
+                metrics_json TEXT
+            )
+        ''')
+
         conn.commit()
         conn.close()
 
@@ -1027,6 +1044,57 @@ class DatabaseManager:
                 "INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)",
                 (name, email, subject, message)
             )
+            conn.commit()
+            return True
+        except Exception:
+            return False
+        finally:
+            conn.close()
+
+    # Model Registry operations
+    def register_model(self, model_path, accuracy, precision, recall, f1_score, roc_auc, dataset_version, is_active=0, metrics_dict=None):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            metrics_json = json.dumps(metrics_dict) if metrics_dict else '{}'
+            
+            # If is_active is 1, deactivate all other models first
+            if is_active == 1:
+                cursor.execute("UPDATE model_registry SET is_active = 0")
+                
+            cursor.execute('''
+                INSERT INTO model_registry (model_path, accuracy, precision, recall, f1_score, roc_auc, dataset_version, is_active, metrics_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (model_path, accuracy, precision, recall, f1_score, roc_auc, dataset_version, is_active, metrics_json))
+            conn.commit()
+            return cursor.lastrowid
+        except Exception:
+            return None
+        finally:
+            conn.close()
+
+    def get_active_model(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM model_registry WHERE is_active = 1 ORDER BY version DESC LIMIT 1")
+        row = cursor.fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def get_model_versions(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM model_registry ORDER BY version DESC")
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+
+    def set_active_model(self, version):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE model_registry SET is_active = 0")
+            cursor.execute("UPDATE model_registry SET is_active = 1 WHERE version = ?", (version,))
             conn.commit()
             return True
         except Exception:
