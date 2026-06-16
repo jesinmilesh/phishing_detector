@@ -34,7 +34,7 @@ class Config:
     UPLOAD_DIR = BASE_DIR / 'static' / 'uploads'
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'eml'}
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB limit
+    MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100 MB limit
     
     # Security Configuration
     RATE_LIMIT = "100 per hour"

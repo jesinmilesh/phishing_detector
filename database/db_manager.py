@@ -416,6 +416,10 @@ class DatabaseManager:
         conn.close()
         return dict(pref) if pref else None
 
+    def get_user_preferences(self, user_id):
+        """Alias for get_preferences_by_user_id to fix route dependency."""
+        return self.get_preferences_by_user_id(user_id)
+
     def update_preferences(self, user_id, theme, language, default_view, notification_pref):
         conn = self.get_connection()
         cursor = conn.cursor()

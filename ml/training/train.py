@@ -122,11 +122,8 @@ def train_and_evaluate_models():
     
     df = load_unified_dataset()
     
-    print("[*] Extracting features from URLs in parallel...")
-    # Extract features in parallel using joblib
-    features_list = Parallel(n_jobs=-1)(
-        delayed(extract_features)(url, False) for url in df['url']
-    )
+    print("[*] Extracting features from URLs...")
+    features_list = [extract_features(url, False) for url in df['url']]
         
     X = pd.DataFrame(features_list)[get_feature_names()]
     y = df['label']

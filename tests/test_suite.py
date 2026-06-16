@@ -190,6 +190,89 @@ class TestFlaskAPI(unittest.TestCase):
         self.assertEqual(notif_res.status_code, 200)
         self.assertTrue(json.loads(notif_res.data)['success'])
 
+    def test_scan_history_page(self):
+        # Register and login test user
+        self.client.post('/register', data={
+            "username": "historyuser",
+            "email": "history@test.com",
+            "password": "testpassword123",
+            "confirm_password": "testpassword123"
+        })
+        self.client.post('/login', data={
+            "username": "historyuser",
+            "password": "testpassword123"
+        })
+
+        # Test scan history loads successfully
+        res = self.client.get('/scan_history')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Scan History', res.data)
+        
+        # Test scan history search and filter parameters
+        res_search = self.client.get('/scan_history?search=paypal&prediction=Phishing')
+        self.assertEqual(res_search.status_code, 200)
+
+    def test_analytics_page(self):
+        # Register and login test user
+        self.client.post('/register', data={
+            "username": "analyticsuser",
+            "email": "analytics@test.com",
+            "password": "testpassword123",
+            "confirm_password": "testpassword123"
+        })
+        self.client.post('/login', data={
+            "username": "analyticsuser",
+            "password": "testpassword123"
+        })
+
+        # Test analytics page loads successfully
+        res = self.client.get('/analytics')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'PLATFORM ANALYTICS', res.data)
+
+    def test_admin_ml_lifecycle(self):
+        # Register and login test admin
+        self.client.post('/register', data={
+            "username": "adminuser",
+            "email": "adminuser@threatintel.local",
+            "password": "testpassword123",
+            "confirm_password": "testpassword123"
+        })
+        
+        # Update user role to admin in database
+        from database.db_manager import DatabaseManager
+        db = DatabaseManager()
+        conn = db.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET role = 'admin' WHERE username = 'adminuser'")
+        conn.commit()
+        conn.close()
+
+        self.client.post('/login', data={
+            "username": "adminuser",
+            "password": "testpassword123"
+        })
+
+        # 1. Test Admin ML Dashboard page loads
+        res = self.client.get('/admin/ml')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'ML Ops Console', res.data)
+
+        # 2. Test ML Status endpoint
+        status_res = self.client.get('/admin/ml/status')
+        self.assertEqual(status_res.status_code, 200)
+        self.assertIn(b'in_progress', status_res.data)
+
+        # 3. Test Retraining trigger
+        retrain_res = self.client.post('/admin/ml/retrain')
+        self.assertEqual(retrain_res.status_code, 200)
+        self.assertIn(b'success', retrain_res.data)
+
+        # 4. Test ML Logs endpoint
+        logs_res = self.client.get('/admin/ml/logs')
+        self.assertEqual(logs_res.status_code, 200)
+        self.assertIn(b'logs', logs_res.data)
+
 from unittest.mock import patch, MagicMock
 
 class TestEmailFeatures(unittest.TestCase):
