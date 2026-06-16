@@ -105,13 +105,11 @@
             <!-- TOP NAVIGATION BAR -->
             <header class="soc-topnav">
                 <div class="topnav-left">
-                    <button class="sidebar-toggle-btn" id="mobileSidebarToggleBtn" aria-label="Toggle Sidebar Menu">
-                        <i class="fas fa-bars"></i>
-                    </button>
                     <div class="topnav-title">
-                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 small fw-semibold">
-                            <i class="fas fa-terminal me-1"></i> ACTIVE NODE: {{ session['user']['role']|upper }}
-                        </span>
+                        <div class="soc-node-status-badge" id="socNodeStatusBadge">
+                            <span class="soc-status-dot pulsing"></span>
+                            <span class="soc-node-text"><i class="fas fa-terminal me-1"></i> ACTIVE NODE: {{ session['user']['role']|upper }}</span>
+                        </div>
                     </div>
                 </div>
                 

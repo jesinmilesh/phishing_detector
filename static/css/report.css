@@ -798,10 +798,6 @@ select option {
         transform: translateX(-100%);
     }
     
-    .reports-sidebar.active {
-        transform: translateX(0);
-    }
-    
     .reports-main-panel {
         margin-left: 0 !important;
         padding: 15px;
@@ -830,5 +826,110 @@ select option {
     
     .search-input-wrapper {
         max-width: 100%;
+    }
+}
+
+/* ========================================================
+   REPORTS TOPNAV HEADER & ACTIVE NODE BADGE RESTYLING
+   ======================================================== */
+.soc-reports-body .soc-topnav {
+    height: 70px;
+    background: rgba(11, 15, 25, 0.7) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 0 24px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.soc-reports-body .topnav-left {
+    display: flex;
+    align-items: center;
+}
+
+.soc-reports-body .topnav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* SOC Active Node Status Badge */
+.soc-node-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(3, 5, 10, 0.4);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 6px;
+    font-family: var(--font-code);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--cyber-blue);
+    text-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
+    box-shadow: inset 0 0 8px rgba(59, 130, 246, 0.05);
+    letter-spacing: 0.5px;
+    transition: var(--transition-smooth);
+}
+
+.soc-node-status-badge:hover {
+    border-color: var(--cyber-blue);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.15), inset 0 0 10px rgba(59, 130, 246, 0.08);
+}
+
+.soc-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--security-green);
+    box-shadow: 0 0 8px var(--security-green);
+    display: inline-block;
+}
+
+.soc-status-dot.pulsing {
+    animation: badgePulse 2s infinite ease-in-out;
+}
+
+@keyframes badgePulse {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.6;
+        box-shadow: 0 0 6px var(--security-green);
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 1;
+        box-shadow: 0 0 10px var(--security-green), 0 0 14px var(--security-green);
+    }
+    100% {
+        transform: scale(0.95);
+        opacity: 0.6;
+        box-shadow: 0 0 6px var(--security-green);
+    }
+}
+
+@media (max-width: 576px) {
+    .soc-reports-body .soc-topnav {
+        flex-direction: column;
+        height: auto;
+        padding: 15px;
+        gap: 12px;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .soc-reports-body .topnav-left, 
+    .soc-reports-body .topnav-right {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
     }
 }

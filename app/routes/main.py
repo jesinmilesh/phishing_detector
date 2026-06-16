@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from flask import render_template, request, jsonify, redirect, url_for, session, flash, send_file
 
-from app import app, db_manager, predictor, limiter, csrf
+from app import app, db_manager, predictor, limiter, csrf, error_logger
 from app.config import Config
 from app.utils.helpers import login_required
 from app.services.threat_feed import fetch_threat_feed
@@ -159,16 +159,35 @@ def reports_page():
 @app.route('/analytics')
 @login_required
 def analytics_page():
-    pref = db_manager.get_user_preferences(session['user']['id']) or {}
-    user = db_manager.get_user_by_id(session['user']['id'])
+    try:
+        pref = db_manager.get_user_preferences(session['user']['id']) or {}
+    except Exception as e:
+        error_logger.error(f"Error fetching user preferences in analytics: {e}")
+        pref = {}
+        
+    try:
+        user = db_manager.get_user_by_id(session['user']['id'])
+    except Exception as e:
+        error_logger.error(f"Error fetching user profile in analytics: {e}")
+        user = {"id": session['user']['id'], "username": session['user']['username'], "role": session['user'].get('role', 'analyst')}
+        
     data = analytics_service.get_platform_analytics(user_id=session['user']['id'])
     return render_template('analytics.html', user=user, data=data, pref=pref)
 
 @app.route('/scan_history')
 @login_required
 def scan_history_page():
-    pref = db_manager.get_user_preferences(session['user']['id']) or {}
-    user = db_manager.get_user_by_id(session['user']['id'])
+    try:
+        pref = db_manager.get_user_preferences(session['user']['id']) or {}
+    except Exception as e:
+        error_logger.error(f"Error fetching user preferences in scan history: {e}")
+        pref = {}
+        
+    try:
+        user = db_manager.get_user_by_id(session['user']['id'])
+    except Exception as e:
+        error_logger.error(f"Error fetching user profile in scan history: {e}")
+        user = {"id": session['user']['id'], "username": session['user']['username'], "role": session['user'].get('role', 'analyst')}
     
     search_query = request.args.get('search', '').strip()
     prediction = request.args.get('prediction', 'all')
@@ -178,21 +197,41 @@ def scan_history_page():
     except ValueError:
         page = 1
         
-    data = db_manager.query_scan_history(
-        user_id=session['user']['id'],
-        search_query=search_query,
-        prediction_filter=prediction,
-        sort_by=sort_by,
-        page=page,
-        per_page=15
-    )
+    try:
+        data = db_manager.query_scan_history(
+            user_id=session['user']['id'],
+            search_query=search_query,
+            prediction_filter=prediction,
+            sort_by=sort_by,
+            page=page,
+            per_page=15
+        )
+    except Exception as e:
+        error_logger.error(f"Error querying scan history: {e}")
+        data = {
+            'scans': [],
+            'total_items': 0,
+            'total_pages': 0,
+            'current_page': page,
+            'per_page': 15
+        }
+        
     return render_template('scan_history.html', user=user, data=data, pref=pref, search_query=search_query, prediction=prediction, sort_by=sort_by)
 
 @app.route('/report_detail/<int:scan_id>')
 @login_required
 def report_detail_page(scan_id):
-    pref = db_manager.get_user_preferences(session['user']['id']) or {}
-    user = db_manager.get_user_by_id(session['user']['id'])
+    try:
+        pref = db_manager.get_user_preferences(session['user']['id']) or {}
+    except Exception as e:
+        error_logger.error(f"Error fetching user preferences in report detail: {e}")
+        pref = {}
+        
+    try:
+        user = db_manager.get_user_by_id(session['user']['id'])
+    except Exception as e:
+        error_logger.error(f"Error fetching user profile in report detail: {e}")
+        user = {"id": session['user']['id'], "username": session['user']['username'], "role": session['user'].get('role', 'analyst')}
     
     scan = history_service.get_scan_details(scan_id, user_id=session['user']['id'])
     if not scan:

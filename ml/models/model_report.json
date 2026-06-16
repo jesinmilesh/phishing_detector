@@ -16,7 +16,7 @@
                 200
             ]
         ],
-        "latency_ms": 0.0138932466506958
+        "latency_ms": 0.016208887100219727
     },
     "comparison": [
         {
@@ -26,8 +26,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.0138932466506958,
-            "Train_Time_s": 0.20398497581481934
+            "Latency_ms": 0.016208887100219727,
+            "Train_Time_s": 0.18144726753234863
         },
         {
             "Model": "Decision Tree",
@@ -36,8 +36,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.007947683334350586,
-            "Train_Time_s": 0.004663705825805664
+            "Latency_ms": 0.0,
+            "Train_Time_s": 0.0021986961364746094
         },
         {
             "Model": "Gradient Boosting",
@@ -46,8 +46,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.0,
-            "Train_Time_s": 0.33385610580444336
+            "Latency_ms": 0.005066394805908203,
+            "Train_Time_s": 0.3181345462799072
         },
         {
             "Model": "Logistic Regression",
@@ -57,7 +57,7 @@
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
             "Latency_ms": 0.0,
-            "Train_Time_s": 0.006143331527709961
+            "Train_Time_s": 0.024255990982055664
         },
         {
             "Model": "XGBoost",
@@ -66,8 +66,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 0.9999999999999999,
-            "Latency_ms": 0.013432502746582031,
-            "Train_Time_s": 0.054474592208862305
+            "Latency_ms": 0.0165402889251709,
+            "Train_Time_s": 0.06579327583312988
         },
         {
             "Model": "LightGBM",
@@ -76,8 +76,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.010988116264343262,
-            "Train_Time_s": 0.3398258686065674
+            "Latency_ms": 0.011347532272338867,
+            "Train_Time_s": 0.5056071281433105
         }
     ]
 }

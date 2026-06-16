@@ -31,21 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Mobile Hamburger
-    const mobileSidebarToggle = document.getElementById('mobileSidebarToggleBtn');
-    if (mobileSidebarToggle && sidebar) {
-        mobileSidebarToggle.addEventListener('click', function(e) {
-            e.stopPropagation();
-            sidebar.classList.toggle('active');
-        });
-        
-        document.addEventListener('click', function(e) {
-            if (!sidebar.contains(e.target) && sidebar.classList.contains('active')) {
-                sidebar.classList.remove('active');
-            }
-        });
-    }
-
     // 2. Interactive Charts (Chart.js)
     initializeCharts();
 
