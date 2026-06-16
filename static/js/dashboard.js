@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ----------------------------------------------------
-    // 2. COLLAPSIBLE SIDEBAR LOGIC
+    // 2. COLLAPSIBLE SIDEBAR LOGIC (Antigravity Refactor)
     // ----------------------------------------------------
     const sidebar = document.getElementById('socSidebar');
     const sidebarToggleBtn = document.getElementById('sidebarToggle');
@@ -30,13 +30,27 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Restore sidebar state from localStorage
     const isSidebarCollapsed = localStorage.getItem('soc_sidebar_collapsed') === 'true';
-    if (isSidebarCollapsed && sidebar) {
-        sidebar.classList.add('collapsed');
+    if (sidebar && mainContent) {
+        if (isSidebarCollapsed) {
+            sidebar.classList.remove('sidebar');
+            sidebar.classList.add('sidebar-collapsed');
+            sidebar.classList.add('collapsed');
+            
+            mainContent.classList.remove('main-content');
+            mainContent.classList.add('main-expanded');
+        } else {
+            sidebar.classList.add('sidebar');
+            sidebar.classList.remove('sidebar-collapsed');
+            sidebar.classList.remove('collapsed');
+            
+            mainContent.classList.add('main-content');
+            mainContent.classList.remove('main-expanded');
+        }
     }
 
     function toggleSidebar(e) {
         if (e) e.stopPropagation();
-        if (!sidebar) return;
+        if (!sidebar || !mainContent) return;
         
         if (window.innerWidth <= 992) {
             sidebar.classList.toggle('mobile-open');
@@ -44,8 +58,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 sidebarOverlay.classList.toggle('active');
             }
         } else {
-            sidebar.classList.toggle('collapsed');
-            localStorage.setItem('soc_sidebar_collapsed', sidebar.classList.contains('collapsed'));
+            const willCollapse = !sidebar.classList.contains('sidebar-collapsed');
+            localStorage.setItem('soc_sidebar_collapsed', willCollapse);
+            if (willCollapse) {
+                sidebar.classList.remove('sidebar');
+                sidebar.classList.add('sidebar-collapsed');
+                sidebar.classList.add('collapsed');
+                
+                mainContent.classList.remove('main-content');
+                mainContent.classList.add('main-expanded');
+            } else {
+                sidebar.classList.add('sidebar');
+                sidebar.classList.remove('sidebar-collapsed');
+                sidebar.classList.remove('collapsed');
+                
+                mainContent.classList.add('main-content');
+                mainContent.classList.remove('main-expanded');
+            }
         }
         
         // Trigger resize event to force Chart.js charts to redimension smoothly

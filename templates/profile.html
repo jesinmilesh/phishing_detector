@@ -19,49 +19,61 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg cyber-navbar">
+    <nav class="navbar navbar-expand-lg soc-navbar" aria-label="Main Navigation">
         <div class="container">
-            <a class="navbar-brand brand-font" href="/scanner">
-                <img src="/static/images/logo.svg" alt="AI Shield Logo" style="width: 30px; height: 30px; margin-right: 8px;"> AI SHIELD
+            <!-- Left: Logo & Brand -->
+            <a class="soc-navbar-brand" href="/scanner">
+                <img src="/static/images/logo.svg" alt="AI Shield Logo" style="width: 32px; height: 32px;">
+                <span>AI SHIELD</span>
             </a>
-            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            
+            <!-- Mobile Menu Toggle -->
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#socNavbarNav" aria-controls="socNavbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <i class="fas fa-bars"></i>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+            
+            <!-- Center & Right Navigation -->
+            <div class="collapse navbar-collapse" id="socNavbarNav">
+                <!-- Center Links -->
+                <ul class="navbar-nav mx-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/scanner"><i class="fas fa-magnifying-glass"></i> SCANNERS</a>
+                        <a class="soc-nav-link" href="/dashboard"><i class="fas fa-chart-line"></i> SOC Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/dashboard"><i class="fas fa-chart-line"></i> SOC DASHBOARD</a>
+                        <a class="soc-nav-link" href="/scanner"><i class="fas fa-shield-halved"></i> Threat Analysis</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/analytics"><i class="fas fa-chart-pie"></i> ANALYTICS</a>
+                        <a class="soc-nav-link" href="/analytics"><i class="fas fa-chart-pie"></i> Platform Analytics</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/scan_history"><i class="fas fa-archive"></i> SCANS ARCHIVE</a>
+                        <a class="soc-nav-link" href="/scan_history"><i class="fas fa-history"></i> Scan History</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/profile"><i class="fas fa-user-gear"></i> MY PROFILE</a>
+                        <a class="soc-nav-link" href="/history"><i class="fas fa-box-archive"></i> Reports Center</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="soc-nav-link active" href="/profile"><i class="fas fa-user-gear"></i> Analyst Profile</a>
                     </li>
                     {% if session.get('user', {}).get('role') == 'admin' %}
                     <li class="nav-item">
-                        <a class="nav-link" href="/admin/ml"><i class="fas fa-microchip text-info"></i> ML OPS</a>
+                        <a class="soc-nav-link" href="/admin/ml"><i class="fas fa-microchip text-info"></i> ML Ops Console</a>
                     </li>
                     {% endif %}
                 </ul>
-                <div class="d-flex align-items-center">
+                
+                <!-- Right Controls -->
+                <div class="d-flex align-items-center gap-3">
                     <!-- Notifications Dropdown -->
-                    <div class="dropdown me-3" id="notificationsDropdown">
-                        <button class="btn btn-link text-secondary position-relative p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="notifBtn">
+                    <div class="dropdown" id="notificationsDropdown">
+                        <button class="btn btn-link text-secondary position-relative p-0 text-decoration-none" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="notifBtn" aria-label="Alerts Dropdown">
                             <i class="fas fa-bell fs-5"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notifBadge">
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notifBadge" style="font-size: 0.65rem; padding: 2px 5px;">
                                 0
                             </span>
                         </button>
                         <div class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-0 border border-secondary" style="width: 320px; font-size: 0.85rem;" aria-labelledby="notifBtn">
                             <div class="p-2 border-bottom border-secondary d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">Notifications</span>
+                                <span class="fw-bold text-info"><i class="fas fa-triangle-exclamation me-1"></i> Security Alerts</span>
                                 <button class="btn btn-link btn-xs text-info p-0 text-decoration-none" id="markAllReadBtn" style="font-size: 0.75rem;">Mark all read</button>
                             </div>
                             <div class="overflow-y-auto" style="max-height: 250px;" id="notifList">
@@ -70,10 +82,20 @@
                         </div>
                     </div>
                     
-                    <span class="text-secondary me-3 small">
-                        <i class="fas fa-terminal text-info"></i> Analyst: <strong class="text-white">{{ session['user']['username'] }}</strong>
-                    </span>
-                    <a href="/logout" class="btn btn-cyber-danger btn-sm py-1 px-3"><i class="fas fa-right-from-bracket"></i> EXIT</a>
+                    <!-- Dark Mode icon status -->
+                    <button class="btn text-secondary p-0" id="themeToggleBtn" title="Theme Toggle (Dark Mode Default)" aria-label="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    
+                    <!-- User Settings profile link -->
+                    <a href="/profile" class="text-secondary small d-flex align-items-center gap-2 text-decoration-none" title="User Settings">
+                        <div class="analyst-avatar-container" style="width:26px; height:26px; font-size:0.75rem; border:1px solid var(--color-primary); background:linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color:#030712; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Orbitron', sans-serif; font-weight:700;">
+                            {{ session['user']['username'][:2]|upper }}
+                        </div>
+                    </a>
+                    
+                    <!-- Exit -->
+                    <a href="/logout" class="btn btn-outline-danger btn-sm px-3 py-1 font-monospace" style="font-size: 0.75rem; letter-spacing:0.05em;"><i class="fas fa-right-from-bracket"></i> EXIT</a>
                 </div>
             </div>
         </div>
@@ -649,6 +671,35 @@
         document.addEventListener('DOMContentLoaded', function() {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             
+            // ==========================================
+            // THEME TOGGLE LOGIC
+            // ==========================================
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            if (themeToggleBtn) {
+                const themeIcon = themeToggleBtn.querySelector('i');
+                const savedTheme = localStorage.getItem('theme') || 'dark';
+                
+                if (savedTheme === 'light') {
+                    document.body.classList.add('light-theme');
+                    if (themeIcon) themeIcon.className = 'fas fa-moon';
+                } else {
+                    document.body.classList.remove('light-theme');
+                    if (themeIcon) themeIcon.className = 'fas fa-sun';
+                }
+                
+                themeToggleBtn.addEventListener('click', function() {
+                    if (document.body.classList.contains('light-theme')) {
+                        document.body.classList.remove('light-theme');
+                        if (themeIcon) themeIcon.className = 'fas fa-sun';
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        document.body.classList.add('light-theme');
+                        if (themeIcon) themeIcon.className = 'fas fa-moon';
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+
             // ==========================================
             // NOTIFICATION CENTER DYNAMIC LOGIC
             // ==========================================

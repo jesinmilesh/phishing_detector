@@ -41,23 +41,26 @@
                 <!-- Center Links -->
                 <ul class="navbar-nav mx-auto">
                     <li class="nav-item">
-                        <a class="soc-nav-link" href="/dashboard"><i class="fas fa-chart-line"></i> Dashboard</a>
+                        <a class="soc-nav-link" href="/dashboard"><i class="fas fa-chart-line"></i> SOC Dashboard</a>
                     </li>
                     <li class="nav-item">
                         <a class="soc-nav-link active" href="/scanner"><i class="fas fa-shield-halved"></i> Threat Analysis</a>
                     </li>
                     <li class="nav-item">
-                        <a class="soc-nav-link" href="/analytics"><i class="fas fa-chart-pie"></i> Analytics</a>
+                        <a class="soc-nav-link" href="/analytics"><i class="fas fa-chart-pie"></i> Platform Analytics</a>
                     </li>
                     <li class="nav-item">
-                        <a class="soc-nav-link" href="/history"><i class="fas fa-file-invoice"></i> Reports</a>
+                        <a class="soc-nav-link" href="/scan_history"><i class="fas fa-history"></i> Scan History</a>
                     </li>
                     <li class="nav-item">
-                        <a class="soc-nav-link" href="/scan_history"><i class="fas fa-box-archive"></i> HistoryLog</a>
+                        <a class="soc-nav-link" href="/history"><i class="fas fa-box-archive"></i> Reports Center</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="soc-nav-link" href="/profile"><i class="fas fa-user-gear"></i> Analyst Profile</a>
                     </li>
                     {% if session.get('user', {}).get('role') == 'admin' %}
                     <li class="nav-item">
-                        <a class="soc-nav-link" href="/admin/ml"><i class="fas fa-microchip text-info"></i> ML Ops</a>
+                        <a class="soc-nav-link" href="/admin/ml"><i class="fas fa-microchip text-info"></i> ML Ops Console</a>
                     </li>
                     {% endif %}
                 </ul>

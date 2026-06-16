@@ -17,11 +17,55 @@ document.addEventListener('DOMContentLoaded', function() {
         dateRange: '30'
     };
 
-    // Sidebar Collapsible Controller
+    // Sidebar Collapsible Controller (Antigravity Refactor)
+    // Restore sidebar state from localStorage
+    const isSidebarCollapsed = localStorage.getItem('soc_sidebar_collapsed') === 'true';
+    if (sidebar && mainPanel) {
+        if (isSidebarCollapsed) {
+            sidebar.classList.remove('sidebar');
+            sidebar.classList.add('sidebar-collapsed');
+            sidebar.classList.add('reports-sidebar-collapsed');
+            sidebar.classList.add('collapsed');
+            
+            mainPanel.classList.remove('main-content');
+            mainPanel.classList.add('main-expanded');
+            mainPanel.classList.add('sidebar-collapsed');
+        } else {
+            sidebar.classList.add('sidebar');
+            sidebar.classList.remove('sidebar-collapsed');
+            sidebar.classList.remove('reports-sidebar-collapsed');
+            sidebar.classList.remove('collapsed');
+            
+            mainPanel.classList.add('main-content');
+            mainPanel.classList.remove('main-expanded');
+            mainPanel.classList.remove('sidebar-collapsed');
+        }
+    }
+
     if (sidebarToggle && sidebar && mainPanel) {
         sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('reports-sidebar-collapsed');
-            mainPanel.classList.toggle('sidebar-collapsed');
+            const willCollapse = !sidebar.classList.contains('sidebar-collapsed');
+            localStorage.setItem('soc_sidebar_collapsed', willCollapse);
+            
+            if (willCollapse) {
+                sidebar.classList.remove('sidebar');
+                sidebar.classList.add('sidebar-collapsed');
+                sidebar.classList.add('reports-sidebar-collapsed');
+                sidebar.classList.add('collapsed');
+                
+                mainPanel.classList.remove('main-content');
+                mainPanel.classList.add('main-expanded');
+                mainPanel.classList.add('sidebar-collapsed');
+            } else {
+                sidebar.classList.add('sidebar');
+                sidebar.classList.remove('sidebar-collapsed');
+                sidebar.classList.remove('reports-sidebar-collapsed');
+                sidebar.classList.remove('collapsed');
+                
+                mainPanel.classList.add('main-content');
+                mainPanel.classList.remove('main-expanded');
+                mainPanel.classList.remove('sidebar-collapsed');
+            }
             
             // Adjust any active charts on resize
             setTimeout(() => {

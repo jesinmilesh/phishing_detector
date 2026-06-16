@@ -27,7 +27,7 @@
         <!-- ==========================================
              SIDEBAR NAVIGATION (CrowdStrike Falcon Style)
              ========================================== -->
-        <aside class="reports-sidebar" id="socSidebar">
+        <aside class="reports-sidebar sidebar" id="socSidebar">
             <div class="sidebar-header">
                 <a href="/scanner" class="sidebar-brand">
                     <img src="/static/images/logo.svg" alt="AI Shield Logo">
@@ -100,11 +100,14 @@
         <!-- ==========================================
              MAIN CONTENT CONTAINER
              ========================================== -->
-        <main class="reports-main-panel" id="reportsMainPanel">
+        <main class="reports-main-panel main-content" id="reportsMainPanel">
             
             <!-- TOP NAVIGATION BAR -->
             <header class="soc-topnav">
                 <div class="topnav-left">
+                    <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar Menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
                     <div class="topnav-title">
                         <div class="soc-node-status-badge" id="socNodeStatusBadge">
                             <span class="soc-status-dot pulsing"></span>

@@ -378,11 +378,6 @@ def send_verification_email(user_email, username, verification_url, token=None):
                     <p class="notice-title">⚠️ Security Notice</p>
                     <p class="notice-text">This authentication token is sensitive and valid for a single use. Do not share or forward this email. If you did not initiate this request, please contact security operations immediately.</p>
                 </div>
-
-                <div class="url-box">
-                    <p class="url-title">Fallback Authorization Link</p>
-                    <div class="url-link">{verification_url}</div>
-                </div>
             </div>
             <div class="footer">
                 <p class="footer-text">&copy; 2026 AI Shield SOC. All rights reserved.</p>

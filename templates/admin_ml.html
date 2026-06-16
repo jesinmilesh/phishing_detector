@@ -28,13 +28,11 @@
             color: var(--text-primary);
         }
         .mlops-sidebar {
-            width: 260px;
             background-color: var(--bg-darker);
             border-right: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
-            transition: all 0.3s ease;
         }
         .mlops-main-panel {
             flex-grow: 1;
@@ -234,12 +232,15 @@
         <!-- ==========================================
              SIDEBAR NAVIGATION
              ========================================== -->
-        <aside class="mlops-sidebar" id="socSidebar">
+        <aside class="mlops-sidebar sidebar" id="socSidebar">
             <div class="sidebar-header" style="height:70px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; border-bottom: 1px solid rgba(255,255,255,0.05)">
                 <a href="/scanner" class="sidebar-brand" style="display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text-primary); font-family:'Orbitron', sans-serif; font-weight:700;">
                     <img src="/static/images/logo.svg" alt="AI Shield Logo" style="width:28px;">
                     <span>AI SHIELD</span>
                 </a>
+                <button class="sidebar-toggle-inner" id="sidebarToggleInner" aria-label="Collapse Sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
             </div>
             
             <div class="sidebar-menu-wrapper" style="padding:20px 0; display:flex; flex-direction:column; gap:20px;">
@@ -302,7 +303,7 @@
         <!-- ==========================================
              MAIN CONTENT CONTAINER
              ========================================== -->
-        <main class="mlops-main-panel">
+        <main class="mlops-main-panel main-content">
             
             <!-- TOP NAVIGATION HEADER -->
             <header class="d-flex justify-content-between align-items-center mb-4">
@@ -566,6 +567,56 @@
     <!-- MLOps Dashboard Scripts -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // --- SIDEBAR TOGGLE MECHANICS (Antigravity Refactor) ---
+            const sidebar = document.getElementById("socSidebar");
+            const toggleInnerBtn = document.getElementById("sidebarToggleInner");
+            const mainContent = document.querySelector(".mlops-main-panel");
+
+            // Restore sidebar state from localStorage
+            const isSidebarCollapsed = localStorage.getItem('soc_sidebar_collapsed') === 'true';
+            if (sidebar && mainContent) {
+                if (isSidebarCollapsed) {
+                    sidebar.classList.remove('sidebar');
+                    sidebar.classList.add('sidebar-collapsed');
+                    sidebar.classList.add('collapsed');
+                    
+                    mainContent.classList.remove('main-content');
+                    mainContent.classList.add('main-expanded');
+                } else {
+                    sidebar.classList.add('sidebar');
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.remove('collapsed');
+                    
+                    mainContent.classList.add('main-content');
+                    mainContent.classList.remove('main-expanded');
+                }
+            }
+
+            function toggleSidebar(e) {
+                if (e) e.stopPropagation();
+                if (!sidebar || !mainContent) return;
+
+                const willCollapse = !sidebar.classList.contains('sidebar-collapsed');
+                localStorage.setItem('soc_sidebar_collapsed', willCollapse);
+                if (willCollapse) {
+                    sidebar.classList.remove('sidebar');
+                    sidebar.classList.add('sidebar-collapsed');
+                    sidebar.classList.add('collapsed');
+                    
+                    mainContent.classList.remove('main-content');
+                    mainContent.classList.add('main-expanded');
+                } else {
+                    sidebar.classList.add('sidebar');
+                    sidebar.classList.remove('sidebar-collapsed');
+                    sidebar.classList.remove('collapsed');
+                    
+                    mainContent.classList.add('main-content');
+                    mainContent.classList.remove('main-expanded');
+                }
+            }
+
+            if (toggleInnerBtn) toggleInnerBtn.addEventListener("click", toggleSidebar);
+
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             
             // Drag and Drop implementation for datasets upload

@@ -14,6 +14,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
 
     // ----------------------------------------------------
+    // THEME TOGGLE LOGIC
+    // ----------------------------------------------------
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) {
+        const themeIcon = themeToggleBtn.querySelector('i');
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+            if (themeIcon) themeIcon.className = 'fas fa-moon';
+        } else {
+            document.body.classList.remove('light-theme');
+            if (themeIcon) themeIcon.className = 'fas fa-sun';
+        }
+        
+        themeToggleBtn.addEventListener('click', function() {
+            if (document.body.classList.contains('light-theme')) {
+                document.body.classList.remove('light-theme');
+                if (themeIcon) themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.add('light-theme');
+                if (themeIcon) themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    }
+
+    // ----------------------------------------------------
     // SUGGESTION CHIPS LOGIC
     // ----------------------------------------------------
     const suggestionChips = document.querySelectorAll('.suggestion-chip');
