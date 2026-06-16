@@ -131,19 +131,16 @@ class PhishingPredictor:
         
         risk_score = int((phishing_prob * 60) + (heuristic_score * 0.4))
         
-        # Map to classes
-        # Phishing: Risk >= 70 or model phishing prob >= 0.70
-        # Suspicious: Risk between 35 and 69, or model phishing prob between 0.35 and 0.69
-        # Legitimate: Risk < 35 and model phishing prob < 0.35
-        if phishing_prob >= 0.70 or risk_score >= 70:
+        # Map to classes based on combined risk score
+        if risk_score >= 70:
             prediction = "Phishing"
-            confidence = float(phishing_prob if phishing_prob >= 0.5 else 1 - phishing_prob)
-        elif phishing_prob >= 0.35 or risk_score >= 35:
+            confidence = float(phishing_prob) if phishing_prob >= 0.7 else (risk_score / 100.0)
+        elif risk_score >= 35:
             prediction = "Suspicious"
             confidence = float(max(phishing_prob, 1 - phishing_prob))
         else:
             prediction = "Legitimate"
-            confidence = float(prob[0])  # probability of being legitimate
+            confidence = float(prob[0]) if prob[0] >= 0.65 else ((100 - risk_score) / 100.0)
 
         return {
             "prediction": prediction,

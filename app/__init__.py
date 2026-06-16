@@ -58,6 +58,9 @@ error_logger = setup_logger('error_logger', 'logs/errors.log', logging.ERROR)
 security_logger = setup_logger('security_logger', 'logs/security.log')
 email_logger = setup_logger('email_logger', 'logs/email.log')
 registration_logger = setup_logger('registration_logger', 'logs/registration.log', logging.DEBUG)
+training_logger = setup_logger('training_logger', 'logs/training.log')
+export_logger = setup_logger('export_logger', 'logs/export.log')
+upload_logger = setup_logger('upload_logger', 'logs/upload.log')
 
 # Log SMTP config variables on startup
 app_logger.info("Initializing AI Shield application...")

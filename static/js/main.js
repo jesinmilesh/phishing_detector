@@ -412,7 +412,7 @@ function displayUrlResult(data) {
                         <!-- WHOIS -->
                         <div class="tab-pane fade" id="intel-whois">
                             <h6 class="text-info brand-font mb-3">WHOIS Domain Registration</h6>
-                            <table class="table table-borderless text-light table-sm">
+                            <table class="table table-dark table-borderless text-light table-sm">
                                 <tr><td><strong>Domain:</strong></td><td class="text-secondary">${whois.domain || 'N/A'}</td></tr>
                                 <tr><td><strong>Registrar:</strong></td><td class="text-secondary">${whois.registrar || 'N/A'}</td></tr>
                                 <tr><td><strong>Creation Date:</strong></td><td class="text-secondary">${whois.creation_date || 'Unknown'}</td></tr>
@@ -425,7 +425,7 @@ function displayUrlResult(data) {
                         <!-- SSL -->
                         <div class="tab-pane fade" id="intel-ssl">
                             <h6 class="text-info brand-font mb-3">SSL Certificate Properties</h6>
-                            <table class="table table-borderless text-light table-sm">
+                            <table class="table table-dark table-borderless text-light table-sm">
                                 <tr><td><strong>Has SSL/TLS:</strong></td><td><span class="badge ${ssl.has_ssl ? 'bg-success' : 'bg-danger'}">${ssl.has_ssl ? 'YES' : 'NO'}</span></td></tr>
                                 <tr><td><strong>Verification:</strong></td><td><span class="badge ${ssl.verified ? 'bg-success' : 'bg-warning'}">${ssl.verified ? 'VERIFIED TRUSTED' : 'UNTRUSTED/SELF-SIGNED'}</span></td></tr>
                                 <tr><td><strong>Issuer:</strong></td><td class="text-secondary">${ssl.issuer || 'N/A'}</td></tr>
@@ -523,7 +523,7 @@ function displayDomainResult(data) {
                 <div class="col-md-6">
                     <div class="p-3 bg-black bg-opacity-20 rounded border border-secondary border-opacity-10 h-100">
                         <strong class="text-info font-monospace d-block mb-2 small"><i class="fas fa-id-card"></i> WHOIS & SSL Details</strong>
-                        <table class="table table-borderless text-light table-sm small mb-0">
+                        <table class="table table-dark table-borderless text-light table-sm small mb-0">
                             <tr><td><strong>Domain:</strong></td><td class="text-secondary font-monospace">${whois.domain || 'N/A'}</td></tr>
                             <tr><td><strong>Registrar:</strong></td><td class="text-secondary">${whois.registrar || 'N/A'}</td></tr>
                             <tr><td><strong>Domain Age:</strong></td><td class="text-secondary">${whois.domain_age_days !== -1 ? whois.domain_age_days + ' days' : 'Unknown'}</td></tr>

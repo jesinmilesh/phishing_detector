@@ -203,20 +203,31 @@ document.addEventListener('DOMContentLoaded', function() {
                     format: format
                 })
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    showNotification('Error generating report: ' + (data.error || 'Unknown error'), 'danger');
+            .then(async res => {
+                if (!res.ok) {
+                    const errText = await res.text();
+                    try {
+                        const errJson = JSON.parse(errText);
+                        throw new Error(errJson.error || 'Report generation failed');
+                    } catch(e) {
+                        throw new Error(errText || 'Report generation failed');
+                    }
                 }
+                
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ai_shield_report_${reportType.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                showNotification('Report generated and downloaded successfully.', 'success');
             })
             .catch(err => {
                 console.error(err);
-                showNotification('Network error during report generation.', 'danger');
+                showNotification('Error generating report: ' + err.message, 'danger');
             });
         });
     }

@@ -460,9 +460,9 @@
                             
                             <label class="upload-drag-zone d-block" for="dataset_file">
                                 <i class="fas fa-file-csv text-info fa-2x mb-3"></i>
-                                <h5 class="brand-font text-white fs-6 mb-1">Click to browse or Drag CSV file here</h5>
-                                <p class="text-secondary small mb-0">File format must be CSV and contain 'url' and 'label' fields.</p>
-                                <input type="file" name="dataset_file" id="dataset_file" class="d-none" accept=".csv" required onchange="this.form.submit()">
+                                <h5 class="brand-font text-white fs-6 mb-1">Click to browse or Drag CSV/Excel file here</h5>
+                                <p class="text-secondary small mb-0">File format must be CSV or Excel and contain 'url' and 'label' fields.</p>
+                                <input type="file" name="dataset_file" id="dataset_file" class="d-none" accept=".csv,.xlsx,.xls" required onchange="this.form.submit()">
                             </label>
                         </form>
                     </div>
@@ -567,15 +567,83 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            // Drag and Drop implementation for datasets upload
+            const dragZone = document.querySelector('.upload-drag-zone');
+            const fileInput = document.getElementById('dataset_file');
+            const uploadForm = document.getElementById('uploadForm');
+
+            if (dragZone && fileInput && uploadForm) {
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dragZone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dragZone.style.borderColor = 'var(--color-primary)';
+                        dragZone.style.background = 'rgba(14, 165, 233, 0.08)';
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dragZone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dragZone.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                        dragZone.style.background = 'rgba(0, 0, 0, 0.15)';
+                    }, false);
+                });
+
+                dragZone.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files && files.length > 0) {
+                        fileInput.files = files;
+                        uploadForm.submit();
+                    }
+                }, false);
+            }
+
             const btnRetrain = document.getElementById('btnRetrain');
             const trainingStatusWrapper = document.getElementById('trainingStatusWrapper');
             const trainingStatusText = document.getElementById('trainingStatusText');
             const terminalLog = document.getElementById('terminalLog');
 
+            function escapeHtml(str) {
+                return str.replace(/[&<>'"]/g, 
+                    tag => ({
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        "'": '&#39;',
+                        '"': '&quot;'
+                    }[tag] || tag)
+                );
+            }
+
             function logToTerminal(msg) {
                 const timeStr = new Date().toLocaleTimeString();
                 terminalLog.innerHTML += `[${timeStr}] ${msg}<br>`;
                 terminalLog.scrollTop = terminalLog.scrollHeight;
+            }
+
+            function fetchLogs() {
+                fetch('/admin/ml/logs')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.logs) {
+                            terminalLog.innerHTML = data.logs.map(line => {
+                                if (line.includes('| ERROR |') || line.includes('[!] Error') || line.includes('Failed')) {
+                                    return `<span class="text-danger">${escapeHtml(line)}</span>`;
+                                } else if (line.includes('| WARNING |') || line.includes('[!] Warning') || line.includes('[!] XGBoost') || line.includes('[!] LightGBM')) {
+                                    return `<span class="text-warning">${escapeHtml(line)}</span>`;
+                                } else if (line.includes('[+]') || line.includes('SUCCESS') || line.includes('selected best model') || line.includes('completed successfully')) {
+                                    return `<span class="text-info">${escapeHtml(line)}</span>`;
+                                }
+                                return `<span>${escapeHtml(line)}</span>`;
+                            }).join('<br>') + '<br>';
+                            terminalLog.scrollTop = terminalLog.scrollHeight;
+                        }
+                    })
+                    .catch(err => console.error("Error fetching logs", err));
             }
 
             // Polling function for background retraining status
@@ -588,14 +656,16 @@
                             trainingStatusText.textContent = data.status;
                             btnRetrain.disabled = true;
                             trainingStatusWrapper.classList.remove('d-none');
+                            fetchLogs();
                         } else {
                             trainingStatusWrapper.classList.add('d-none');
                             btnRetrain.disabled = false;
                             clearInterval(statusInterval);
                             statusInterval = null;
+                            fetchLogs();
                             if (data.status.startsWith('Completed')) {
                                 logToTerminal("Retraining finished: " + data.status);
-                                window.location.reload();
+                                setTimeout(() => window.location.reload(), 2000);
                             } else if (data.status === 'Failed') {
                                 logToTerminal("ERROR during training: " + data.error);
                             }
@@ -610,6 +680,7 @@
             {% if training_state.in_progress %}
             logToTerminal("Resuming training status monitor...");
             statusInterval = setInterval(pollTrainingStatus, 2000);
+            fetchLogs();
             {% endif %}
 
             // Trigger retraining
@@ -628,6 +699,7 @@
                         trainingStatusWrapper.classList.remove('d-none');
                         trainingStatusText.textContent = "Connecting to pipeline...";
                         statusInterval = setInterval(pollTrainingStatus, 2000);
+                        fetchLogs();
                     } else {
                         logToTerminal("Error: " + data.error);
                         btnRetrain.disabled = false;

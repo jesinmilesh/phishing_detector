@@ -18,8 +18,20 @@ from sklearn.pipeline import make_pipeline
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_auc_score
 from joblib import Parallel, delayed
 
-from app.config import Config
 from ml.feature_extraction.feature_extractor import extract_features, get_feature_names
+from app.config import Config
+
+# Mirror print statements to training log file
+import builtins
+_print = builtins.print
+def print(*args, **kwargs):
+    import logging
+    msg = " ".join(str(arg) for arg in args)
+    _print(msg, **kwargs)
+    try:
+        logging.getLogger('training_logger').info(msg)
+    except Exception:
+        pass
 
 # Try to import xgboost
 try:
@@ -50,43 +62,41 @@ def clean_label(val):
     return None
 
 def load_unified_dataset():
-    """Loads and merges all datasets from the datasets directory."""
-    print("[*] Loading datasets...")
-    dataset_files = {
-        "phishing1": "datasets/phishing1.csv",
-        "phishing2": "datasets/phishing2.csv",
-        "phishing3": "datasets/phishing3.csv",
-        "legitimate": "datasets/legitimate.csv"
-    }
+    """Loads and merges all datasets from the datasets directory dynamically."""
+    print("[*] Loading datasets dynamically...")
+    datasets_dir = "datasets"
     
     dfs = []
-    for name, path in dataset_files.items():
-        if os.path.exists(path):
-            try:
-                df = pd.read_csv(path)
-                print(f"    Loaded {name} dataset ({len(df)} rows)")
-                df.columns = [col.lower().strip() for col in df.columns]
-                
-                if 'url' not in df.columns or 'label' not in df.columns:
-                    col_map = {}
-                    for col in df.columns:
-                        if col in ['url_string', 'link', 'address']:
-                            col_map[col] = 'url'
-                        elif col in ['class', 'target', 'phish', 'phishing', 'is_phishing']:
-                            col_map[col] = 'label'
-                    df = df.rename(columns=col_map)
-                
-                if 'url' in df.columns and 'label' in df.columns:
-                    dfs.append(df[['url', 'label']])
-                else:
-                    print(f"    [!] Skipping {name}: Missing 'url' or 'label' column. Columns: {list(df.columns)}")
-            except Exception as e:
-                print(f"    [!] Error loading {name}: {e}")
-        else:
-            print(f"    [!] Dataset file not found: {path}")
+    if os.path.exists(datasets_dir):
+        for f in os.listdir(datasets_dir):
+            if f.endswith('.csv') or f.endswith('.xlsx') or f.endswith('.xls'):
+                path = os.path.join(datasets_dir, f)
+                try:
+                    if f.endswith('.csv'):
+                        df = pd.read_csv(path)
+                    else:
+                        df = pd.read_excel(path)
+                    print(f"    Loaded {f} dataset ({len(df)} rows)")
+                    df.columns = [col.lower().strip() for col in df.columns]
+                    
+                    if 'url' not in df.columns or 'label' not in df.columns:
+                        col_map = {}
+                        for col in df.columns:
+                            if col in ['url_string', 'link', 'address']:
+                                col_map[col] = 'url'
+                            elif col in ['class', 'target', 'phish', 'phishing', 'is_phishing']:
+                                col_map[col] = 'label'
+                        df = df.rename(columns=col_map)
+                    
+                    if 'url' in df.columns and 'label' in df.columns:
+                        dfs.append(df[['url', 'label']])
+                    else:
+                        print(f"    [!] Skipping {f}: Missing 'url' or 'label' column. Columns: {list(df.columns)}")
+                except Exception as e:
+                    print(f"    [!] Error loading {f}: {e}")
             
     if not dfs:
-        raise FileNotFoundError("No valid datasets loaded. Make sure CSV files are present in the 'datasets/' folder.")
+        raise FileNotFoundError("No valid datasets loaded. Make sure CSV/Excel files are present in the 'datasets/' folder.")
         
     unified_df = pd.concat(dfs, ignore_index=True)
     initial_len = len(unified_df)

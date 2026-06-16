@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from flask import render_template, request, jsonify, redirect, url_for, session, flash
+from flask import render_template, request, jsonify, redirect, url_for, session, flash, send_file
 
 from app import app, db_manager, predictor, limiter, csrf
 from app.config import Config
@@ -271,35 +271,116 @@ def api_generate_report():
         date_range = int(data.get('date_range', 30))
         output_format = data.get('format', 'pdf')
         
-        # Get latest scan for this user
-        latest_scans = db_manager.get_all_scans(limit=1, user_id=session['user']['id'])
-        if not latest_scans:
+        # Get scans for this user
+        scans = db_manager.get_all_scans(limit=1000, user_id=session['user']['id'])
+        if not scans:
             return jsonify({'success': False, 'error': 'No scan history exists to build a report.'}), 400
             
-        scan_record = latest_scans[0]
-        from app.services.report_generator import generate_pdf_report as backend_gen_pdf
-        
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"report_batch_{scan_record['id']}_{timestamp}.pdf"
-        scan_record['username'] = session['user']['username']
-        
-        pdf_path = backend_gen_pdf(scan_record, filename)
-        db_manager.create_report(scan_record['id'], pdf_path)
-        
-        # Log event
-        try:
-            conn = db_manager.get_connection()
-            conn.execute("INSERT INTO analytics (event_type, user_id, details) VALUES (?, ?, ?)",
-                         ("generate_report", session['user']['id'], f"Generated {report_type} report in {output_format}"))
-            conn.commit()
-            conn.close()
-        except Exception:
-            pass
+        # Filter based on date_range
+        import datetime as dt
+        now = dt.datetime.now()
+        filtered_scans = []
+        for s in scans:
+            try:
+                # scan_time format: "YYYY-MM-DD HH:MM:SS"
+                scan_date = dt.datetime.strptime(s['scan_time'], "%Y-%m-%d %H:%M:%S")
+                if (now - scan_date).days <= date_range:
+                    filtered_scans.append(s)
+            except Exception:
+                filtered_scans.append(s)
+                
+        # If no scans in the range, fall back to all scans
+        if not filtered_scans:
+            filtered_scans = scans[:10]  # default fallback to latest 10
             
-        return jsonify({
-            'success': True,
-            'message': f'{report_type} report created successfully!',
-            'filename': filename
-        })
+        timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        if output_format == 'csv':
+            import csv
+            import io
+            from flask import Response
+            
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(['Report ID', 'Target Resource URL', 'Threat Level', 'Risk Score', 'Scan Date/Time', 'Created By'])
+            
+            for s in filtered_scans:
+                writer.writerow([
+                    s['id'],
+                    s['url'],
+                    s['prediction'],
+                    f"{s['risk_score']}%",
+                    s['scan_time'],
+                    session['user']['username']
+                ])
+                
+            # Log event in activity
+            try:
+                conn = db_manager.get_connection()
+                conn.execute("INSERT INTO analytics (event_type, user_id, details) VALUES (?, ?, ?)",
+                             ("generate_report", session['user']['id'], f"Generated {report_type} CSV report"))
+                conn.commit()
+                conn.close()
+            except Exception:
+                pass
+                
+            response = Response(output.getvalue(), mimetype='text/csv')
+            response.headers["Content-Disposition"] = f"attachment; filename=ai_shield_report_{report_type.lower().replace(' ', '_')}_{timestamp}.csv"
+            return response
+            
+        elif output_format == 'json':
+            import json
+            from flask import Response
+            
+            export_data = []
+            for s in filtered_scans:
+                export_data.append({
+                    'id': s['id'],
+                    'url': s['url'],
+                    'prediction': s['prediction'],
+                    'risk_score': s['risk_score'],
+                    'scan_time': s['scan_time'],
+                    'analyst': session['user']['username'],
+                    'details': s.get('details', {})
+                })
+                
+            # Log event in activity
+            try:
+                conn = db_manager.get_connection()
+                conn.execute("INSERT INTO analytics (event_type, user_id, details) VALUES (?, ?, ?)",
+                             ("generate_report", session['user']['id'], f"Generated {report_type} JSON report"))
+                conn.commit()
+                conn.close()
+            except Exception:
+                pass
+                
+            json_str = json.dumps(export_data, indent=4)
+            response = Response(json_str, mimetype='application/json')
+            response.headers["Content-Disposition"] = f"attachment; filename=ai_shield_report_{report_type.lower().replace(' ', '_')}_{timestamp}.json"
+            return response
+            
+        else: # Default: pdf
+            # Get latest scan record to use for PDF report details
+            scan_record = filtered_scans[0]
+            from app.services.report_generator import generate_pdf_report as backend_gen_pdf
+            
+            filename = f"report_batch_{scan_record['id']}_{timestamp}.pdf"
+            scan_record['username'] = session['user']['username']
+            
+            pdf_path = backend_gen_pdf(scan_record, filename)
+            db_manager.create_report(scan_record['id'], pdf_path)
+            
+            # Log event
+            try:
+                conn = db_manager.get_connection()
+                conn.execute("INSERT INTO analytics (event_type, user_id, details) VALUES (?, ?, ?)",
+                             ("generate_report", session['user']['id'], f"Generated {report_type} PDF report"))
+                conn.commit()
+                conn.close()
+            except Exception:
+                pass
+                
+            return send_file(pdf_path, as_attachment=True, download_name=filename)
+            
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

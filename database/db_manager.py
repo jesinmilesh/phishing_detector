@@ -210,13 +210,19 @@ class DatabaseManager:
         # Sync any existing scans records to scan_history
         cursor.execute("INSERT OR IGNORE INTO scan_history SELECT * FROM scans")
         
-        # Check if an admin user exists, if not, create a default one
-        cursor.execute("SELECT COUNT(*) as count FROM users")
-        if cursor.fetchone()['count'] == 0:
-            admin_pwd_hash = generate_password_hash("admin123")
+        # Check if an admin user exists, if not, create a default one, otherwise update credentials
+        admin_pwd_hash = generate_password_hash("Phishing@2026")
+        cursor.execute("SELECT id FROM users WHERE role = 'admin'")
+        admin_row = cursor.fetchone()
+        if admin_row:
+            cursor.execute(
+                "UPDATE users SET username = ?, password_hash = ? WHERE id = ?",
+                ("Admin", admin_pwd_hash, admin_row['id'])
+            )
+        else:
             cursor.execute(
                 "INSERT INTO users (username, email, password_hash, role, is_verified) VALUES (?, ?, ?, ?, ?)",
-                ("admin", "admin@threatintel.local", admin_pwd_hash, "admin", 1)
+                ("Admin", "admin@threatintel.local", admin_pwd_hash, "admin", 1)
             )
         
         # Perform dynamic migration/checks for existing users who need profiles, preferences, security settings
@@ -283,6 +289,19 @@ class DatabaseManager:
                 dataset_version TEXT,
                 is_active INTEGER DEFAULT 0,
                 metrics_json TEXT
+            )
+        ''')
+
+        # Create Datasets table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS datasets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filename TEXT UNIQUE NOT NULL,
+                file_path TEXT NOT NULL,
+                file_size_kb REAL,
+                row_count INTEGER,
+                upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                uploaded_by TEXT
             )
         ''')
 
@@ -1099,5 +1118,33 @@ class DatabaseManager:
             return True
         except Exception:
             return False
+        finally:
+            conn.close()
+
+    # Dataset operations
+    def register_dataset(self, filename, file_path, file_size_kb, row_count, uploaded_by):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('''
+                INSERT INTO datasets (filename, file_path, file_size_kb, row_count, uploaded_by)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (filename, file_path, file_size_kb, row_count, uploaded_by))
+            conn.commit()
+            return cursor.lastrowid
+        except Exception:
+            return None
+        finally:
+            conn.close()
+
+    def get_all_datasets(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT * FROM datasets ORDER BY upload_time DESC")
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
+        except Exception:
+            return []
         finally:
             conn.close()

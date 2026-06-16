@@ -1148,12 +1148,14 @@
             historySortFilter.addEventListener('change', function() { historyPage = 1; loadScanHistory(); });
             
             document.getElementById('btnPrevHistory').addEventListener('click', function() {
+                if (this.classList.contains('disabled')) return;
                 if (historyPage > 1) {
                     historyPage--;
                     loadScanHistory();
                 }
             });
             document.getElementById('btnNextHistory').addEventListener('click', function() {
+                if (this.classList.contains('disabled')) return;
                 historyPage++;
                 loadScanHistory();
             });

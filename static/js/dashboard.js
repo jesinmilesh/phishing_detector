@@ -15,7 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
         prediction: 'all',
         sort: 'date_desc',
         page: 1,
-        perPage: 10
+        perPage: 10,
+        totalPages: 1
     };
 
     // ----------------------------------------------------
@@ -351,10 +352,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updatePaginationControls(data) {
         if (!pageIndicator) return;
-        pageIndicator.textContent = `Page ${data.current_page} of ${data.total_pages}`;
+        tableState.totalPages = data.total_pages || 1;
+        pageIndicator.textContent = `Page ${data.current_page} of ${tableState.totalPages}`;
         
         if (prevPageBtn) prevPageBtn.disabled = data.current_page <= 1;
-        if (nextPageBtn) nextPageBtn.disabled = data.current_page >= data.total_pages;
+        if (nextPageBtn) nextPageBtn.disabled = data.current_page >= tableState.totalPages;
     }
 
     // Event Handlers for Pagination
@@ -369,8 +371,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (nextPageBtn) {
         nextPageBtn.addEventListener('click', () => {
-            tableState.page++;
-            fetchTableData();
+            if (tableState.page < tableState.totalPages) {
+                tableState.page++;
+                fetchTableData();
+            }
         });
     }
 
