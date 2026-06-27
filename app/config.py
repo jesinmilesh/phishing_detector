@@ -57,6 +57,10 @@ class Config:
 
     # Resend API Configuration
     RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '').strip()
+    # Sender address used in all outgoing emails.
+    # In Resend test mode (no verified domain), use: AI Shield <onboarding@resend.dev>
+    # In production with a verified domain, use: noreply@yourdomain.com
+    RESEND_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL', 'AI Shield <onboarding@resend.dev>').strip()
 
     # Application URL Configuration
     # APP_BASE_URL is used to build external URLs (e.g. in verification emails).

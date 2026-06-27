@@ -10,10 +10,10 @@ ENV/
 .venv/
 
 # SECURITY: Never commit real secrets to GitHub.
-# Store secrets in Render dashboard → Environment tab.
-# Only the template file (.env.example) is tracked.
-env/.env
-!env/.env.example
+# Store secrets in Render dashboard → Environment secrets — NEVER commit these
+env/
+.env
+*.env
 
 # Database files
 database/*.db

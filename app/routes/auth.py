@@ -278,9 +278,7 @@ def register():
 
             security_logger.info(f"USER REGISTRATION | User: {username} | Email: {email} | IP: {request.remote_addr} | EmailSent: {email_sent}")
             reg_logger.info(f"Step 8: Registration complete — email_sent={email_sent} — redirecting to login")
-            print(f"[REGISTRATION] Step 8: Registration complete — email_sent={email_sent}")
 
-            # ---- ACCURATE UI FEEDBACK — only claim success when email was actually delivered ----
             if email_sent:
                 flash(
                     "Account created! ✅ A verification link has been sent to your email address. "
@@ -288,8 +286,14 @@ def register():
                     "success"
                 )
             else:
-                err_msg = f"Verification email could not be delivered. Details: {email_error}" if email_error else "Verification email could not be delivered."
-                flash(err_msg, "danger")
+                # Log raw error server-side but show a clean message to the user
+                reg_logger.error(f"Step 8: Email delivery failed — {email_error}")
+                error_logger.error(f"REGISTRATION EMAIL FAILED | User: {username} | Email: {email} | Error: {email_error}")
+                flash(
+                    "Your account was created successfully, but we could not deliver the verification email. "
+                    "Please use the 'Resend Verification Email' option after logging in, or contact support.",
+                    "warning"
+                )
             return redirect(url_for('login'))
         else:
             reg_logger.error(f"FAILED: Username or email collision — username={username}, email={email}")

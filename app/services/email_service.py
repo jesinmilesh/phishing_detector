@@ -100,59 +100,80 @@ def log_advanced_email(recipient, smtp_status, auth_status, token_generated, ema
 # Core Resend sender
 # ---------------------------------------------------------------------------
 
+def _classify_resend_error(err_str: str) -> str:
+    """Returns a human-readable root cause from a Resend API exception string."""
+    e = err_str.lower()
+    if "api_key" in e or "unauthorized" in e or "401" in e:
+        return "Invalid or missing Resend API key. Check RESEND_API_KEY in env/.env."
+    if "domain" in e or "sender" in e or "from" in e or "403" in e:
+        return "Sender domain not verified on Resend. Verify your domain at https://resend.com/domains or use onboarding@resend.dev for testing."
+    if "rate" in e or "429" in e:
+        return "Resend rate limit exceeded. Wait before retrying."
+    if "timeout" in e or "connection" in e or "network" in e:
+        return "Network/connection error reaching Resend API. Check server connectivity."
+    if "422" in e or "invalid" in e:
+        return f"Invalid request to Resend API: {err_str}"
+    return err_str
+
+
 def send_with_resend(to_email, subject, html_content, retries=3):
     """
-    Sends email via Resend API.
-    Includes 3-attempt automatic retry logic.
+    Sends email via Resend API with automatic retry and structured error classification.
+    Reads sender address from RESEND_FROM_EMAIL environment variable.
+    Falls back to dry-run/simulation mode when RESEND_API_KEY is not set.
     """
+    import time
+    from app.config import Config
+
     try:
         is_testing = current_app.config.get('TESTING', False)
     except RuntimeError:
         is_testing = False
 
-    api_key = os.environ.get("RESEND_API_KEY", "")
-    
-    # Dry-run / simulation mode when API key is missing or we are in a test environment
+    api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    from_address = os.environ.get("RESEND_FROM_EMAIL", "").strip() or Config.RESEND_FROM_EMAIL
+
+    # ── Simulation / dry-run mode ──────────────────────────────────────────────
     if not api_key or is_testing:
-        _log_reg('info', "[EMAIL SIMULATION/DRY-RUN] — Resend API key not configured or in testing mode")
-        _log_reg('info', f"To: {to_email} | Subject: {subject}")
+        _log_reg('warning', "[EMAIL DRY-RUN] RESEND_API_KEY is not set in env/.env — emails are NOT being delivered.")
+        _log_reg('info', f"[DRY-RUN] Would send to: {to_email} | Subject: {subject} | From: {from_address}")
         log_advanced_email(
             recipient=to_email,
-            smtp_status="SIMULATED",
-            auth_status="SIMULATED",
+            smtp_status="DRY-RUN",
+            auth_status="NO_API_KEY",
             token_generated=None,
-            email_sent=True,
-            delivery_failed=False,
-            error_details="Simulation mode active (no Resend API key configured or testing mode active)"
+            email_sent=False,
+            delivery_failed=True,
+            error_details="RESEND_API_KEY missing in env/.env — email NOT sent. Add your key to env/.env."
         )
-        return True, None
+        # Return False so registration accurately reports delivery failure
+        return False, "RESEND_API_KEY not configured. Email was NOT sent. Please set RESEND_API_KEY in env/.env."
 
     resend.api_key = api_key
 
+    last_error = "Unknown error"
     for attempt in range(1, retries + 1):
         try:
-            _safe_print(f"[EMAIL] Sending to: {to_email} | Subject: {subject} | Attempt {attempt}")
+            _safe_print(f"[EMAIL] Attempt {attempt}/{retries} → to={to_email} | from={from_address} | subject={subject}")
             response = resend.Emails.send({
-                "from": "AI Shield <onboarding@resend.dev>",
+                "from": from_address,
                 "to": [to_email],
                 "subject": subject,
                 "html": html_content
             })
-            
-            # Retrieve response email ID safely (can be dict or object depending on SDK version)
+
+            # SDK v1 returns object with .id; SDK v2 may return dict
             email_id = None
             if isinstance(response, dict):
                 email_id = response.get("id")
             elif hasattr(response, "id"):
                 email_id = getattr(response, "id")
-            elif hasattr(response, "get"):
-                email_id = response.get("id")
 
             if email_id:
-                _safe_print(f"[EMAIL SUCCESS] Sent to {to_email} | ID: {email_id}")
+                _safe_print(f"[EMAIL SUCCESS] Delivered to {to_email} | Resend ID: {email_id}")
                 log_advanced_email(
                     recipient=to_email,
-                    smtp_status="SUCCESS",
+                    smtp_status="200 OK",
                     auth_status="SUCCESS",
                     token_generated=None,
                     email_sent=True,
@@ -160,21 +181,31 @@ def send_with_resend(to_email, subject, html_content, retries=3):
                 )
                 return True, None
             else:
-                _safe_print(f"[EMAIL FAIL] No ID returned on attempt {attempt}")
-        except Exception as e:
-            _safe_print(f"[EMAIL ERROR] Attempt {attempt} failed: {str(e)}")
-            if attempt == retries:
-                log_advanced_email(
-                    recipient=to_email,
-                    smtp_status="FAILED",
-                    auth_status="FAILED",
-                    token_generated=None,
-                    email_sent=False,
-                    delivery_failed=True,
-                    error_details=str(e)
-                )
-                return False, str(e)
-    return False, "All retry attempts failed"
+                last_error = "Resend returned no email ID — delivery unconfirmed."
+                _safe_print(f"[EMAIL WARN] No ID in response on attempt {attempt}: {response}")
+
+        except Exception as exc:
+            raw_err = str(exc)
+            last_error = _classify_resend_error(raw_err)
+            _safe_print(f"[EMAIL ERROR] Attempt {attempt} failed: {last_error}")
+            logger.error(f"Resend attempt {attempt} failed for {to_email}: {last_error}")
+
+            if attempt < retries:
+                backoff = 2 ** attempt  # 2s, 4s
+                _safe_print(f"[EMAIL] Retrying in {backoff}s…")
+                time.sleep(backoff)
+
+    # All attempts exhausted
+    log_advanced_email(
+        recipient=to_email,
+        smtp_status="FAILED",
+        auth_status="FAILED",
+        token_generated=None,
+        email_sent=False,
+        delivery_failed=True,
+        error_details=last_error
+    )
+    return False, last_error
 
 
 # ---------------------------------------------------------------------------
