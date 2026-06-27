@@ -244,6 +244,7 @@ def send_verification_email(user_email, username, verification_url, token=None):
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            color: #e2e8f0;
         }}
         .header {{
             background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
@@ -410,11 +411,11 @@ def send_welcome_email(user_email, username, login_url):
         <title>Welcome to AI Shield</title>
         <style>
             body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #060913; color: #cbd5e1; margin: 0; padding: 20px; }}
-            .container {{ max-width: 600px; margin: 0 auto; background: #0d1423; border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 12px; padding: 30px; box-shadow: 0 4px 24px rgba(0,0,0,0.3); }}
+            .container {{ max-width: 600px; margin: 0 auto; background: #0d1423; border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 12px; padding: 30px; box-shadow: 0 4px 24px rgba(0,0,0,0.3); color: #cbd5e1; }}
             .header {{ text-align: center; border-bottom: 1px solid rgba(56, 189, 248, 0.1); padding-bottom: 20px; }}
             .logo {{ color: #0ea5e9; font-size: 24px; font-weight: bold; letter-spacing: 1px; }}
             .welcome-title {{ font-size: 20px; margin-top: 25px; color: #f8fafc; text-align: center; }}
-            .content {{ line-height: 1.6; margin-top: 20px; font-size: 15px; }}
+            .content {{ line-height: 1.6; margin-top: 20px; font-size: 15px; color: #cbd5e1; }}
             .feature-list {{ margin: 20px 0; padding-left: 20px; }}
             .feature-list li {{ margin-bottom: 10px; }}
             .cta-container {{ text-align: center; margin: 30px 0; }}
@@ -465,7 +466,7 @@ def send_password_reset_email(user_email, username, reset_url, token=None):
         <title>Password Reset Request</title>
         <style>
             body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #060913; color: #cbd5e1; margin: 0; padding: 20px; }}
-            .container {{ max-width: 600px; margin: 0 auto; background: #0d1423; border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 12px; padding: 30px; }}
+            .container {{ max-width: 600px; margin: 0 auto; background: #0d1423; border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 12px; padding: 30px; color: #cbd5e1; }}
             .header {{ text-align: center; padding-bottom: 20px; border-bottom: 1px solid rgba(56, 189, 248, 0.1); }}
             .logo {{ color: #0ea5e9; font-size: 24px; font-weight: bold; }}
             .cta-container {{ text-align: center; margin: 30px 0; }}
@@ -477,7 +478,7 @@ def send_password_reset_email(user_email, username, reset_url, token=None):
     <body>
         <div class="container">
             <div class="header"><div class="logo">🛡️ AI SHIELD</div></div>
-            <div style="line-height: 1.6; margin-top: 20px;">
+            <div style="line-height: 1.6; margin-top: 20px; color: #cbd5e1;">
                 <p>Hello {username},</p>
                 <p>A password reset request was submitted for your AI Shield account.</p>
                 <p>Click below to access the secure reset page (valid for 1 hour):</p>
@@ -512,18 +513,18 @@ def send_security_alert_email(user_email, username, alert_type, details):
         <title>System Alert Notice</title>
         <style>
             body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #060913; color: #cbd5e1; margin: 0; padding: 20px; }}
-            .container {{ max-width: 600px; margin: 0 auto; background: #0d1423; border: 2px solid #ef4444; border-radius: 12px; padding: 30px; }}
+            .container {{ max-width: 600px; margin: 0 auto; background: #0d1423; border: 2px solid #ef4444; border-radius: 12px; padding: 30px; color: #cbd5e1; }}
             .header {{ text-align: center; padding-bottom: 20px; border-bottom: 1px solid rgba(239, 68, 68, 0.2); }}
             .logo {{ color: #ef4444; font-size: 24px; font-weight: bold; }}
-            .alert-box {{ background: rgba(239, 68, 68, 0.08); border: 1px dashed #ef4444; border-radius: 8px; padding: 15px; margin: 20px 0; }}
+            .alert-box {{ background: rgba(239, 68, 68, 0.08); border: 1px dashed #ef4444; border-radius: 8px; padding: 15px; margin: 20px 0; color: #cbd5e1; }}
             .footer {{ font-size: 12px; color: #64748b; text-align: center; margin-top: 35px; border-top: 1px solid rgba(56, 189, 248, 0.1); padding-top: 20px; }}
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header"><div class="logo">⚠️ THREAT ALERT</div></div>
-            <div style="line-height: 1.6; margin-top: 20px;">
-                <p>Hello {username},</p>
+            <div style="line-height: 1.6; margin-top: 20px; color: #cbd5e1;">
+                <p style="color: #cbd5e1;">Hello {username},</p>
                 <p>The AI Shield Security Engine resolved a security alert for your SOC node:</p>
                 <div class="alert-box">
                     <strong>Event Type:</strong> {alert_type}<br>
@@ -561,11 +562,11 @@ def send_newsletter_subscription_email(user_email):
         <title>Threat Intelligence Subscription</title>
         <style>
             body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #060913; color: #cbd5e1; margin: 0; padding: 20px; }}
-            .container {{ max-width: 600px; margin: 0 auto; background: #0d1423; border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 30px; box-shadow: 0 4px 24px rgba(0,0,0,0.3); }}
+            .container {{ max-width: 600px; margin: 0 auto; background: #0d1423; border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 30px; box-shadow: 0 4px 24px rgba(0,0,0,0.3); color: #cbd5e1; }}
             .header {{ text-align: center; border-bottom: 1px solid rgba(16, 185, 129, 0.15); padding-bottom: 20px; }}
             .logo {{ color: #10b981; font-size: 24px; font-weight: bold; letter-spacing: 1px; }}
             .title {{ font-size: 20px; margin-top: 25px; color: #f8fafc; text-align: center; }}
-            .content {{ line-height: 1.6; margin-top: 20px; font-size: 15px; }}
+            .content {{ line-height: 1.6; margin-top: 20px; font-size: 15px; color: #cbd5e1; }}
             .footer {{ font-size: 12px; color: #64748b; text-align: center; margin-top: 35px; border-top: 1px solid rgba(56, 189, 248, 0.1); padding-top: 20px; }}
         </style>
     </head>
@@ -605,12 +606,12 @@ def send_contact_email(name, from_email, subject, message):
         <title>New Contact Form Submission</title>
         <style>
             body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #060913; color: #cbd5e1; margin: 0; padding: 20px; }}
-            .container {{ max-width: 600px; margin: 0 auto; background: #0d1423; border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 12px; padding: 30px; box-shadow: 0 4px 24px rgba(0,0,0,0.3); }}
+            .container {{ max-width: 600px; margin: 0 auto; background: #0d1423; border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 12px; padding: 30px; box-shadow: 0 4px 24px rgba(0,0,0,0.3); color: #cbd5e1; }}
             .header {{ text-align: center; border-bottom: 1px solid rgba(59, 130, 246, 0.1); padding-bottom: 20px; }}
             .logo {{ color: #3b82f6; font-size: 24px; font-weight: bold; letter-spacing: 1px; }}
             .title {{ font-size: 20px; margin-top: 25px; color: #f8fafc; text-align: center; }}
-            .content {{ line-height: 1.6; margin-top: 20px; font-size: 15px; }}
-            .detail-box {{ background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 8px; padding: 15px; margin: 20px 0; }}
+            .content {{ line-height: 1.6; margin-top: 20px; font-size: 15px; color: #cbd5e1; }}
+            .detail-box {{ background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 8px; padding: 15px; margin: 20px 0; color: #cbd5e1; }}
             .footer {{ font-size: 12px; color: #64748b; text-align: center; margin-top: 35px; border-top: 1px solid rgba(59, 130, 246, 0.1); padding-top: 20px; }}
         </style>
     </head>
