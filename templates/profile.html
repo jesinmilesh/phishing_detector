@@ -656,6 +656,102 @@
         </div>
     </div>
 
+    <!-- MODAL: EDIT PROFILE -->
+    <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark border border-secondary text-white">
+                <div class="modal-header border-secondary border-opacity-20">
+                    <h5 class="modal-title brand-font text-info" id="editProfileModalLabel"><i class="fas fa-user-edit me-2"></i> Edit Profile Console</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editProfileForm">
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold" for="editFullName">Full Name</label>
+                                <input type="text" class="form-control cyber-input" id="editFullName" name="full_name" value="{{ profile.full_name or '' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold" for="editUsername">Username</label>
+                                <input type="text" class="form-control cyber-input" id="editUsername" name="username" value="{{ profile.username or '' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold" for="editEmail">Email Address</label>
+                                <input type="email" class="form-control cyber-input" id="editEmail" name="email" value="{{ profile.email or '' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold" for="editPhone">Phone Number (Optional)</label>
+                                <input type="text" class="form-control cyber-input" id="editPhone" name="phone_number" value="{{ profile.phone_number or '' }}" placeholder="e.g. +1 (555) 019-2834">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold" for="editCountry">Country</label>
+                                <input type="text" class="form-control cyber-input" id="editCountry" name="country" value="{{ profile.country or '' }}" placeholder="e.g. United States">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold" for="editTimezone">Time Zone</label>
+                                <select class="form-select cyber-input" id="editTimezone" name="timezone">
+                                    <option value="UTC" {% if profile.timezone == 'UTC' %}selected{% endif %}>UTC (Coordinated Universal Time)</option>
+                                    <option value="America/New_York" {% if profile.timezone == 'America/New_York' %}selected{% endif %}>America/New_York (EST/EDT)</option>
+                                    <option value="America/Chicago" {% if profile.timezone == 'America/Chicago' %}selected{% endif %}>America/Chicago (CST/CDT)</option>
+                                    <option value="America/Denver" {% if profile.timezone == 'America/Denver' %}selected{% endif %}>America/Denver (MST/MDT)</option>
+                                    <option value="America/Los_Angeles" {% if profile.timezone == 'America/Los_Angeles' %}selected{% endif %}>America/Los_Angeles (PST/PDT)</option>
+                                    <option value="Europe/London" {% if profile.timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT/BST)</option>
+                                    <option value="Europe/Paris" {% if profile.timezone == 'Europe/Paris' %}selected{% endif %}>Europe/Paris (CET/CEST)</option>
+                                    <option value="Asia/Tokyo" {% if profile.timezone == 'Asia/Tokyo' %}selected{% endif %}>Asia/Tokyo (JST)</option>
+                                    <option value="Asia/Kolkata" {% if profile.timezone == 'Asia/Kolkata' %}selected{% endif %}>Asia/Kolkata (IST)</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small fw-bold" for="editBio">Bio / About Me</label>
+                                <textarea class="form-control cyber-input" id="editBio" name="bio" rows="3" placeholder="Briefly describe your responsibilities...">{{ profile.bio or '' }}</textarea>
+                            </div>
+                            
+                            <!-- Display & Preferences -->
+                            <div class="col-md-6 mt-4">
+                                <label class="form-label text-muted small fw-bold" for="editTheme">Console Theme Mode</label>
+                                <select class="form-select cyber-input" id="editTheme" name="theme">
+                                    <option value="system" {% if prefs.theme == 'system' %}selected{% endif %}>System Preference</option>
+                                    <option value="dark" {% if prefs.theme == 'dark' %}selected{% endif %}>Cyber Dark Mode</option>
+                                    <option value="light" {% if prefs.theme == 'light' %}selected{% endif %}>Tactical Light Mode</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 d-flex align-items-end mt-4">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input cyber-input" type="checkbox" id="editSecurityAlerts" name="security_alerts" {% if sec.login_alerts_enabled == 1 %}checked{% endif %}>
+                                    <label class="form-check-label text-secondary small fw-bold" for="editSecurityAlerts">
+                                        Enable Email Security Alerts
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="editProfileError" class="alert alert-danger py-2 mt-3 border-0 bg-danger bg-opacity-10 text-danger small d-none"></div>
+                    </div>
+                    <div class="modal-footer border-secondary border-opacity-20">
+                        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-cyber-success px-4" id="editProfileSubmitBtn">
+                            <span class="spinner-border spinner-border-sm me-2 d-none" id="editProfileSpinner" role="status" aria-hidden="true"></span>
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+        <div id="cyberToast" class="toast align-items-center text-white bg-dark border border-secondary border-opacity-35 rounded-3 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center">
+                    <i class="fas fa-circle-info fs-5 me-3" id="cyberToastIcon"></i>
+                    <span id="cyberToastMessage" class="small fw-semibold"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="text-center py-4 text-muted border-top border-secondary-subtle mt-5" style="background-color: var(--bg-darker)">
         <p class="small mb-0">&copy; 2026 TR-PHISH Security Operations Center. Real-Time AI Phishing Detection System.</p>
@@ -780,39 +876,87 @@
             setInterval(fetchNotifications, 30000);
 
             // ==========================================
-            // PROFILE DETAILS EDIT / SAVE
+            // TOAST NOTIFICATIONS HELPER
+            // ==========================================
+            const toastEl = document.getElementById('cyberToast');
+            const toastMessage = document.getElementById('cyberToastMessage');
+            const toastIcon = document.getElementById('cyberToastIcon');
+            const bootstrapToast = new bootstrap.Toast(toastEl);
+
+            window.showToast = function(msg, type = 'info') {
+                toastMessage.textContent = msg;
+                
+                // Reset classes
+                toastEl.className = 'toast align-items-center text-white border rounded-3 shadow-lg';
+                if (type === 'success') {
+                    toastEl.classList.add('bg-success', 'border-success', 'bg-opacity-95');
+                    toastIcon.className = 'fas fa-circle-check fs-5 me-3 text-white';
+                } else if (type === 'danger' || type === 'error') {
+                    toastEl.classList.add('bg-danger', 'border-danger', 'bg-opacity-95');
+                    toastIcon.className = 'fas fa-triangle-exclamation fs-5 me-3 text-white';
+                } else if (type === 'warning') {
+                    toastEl.classList.add('bg-warning', 'border-warning', 'text-dark', 'bg-opacity-95');
+                    toastIcon.className = 'fas fa-circle-exclamation fs-5 me-3 text-dark';
+                } else {
+                    toastEl.classList.add('bg-dark', 'border-secondary', 'border-opacity-35');
+                    toastIcon.className = 'fas fa-circle-info fs-5 me-3 text-info';
+                }
+                
+                bootstrapToast.show();
+            };
+
+            // ==========================================
+            // PROFILE DETAILS EDIT / SAVE (MODAL TRIGGER)
             // ==========================================
             const editProfileBtn = document.getElementById('editProfileBtn');
-            const profileActions = document.getElementById('profileActions');
-            const profileForm = document.getElementById('profileForm');
-            const profileInputs = profileForm.querySelectorAll('input, select, textarea');
-            
+            const editProfileModalEl = document.getElementById('editProfileModal');
+            const editProfileModal = new bootstrap.Modal(editProfileModalEl);
+            const editProfileForm = document.getElementById('editProfileForm');
+
             editProfileBtn.addEventListener('click', function() {
-                profileInputs.forEach(input => input.removeAttribute('disabled'));
-                profileActions.classList.remove('d-none');
-                editProfileBtn.classList.add('d-none');
+                // Populate fields from main layout display values
+                document.getElementById('editFullName').value = document.getElementById('profileFullName').value;
+                document.getElementById('editPhone').value = document.getElementById('profilePhone').value;
+                document.getElementById('editCountry').value = document.getElementById('profileCountry').value;
+                document.getElementById('editTimezone').value = document.getElementById('profileTimezone').value;
+                document.getElementById('editBio').value = document.getElementById('profileBio').value;
+                
+                // For username and email, pull from read-only display values on the page
+                document.getElementById('editUsername').value = "{{ profile.username }}";
+                document.getElementById('editEmail').value = "{{ profile.email }}";
+                document.getElementById('editTheme').value = "{{ prefs.theme or 'system' }}";
+                document.getElementById('editSecurityAlerts').checked = {% if sec.login_alerts_enabled == 1 %}true{% else %}false{% endif %};
+                
+                // Clear errors and show
+                document.getElementById('editProfileError').classList.add('d-none');
+                editProfileModal.show();
             });
-            
-            document.getElementById('cancelProfileBtn').addEventListener('click', function() {
-                profileInputs.forEach(input => input.setAttribute('disabled', ''));
-                profileActions.classList.add('d-none');
-                editProfileBtn.classList.remove('d-none');
-                // Reload page to reset values
-                window.location.reload();
-            });
-            
-            profileForm.addEventListener('submit', function(e) {
+
+            editProfileForm.addEventListener('submit', function(e) {
                 e.preventDefault();
+                
+                const spinner = document.getElementById('editProfileSpinner');
+                const submitBtn = document.getElementById('editProfileSubmitBtn');
+                const errorAlert = document.getElementById('editProfileError');
+                
+                spinner.classList.remove('d-none');
+                submitBtn.setAttribute('disabled', 'true');
+                errorAlert.classList.add('d-none');
+                
                 const payload = {
-                    full_name: document.getElementById('profileFullName').value,
-                    phone_number: document.getElementById('profilePhone').value,
-                    country: document.getElementById('profileCountry').value,
-                    timezone: document.getElementById('profileTimezone').value,
-                    bio: document.getElementById('profileBio').value
+                    full_name: document.getElementById('editFullName').value,
+                    username: document.getElementById('editUsername').value,
+                    email: document.getElementById('editEmail').value,
+                    phone_number: document.getElementById('editPhone').value,
+                    country: document.getElementById('editCountry').value,
+                    timezone: document.getElementById('editTimezone').value,
+                    bio: document.getElementById('editBio').value,
+                    theme: document.getElementById('editTheme').value,
+                    security_alerts: document.getElementById('editSecurityAlerts').checked
                 };
                 
                 fetch('/profile/update', {
-                    method: 'PUT',
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken
@@ -821,12 +965,27 @@
                 })
                 .then(res => res.json())
                 .then(data => {
+                    spinner.classList.add('d-none');
+                    submitBtn.removeAttribute('disabled');
+                    
                     if (data.success) {
-                        alert(data.message);
-                        window.location.reload();
+                        showToast(data.message, 'success');
+                        editProfileModal.hide();
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
                     } else {
-                        alert(data.error || 'Failed to update profile.');
+                        errorAlert.textContent = data.error || 'Failed to update profile details.';
+                        errorAlert.classList.remove('d-none');
+                        showToast(data.error || 'Failed to update profile details.', 'danger');
                     }
+                })
+                .catch(err => {
+                    spinner.classList.add('d-none');
+                    submitBtn.removeAttribute('disabled');
+                    errorAlert.textContent = 'An unexpected network error occurred.';
+                    errorAlert.classList.remove('d-none');
+                    showToast('An unexpected network error occurred.', 'danger');
                 });
             });
 
@@ -898,9 +1057,9 @@
                     if (data.success) {
                         document.getElementById('sidebarAvatar').src = data.avatar_url;
                         cropperModal.hide();
-                        alert('Profile picture updated successfully!');
+                        showToast('Profile picture updated successfully!', 'success');
                     } else {
-                        alert(data.error || 'Failed to upload photo.');
+                        showToast(data.error || 'Failed to upload photo.', 'danger');
                     }
                 });
             });
@@ -916,7 +1075,7 @@
                 const confirmPassword = document.getElementById('confirmPassword').value;
                 
                 if (newPassword !== confirmPassword) {
-                    alert('New passwords do not match!');
+                    showToast('New passwords do not match!', 'danger');
                     return;
                 }
                 
@@ -935,10 +1094,10 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message);
+                        showToast(data.message, 'success');
                         changePasswordForm.reset();
                     } else {
-                        alert(data.error || 'Failed to change password.');
+                        showToast(data.error || 'Failed to change password.', 'danger');
                     }
                 });
             });
@@ -974,7 +1133,7 @@
                             document.getElementById('mfaSetupError').classList.add('d-none');
                             mfaSetupModal.show();
                         } else {
-                            alert('MFA setup initiation failed.');
+                            showToast('MFA setup initiation failed.', 'danger');
                             mfaToggle.checked = false;
                         }
                     });
@@ -998,7 +1157,7 @@
             document.getElementById('mfaVerifyBtn').addEventListener('click', function() {
                 const code = document.getElementById('mfaVerificationCode').value.trim();
                 if (code.length !== 6) {
-                    alert('Please enter a valid 6-digit verification code.');
+                    showToast('Please enter a valid 6-digit verification code.', 'danger');
                     return;
                 }
                 
@@ -1013,7 +1172,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message);
+                        showToast(data.message, 'success');
                         currentMfaState = true;
                         mfaToggle.checked = true;
                         mfaSetupModal.hide();
@@ -1029,7 +1188,7 @@
             document.getElementById('mfaDisableConfirmBtn').addEventListener('click', function() {
                 const password = document.getElementById('mfaDisablePassword').value;
                 if (!password) {
-                    alert('Password verification is required.');
+                    showToast('Password verification is required.', 'danger');
                     return;
                 }
                 
@@ -1044,7 +1203,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message);
+                        showToast(data.message, 'success');
                         currentMfaState = false;
                         mfaToggle.checked = false;
                         mfaDisableModal.hide();
@@ -1081,9 +1240,9 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message);
+                        showToast(data.message, 'success');
                     } else {
-                        alert(data.error || 'Failed to save preferences.');
+                        showToast(data.error || 'Failed to save preferences.', 'danger');
                     }
                 });
             });
@@ -1108,10 +1267,10 @@
                         .then(res => res.json())
                         .then(data => {
                             if (data.success) {
-                                alert(data.message);
+                                showToast(data.message, 'success');
                                 window.location.reload();
                             } else {
-                                alert(data.error);
+                                showToast(data.error, 'danger');
                             }
                         });
                     }
@@ -1127,7 +1286,7 @@
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
-                            alert(data.message);
+                            showToast(data.message, 'success');
                             window.location.reload();
                         }
                     });
@@ -1231,9 +1390,9 @@
                         .then(data => {
                             if (data.success) {
                                 document.getElementById(`report-row-${reportId}`).remove();
-                                alert(data.message);
+                                showToast(data.message, 'success');
                             } else {
-                                alert(data.error);
+                                showToast(data.error, 'danger');
                             }
                         });
                     }
@@ -1254,7 +1413,7 @@
             document.getElementById('deleteAccountConfirmBtn').addEventListener('click', function() {
                 const password = document.getElementById('deleteAccountPassword').value;
                 if (!password) {
-                    alert('Passcode confirmation is required.');
+                    showToast('Passcode confirmation is required.', 'danger');
                     return;
                 }
                 
@@ -1269,8 +1428,10 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message);
-                        window.location.href = '/login';
+                        showToast(data.message, 'success');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 1500);
                     } else {
                         const errDiv = document.getElementById('deleteAccountError');
                         errDiv.textContent = data.error;

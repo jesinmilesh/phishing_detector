@@ -86,13 +86,15 @@
 
             <!-- Profile Footer -->
             <div class="sidebar-footer-profile">
-                <div class="analyst-avatar-container">
-                    <img src="{{ user.avatar_path or '/static/images/default_avatar.png' }}" alt="Avatar" class="avatar-img">
-                </div>
-                <div class="analyst-meta">
-                    <div class="analyst-name">{{ user.username }}</div>
-                    <div class="analyst-role">SOC analyst</div>
-                </div>
+                <a href="/profile" class="sidebar-footer-profile-link" aria-label="View Analyst Profile" title="View Analyst Profile">
+                    <div class="analyst-avatar-container">
+                        <img src="{{ user.avatar_path or '/static/images/default_avatar.png' }}" alt="Avatar" class="avatar-img">
+                    </div>
+                    <div class="analyst-meta">
+                        <div class="analyst-name">{{ user.username }}</div>
+                        <div class="analyst-role">SOC analyst</div>
+                    </div>
+                </a>
                 <a href="/logout" class="logout-btn-link" title="Logout session">
                     <i class="fas fa-power-off"></i>
                 </a>

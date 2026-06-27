@@ -211,6 +211,23 @@ select option {
     display: flex;
     align-items: center;
     gap: 12px;
+    transition: var(--transition-smooth);
+}
+
+a.sidebar-user-widget {
+    text-decoration: none !important;
+    cursor: pointer;
+}
+
+a.sidebar-user-widget:hover {
+    background-color: var(--cyber-blue-glow);
+    border-top-color: var(--cyber-blue);
+    box-shadow: var(--neon-glow-blue);
+}
+
+a.sidebar-user-widget:focus-visible {
+    outline: 2px solid var(--cyber-blue);
+    outline-offset: -2px;
 }
 
 .reports-sidebar-collapsed .sidebar-user-widget {

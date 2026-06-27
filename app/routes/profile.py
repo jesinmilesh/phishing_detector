@@ -91,11 +91,17 @@ def profile_page():
         user=profile
     )
 
-@app.route('/profile/update', methods=['PUT'])
+@app.route('/profile/update', methods=['POST', 'PUT'])
 @login_required
 def profile_update():
     user_id = session['user']['id']
-    data = request.get_json()
+    
+    # Support both JSON and Form Data
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+        
     if not data:
         return jsonify({"success": False, "error": "Bad request"}), 400
         
@@ -104,13 +110,54 @@ def profile_update():
     country = data.get('country', '').strip()
     timezone = data.get('timezone', '').strip()
     bio = data.get('bio', '').strip()
+    username = data.get('username', '').strip()
+    email = data.get('email', '').strip()
     
     # Sanitization
     full_name = re.sub(r'[<>]', '', full_name)
     phone_number = re.sub(r'[^0-9+\-\s()]', '', phone_number)
     bio = re.sub(r'[<>]', '', bio)
+    if username:
+        username = re.sub(r'[^a-zA-Z0-9_\-]', '', username)
+    if email:
+        email = email.lower()
+        if not re.match(r'[^@]+@[^@]+\.[^@]+', email):
+            return jsonify({"success": False, "error": "Invalid email address format."}), 400
+            
+    success, err = db_manager.update_profile(
+        user_id,
+        full_name=full_name,
+        phone_number=phone_number,
+        country=country,
+        timezone=timezone,
+        bio=bio,
+        username=username or None,
+        email=email or None
+    )
     
-    db_manager.update_profile(user_id, full_name, phone_number, country, timezone, bio)
+    if not success:
+        return jsonify({"success": False, "error": err}), 400
+        
+    # Sync session details
+    if username:
+        session['user']['username'] = username
+        
+    # Also handle Security preferences / display preferences update if passed
+    theme = data.get('theme')
+    if theme in ['light', 'dark', 'system']:
+        language = data.get('language', 'en')
+        default_view = data.get('default_view', 'dashboard')
+        notification_pref = data.get('notification_pref', 'all')
+        db_manager.update_preferences(user_id, theme, language, default_view, notification_pref)
+        
+    if 'security_alerts' in data:
+        email_alerts = 1 if (data.get('security_alerts') in [True, 'true', 'on', 1, '1']) else 0
+        sec = db_manager.get_security_settings_by_user_id(user_id)
+        mfa_enabled = sec.get('two_factor_enabled', 0) if sec else 0
+        mfa_secret = sec.get('two_factor_secret', '') if sec else ''
+        data_sharing = sec.get('data_sharing_enabled', 1) if sec else 1
+        db_manager.update_security_settings(user_id, mfa_enabled, mfa_secret, email_alerts, data_sharing)
+        
     db_manager.add_notification(
         user_id,
         "Profile Updated",
@@ -381,10 +428,17 @@ def profile_2fa_disable():
 
 # ACTIVE SESSIONS REVOCATION
 @app.route('/profile/sessions/revoke', methods=['POST'])
+@app.route('/node/revoke', methods=['POST'])
 @login_required
 def profile_session_revoke():
     user_id = session['user']['id']
-    data = request.get_json()
+    
+    # Support both JSON and Form Data
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+        
     if not data or 'session_token' not in data:
         return jsonify({"success": False, "error": "Session token required"}), 400
         
@@ -403,6 +457,7 @@ def profile_session_revoke():
     return jsonify({"success": True, "message": "Session terminated successfully."})
 
 @app.route('/profile/sessions/revoke-all', methods=['POST'])
+@app.route('/node/revoke-all', methods=['POST'])
 @login_required
 def profile_session_revoke_all():
     user_id = session['user']['id']
@@ -416,6 +471,32 @@ def profile_session_revoke_all():
         "security_alert"
     )
     return jsonify({"success": True, "message": "All other active sessions revoked."})
+
+@app.route('/user/sessions', methods=['GET'])
+@login_required
+def get_user_sessions():
+    user_id = session['user']['id']
+    sessions = db_manager.get_active_sessions(user_id)
+    current_token = session.get('session_token')
+    
+    results = []
+    for s in sessions:
+        sd = {
+            "device_name": s.get('device_name', ''),
+            "browser": s.get('browser', ''),
+            "os": s.get('os', ''),
+            "ip_address": s.get('ip_address', ''),
+            "location": s.get('location', ''),
+            "last_active": s.get('last_active', ''),
+            "is_current": s.get('session_token') == current_token,
+            "session_token": s.get('session_token')
+        }
+        results.append(sd)
+        
+    return jsonify({
+        "success": True,
+        "sessions": results
+    })
 
 # EXPORT DATA (GDPR & COMPLIANCE)
 @app.route('/profile/export-data', methods=['GET'])

@@ -86,7 +86,7 @@
             </div>
 
             <!-- Sidebar Footer Profile -->
-            <div class="sidebar-footer-profile">
+            <a href="/profile" class="sidebar-footer-profile text-decoration-none" aria-label="View Analyst Profile" title="View Analyst Profile">
                 <div class="analyst-avatar-container">
                     {{ session['user']['username'][:2]|upper }}
                 </div>
@@ -94,7 +94,7 @@
                     <span class="name">{{ session['user']['username'] }}</span>
                     <span class="role">{{ session['user']['role'] }} node</span>
                 </div>
-            </div>
+            </a>
         </aside>
 
         <!-- MAIN CONTENT CONTAINER -->
@@ -142,13 +142,13 @@
                         </div>
                     </div>
 
-                    <!-- Profile Dropdown -->
-                    <div class="topnav-profile-menu" onclick="window.location.href='/profile'">
+                    <!-- Profile Link -->
+                    <a href="/profile" class="topnav-profile-menu text-decoration-none" aria-label="View Analyst Profile" title="View Analyst Profile">
                         <div class="analyst-avatar-container" style="width:28px; height:28px; font-size:0.7rem; border-width: 1px;">
                             {{ session['user']['username'][:2]|upper }}
                         </div>
                         <span class="text-white small d-none d-md-inline">{{ session['user']['username'] }}</span>
-                    </div>
+                    </a>
                 </div>
             </header>
 

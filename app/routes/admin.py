@@ -255,3 +255,29 @@ def admin_ml_logs():
             return jsonify({"success": True, "logs": last_lines})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/admin/ml/delete-dataset/<string:filename>', methods=['POST', 'DELETE'])
+@login_required
+def admin_delete_dataset(filename):
+    user = db_manager.get_user_by_id(session['user']['id'])
+    if not user or user.get('role') != 'admin':
+        return jsonify({"success": False, "error": "Access denied"}), 403
+
+    filename = secure_filename(filename)
+    datasets_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'datasets')
+    file_path = os.path.join(datasets_dir, filename)
+
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        db_manager.delete_dataset_by_name(filename)
+        
+        import logging
+        upload_logger = logging.getLogger('upload_logger')
+        upload_logger.info(f"DATASET DELETED | User: {user.get('username')} | File: {filename}")
+        
+        flash(f"Dataset '{filename}' deleted successfully.", "success")
+        return jsonify({"success": True, "message": f"Dataset '{filename}' deleted."})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500

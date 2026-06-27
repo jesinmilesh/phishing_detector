@@ -16,7 +16,7 @@
                 200
             ]
         ],
-        "latency_ms": 0.015466809272766113
+        "latency_ms": 0.016143321990966797
     },
     "comparison": [
         {
@@ -26,8 +26,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.015466809272766113,
-            "Train_Time_s": 0.16699600219726562
+            "Latency_ms": 0.016143321990966797,
+            "Train_Time_s": 0.11579251289367676
         },
         {
             "Model": "Decision Tree",
@@ -36,8 +36,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.0,
-            "Train_Time_s": 0.0
+            "Latency_ms": 0.0013202428817749023,
+            "Train_Time_s": 0.002694368362426758
         },
         {
             "Model": "Gradient Boosting",
@@ -46,8 +46,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.0,
-            "Train_Time_s": 0.3107924461364746
+            "Latency_ms": 0.0029706954956054688,
+            "Train_Time_s": 0.17401719093322754
         },
         {
             "Model": "Logistic Regression",
@@ -56,8 +56,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.0,
-            "Train_Time_s": 0.01279759407043457
+            "Latency_ms": 0.0018286705017089844,
+            "Train_Time_s": 0.005411863327026367
         },
         {
             "Model": "XGBoost",
@@ -66,8 +66,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 0.9999999999999999,
-            "Latency_ms": 0.017031431198120117,
-            "Train_Time_s": 0.07072854042053223
+            "Latency_ms": 0.006668567657470703,
+            "Train_Time_s": 0.03513455390930176
         },
         {
             "Model": "LightGBM",
@@ -76,8 +76,8 @@
             "Recall": 1.0,
             "F1 Score": 1.0,
             "ROC-AUC": 1.0,
-            "Latency_ms": 0.00905752182006836,
-            "Train_Time_s": 0.37564754486083984
+            "Latency_ms": 0.006198883056640625,
+            "Train_Time_s": 1.477752447128296
         }
     ]
 }

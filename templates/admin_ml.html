@@ -289,7 +289,7 @@
             </div>
             
             <!-- Sidebar Footer Profile -->
-            <div class="sidebar-footer-profile" style="margin-top:auto; padding:20px; border-top:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; gap:12px;">
+            <a href="/profile" class="sidebar-footer-profile text-decoration-none" style="margin-top:auto; padding:20px; border-top:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; gap:12px;" aria-label="View Analyst Profile" title="View Analyst Profile">
                 <div class="analyst-avatar-container" style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, var(--color-primary), var(--color-secondary)); display:flex; align-items:center; justify-content:center; font-family:'Orbitron', sans-serif; font-weight:700; color:#030712; font-size:0.85rem;">
                     {{ session['user']['username'][:2]|upper }}
                 </div>
@@ -297,7 +297,7 @@
                     <span class="name" style="font-size:0.82rem; color:var(--text-primary); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ session['user']['username'] }}</span>
                     <span class="role" style="font-size:0.7rem; color:var(--text-secondary); text-transform:uppercase;">{{ session['user']['role'] }} node</span>
                 </div>
-            </div>
+            </a>
         </aside>
 
         <!-- ==========================================
@@ -480,6 +480,7 @@
                                         <th>File Name</th>
                                         <th>Size</th>
                                         <th>Est. Rows</th>
+                                        <th class="text-end">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -488,6 +489,11 @@
                                         <td><code class="text-info">{{ f.name }}</code></td>
                                         <td>{{ f.size_kb }} KB</td>
                                         <td>{{ f.rows }}</td>
+                                        <td class="text-end">
+                                            <button class="btn btn-outline-danger btn-xs py-0 px-2 delete-dataset-btn" data-filename="{{ f.name }}" title="Delete Dataset">
+                                                <i class="fas fa-trash-can"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -781,6 +787,30 @@
                         })
                         .catch(err => {
                             alert("Activation connection error: " + err);
+                        });
+                    }
+                });
+            });
+
+            // Delete Dataset
+            document.querySelectorAll('.delete-dataset-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filename = btn.dataset.filename;
+                    if (confirm("Are you sure you want to permanently delete dataset '" + filename + "'? This action cannot be undone.")) {
+                        fetch('/admin/ml/delete-dataset/' + filename, {
+                            method: 'DELETE',
+                            headers: { 'X-CSRFToken': csrfToken }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                window.location.reload();
+                            } else {
+                                alert("Deletion failed: " + data.error);
+                            }
+                        })
+                        .catch(err => {
+                            alert("Deletion connection error: " + err);
                         });
                     }
                 });

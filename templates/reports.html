@@ -86,7 +86,7 @@
             </div>
 
             <!-- Sidebar Footer User Profile -->
-            <div class="sidebar-user-widget">
+            <a href="/profile" class="sidebar-user-widget text-decoration-none" aria-label="View Analyst Profile" title="View Analyst Profile">
                 <div class="user-avatar-circle">
                     {{ session['user']['username'][:2]|upper }}
                 </div>
@@ -94,7 +94,7 @@
                     <span class="username">{{ session['user']['username'] }}</span>
                     <span class="role">{{ session['user']['role'] }} node</span>
                 </div>
-            </div>
+            </a>
         </aside>
 
         <!-- ==========================================

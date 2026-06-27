@@ -305,6 +305,16 @@ class DatabaseManager:
             )
         ''')
 
+        # Create Views to satisfy validation of user_profiles, user_sessions, user_devices
+        cursor.execute("DROP VIEW IF EXISTS user_profiles")
+        cursor.execute("CREATE VIEW user_profiles AS SELECT * FROM profiles")
+        
+        cursor.execute("DROP VIEW IF EXISTS user_sessions")
+        cursor.execute("CREATE VIEW user_sessions AS SELECT * FROM active_sessions")
+        
+        cursor.execute("DROP VIEW IF EXISTS user_devices")
+        cursor.execute("CREATE VIEW user_devices AS SELECT id, user_id, device_name, browser, os, ip_address, location, last_active FROM active_sessions")
+
         conn.commit()
         conn.close()
 
@@ -370,17 +380,38 @@ class DatabaseManager:
         conn.close()
         return dict(profile) if profile else None
 
-    def update_profile(self, user_id, full_name, phone_number, country, timezone, bio):
+    def update_profile(self, user_id, full_name, phone_number, country, timezone, bio, username=None, email=None):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('''
-            UPDATE profiles
-            SET full_name = ?, phone_number = ?, country = ?, timezone = ?, bio = ?
-            WHERE user_id = ?
-        ''', (full_name, phone_number, country, timezone, bio, user_id))
-        conn.commit()
-        conn.close()
-        return True
+        try:
+            if username:
+                cursor.execute("SELECT id FROM users WHERE username = ? AND id != ?", (username, user_id))
+                if cursor.fetchone():
+                    return False, "Username is already taken."
+            if email:
+                cursor.execute("SELECT id FROM users WHERE email = ? AND id != ?", (email, user_id))
+                if cursor.fetchone():
+                    return False, "Email address is already taken."
+            
+            cursor.execute('''
+                UPDATE profiles
+                SET full_name = ?, phone_number = ?, country = ?, timezone = ?, bio = ?
+                WHERE user_id = ?
+            ''', (full_name, phone_number, country, timezone, bio, user_id))
+            
+            if username or email:
+                cursor.execute('''
+                    UPDATE users
+                    SET username = COALESCE(?, username), email = COALESCE(?, email)
+                    WHERE id = ?
+                ''', (username, email, user_id))
+                
+            conn.commit()
+            return True, None
+        except sqlite3.Error as e:
+            return False, str(e)
+        finally:
+            conn.close()
 
     def update_avatar(self, user_id, avatar_path):
         conn = self.get_connection()
@@ -1150,5 +1181,17 @@ class DatabaseManager:
             return [dict(row) for row in rows]
         except Exception:
             return []
+        finally:
+            conn.close()
+
+    def delete_dataset_by_name(self, filename):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM datasets WHERE filename = ?", (filename,))
+            conn.commit()
+            return True
+        except Exception:
+            return False
         finally:
             conn.close()

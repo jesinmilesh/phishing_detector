@@ -271,6 +271,44 @@ select option {
     gap: 12px;
     background-color: rgba(0, 0, 0, 0.2);
     overflow: hidden;
+    transition: var(--transition-fast);
+}
+
+a.sidebar-footer-profile {
+    text-decoration: none !important;
+    cursor: pointer;
+}
+
+a.sidebar-footer-profile:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-top-color: var(--color-primary);
+}
+
+a.sidebar-footer-profile:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+}
+
+.sidebar-footer-profile-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-grow: 1;
+    min-width: 0;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    padding: 4px;
+    border-radius: 6px;
+}
+
+.sidebar-footer-profile-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-footer-profile-link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
 }
 
 .analyst-avatar-container {
@@ -490,6 +528,11 @@ select option {
 .topnav-profile-menu:hover {
     background-color: rgba(255, 255, 255, 0.02);
     border-color: var(--border-cyber);
+}
+
+.topnav-profile-menu:focus-visible {
+    outline: 2px solid var(--color-primary);
+    border-color: var(--color-primary);
 }
 
 .topnav-profile-menu img {
