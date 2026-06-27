@@ -217,12 +217,12 @@ class DatabaseManager:
         if admin_row:
             cursor.execute(
                 "UPDATE users SET username = ?, email = ?, password_hash = ? WHERE id = ?",
-                ("Admin", "jesinmilesh@gmail.com", admin_pwd_hash, admin_row['id'])
+                ("Admin", "jesin@gmail.com", admin_pwd_hash, admin_row['id'])
             )
         else:
             cursor.execute(
                 "INSERT INTO users (username, email, password_hash, role, is_verified) VALUES (?, ?, ?, ?, ?)",
-                ("Admin", "jesinmilesh@gmail.com", admin_pwd_hash, "admin", 1)
+                ("Admin", "jesin@gmail.com", admin_pwd_hash, "admin", 1)
             )
         
         # Perform dynamic migration/checks for existing users who need profiles, preferences, security settings

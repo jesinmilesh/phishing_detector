@@ -625,7 +625,7 @@ def send_newsletter_subscription_email(user_email):
 
 def send_contact_email(name, from_email, subject, message):
     """Sends contact form submission notification to the support team email."""
-    to_email = "jesintechnologies@gmail.com"
+    to_email = "jesinmilesh@gmail.com"
     email_subject = f"[AI SHIELD CONTACT] {subject or 'New Inquiry'} from {name}"
     
     html_content = f"""
